@@ -87,6 +87,15 @@
 }
 
 @layer utilities {
+  .mobile-app-container {
+    max-width: 428px;
+    margin: 0 auto;
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
   .text-forest-green {
     color: hsl(var(--forest-green));
   }
@@ -183,5 +192,9 @@
     50% {
       box-shadow: 0 0 0 20px rgba(76, 175, 80, 0);
     }
+  }
+
+  .border-3 {
+    border-width: 3px;
   }
 }
