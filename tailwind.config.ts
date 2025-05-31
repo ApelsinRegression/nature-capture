@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,18 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// NatureCapture custom colors
+				'forest-green': 'hsl(var(--forest-green))',
+				'sky-blue': 'hsl(var(--sky-blue))',
+				'sunlight-yellow': 'hsl(var(--sunlight-yellow))',
+				'earth-brown': 'hsl(var(--earth-brown))',
+				'off-white': 'hsl(var(--off-white))',
+				'slate-gray': 'hsl(var(--slate-gray))'
+			},
+			fontFamily: {
+				'playfair': ['Playfair Display', 'serif'],
+				'inter': ['Inter', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +96,20 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 0 0 rgba(46, 125, 50, 0.4)'
+					},
+					'50%': {
+						boxShadow: '0 0 0 10px rgba(46, 125, 50, 0)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite'
 			}
 		}
 	},
