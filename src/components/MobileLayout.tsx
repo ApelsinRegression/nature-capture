@@ -27,7 +27,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children, onLogout }) => {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t-4 border-forest-green">
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-gradient-to-r from-white to-light-green border-t-4 border-forest-green shadow-2xl">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -35,14 +35,16 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children, onLogout }) => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center py-2 px-3 rounded-2xl transition-all ${
+                className={`flex flex-col items-center py-3 px-4 rounded-3xl transition-all transform duration-300 animate-button ${
                   isActive
-                    ? 'bg-forest-green text-white shadow-lg scale-110'
-                    : 'text-forest-green hover:bg-light-green'
+                    ? 'bg-gradient-to-br from-forest-green to-bright-green text-white shadow-2xl scale-110 animate-pulse-active'
+                    : 'text-forest-green hover:bg-light-green hover:scale-105'
                 }`}
               >
-                <span className="text-2xl mb-1">{item.emoji}</span>
-                <span className="text-xs font-bold">{item.label}</span>
+                <span className="text-3xl mb-1 animate-bounce" style={{ animationDelay: `${navItems.indexOf(item) * 0.1}s` }}>
+                  {item.emoji}
+                </span>
+                <span className="text-xs font-black">{item.label}</span>
               </button>
             );
           })}

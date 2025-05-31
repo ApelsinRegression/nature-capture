@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -76,13 +76,13 @@
 
   body {
     @apply bg-off-white text-text-dark;
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Poppins', 'Nunito', sans-serif;
     font-weight: 600;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Nunito', sans-serif;
-    font-weight: 800;
+    font-weight: 900;
   }
 }
 
@@ -148,8 +148,16 @@
     font-family: 'Nunito', sans-serif;
   }
 
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .font-black {
+    font-weight: 900;
+  }
+
   .duolingo-button {
-    @apply bg-forest-green text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95;
+    @apply bg-forest-green text-white font-black py-4 px-8 rounded-full text-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95;
   }
 
   .duolingo-card {
@@ -157,11 +165,19 @@
   }
 
   .circle-stat {
-    @apply w-20 h-20 rounded-full flex flex-col items-center justify-center text-center font-bold;
+    @apply w-20 h-20 rounded-full flex flex-col items-center justify-center text-center font-black;
   }
 
   .bounce-in {
     animation: bounceIn 0.6s ease-out;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .scale-in {
+    animation: scaleIn 0.4s ease-out;
   }
 
   @keyframes bounceIn {
@@ -181,6 +197,40 @@
     }
   }
 
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+
   .pulse-green {
     animation: pulseGreen 2s ease-in-out infinite;
   }
@@ -196,5 +246,54 @@
 
   .border-3 {
     border-width: 3px;
+  }
+
+  .hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+
+  .hover\:scale-110:hover {
+    transform: scale(1.1);
+  }
+
+  /* Enhanced button animations */
+  .animate-button {
+    @apply transform transition-all duration-300 ease-in-out;
+  }
+
+  .animate-button:hover {
+    @apply scale-105 shadow-2xl;
+  }
+
+  .animate-button:active {
+    @apply scale-95;
+  }
+
+  /* Stagger animations for lists */
+  .stagger-in {
+    animation: staggerIn 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  @keyframes staggerIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Pulse animation for active elements */
+  .pulse-active {
+    animation: pulseActive 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulseActive {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
   }
 }
