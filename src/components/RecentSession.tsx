@@ -1,86 +1,68 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Clock, Route, Activity, Heart } from 'lucide-react';
+import { Clock, MapPin, Heart, Zap } from 'lucide-react';
 
-const RecentSession = () => {
-  // Mock data for the most recent session
-  const recentSession = {
+const RecentSession: React.FC = () => {
+  const lastSession = {
     date: 'Yesterday',
-    duration: '23 min',
-    distance: '1.2 km',
-    calories: 89,
-    moodRating: 4,
+    duration: '25 min',
     location: 'Central Park Trail',
-    coinsEarned: 46
-  };
-
-  const getMoodEmoji = (rating: number) => {
-    const moods = ['😰', '😕', '😐', '😊', '😄'];
-    return moods[rating - 1] || '😐';
+    distance: '1.2 km',
+    mood: 5,
+    coins: 25
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl font-playfair text-forest-green flex items-center">
-          <Activity className="w-5 h-5 mr-2" />
-          Recent Session
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+    <div className="duolingo-card">
+      <h2 className="text-2xl font-nunito font-bold text-bright-green mb-6 text-center">
+        🚶 Recent Adventure
+      </h2>
+      
+      <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-6 border-4 border-forest-green">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-forest-green rounded-full flex items-center justify-center">
+              <Clock className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-bright-green text-lg">{lastSession.duration}</p>
+              <p className="text-sm text-text-dark">{lastSession.date}</p>
+            </div>
+          </div>
+          <div className="bg-yellow-accent rounded-full px-4 py-2">
+            <p className="font-bold text-bright-green">🪙 +{lastSession.coins}</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center space-x-3">
+            <MapPin className="w-5 h-5 text-forest-green" />
+            <span className="text-text-dark font-semibold">{lastSession.location}</span>
+          </div>
+          
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-earth-brown">{recentSession.location}</h3>
-            <Badge variant="secondary" className="bg-sunlight-yellow text-earth-brown">
-              +{recentSession.coinsEarned} coins
-            </Badge>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Duration */}
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <Clock className="w-5 h-5 mx-auto mb-1 text-forest-green" />
-              <div className="font-semibold text-forest-green">{recentSession.duration}</div>
-              <div className="text-xs text-slate-gray">Duration</div>
+            <div className="flex items-center space-x-2">
+              <Zap className="w-5 h-5 text-orange-accent" />
+              <span className="text-text-dark font-semibold">{lastSession.distance}</span>
             </div>
-
-            {/* Distance */}
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <Route className="w-5 h-5 mx-auto mb-1 text-sky-blue" />
-              <div className="font-semibold text-sky-blue">{recentSession.distance}</div>
-              <div className="text-xs text-slate-gray">Distance</div>
-            </div>
-
-            {/* Calories */}
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <Activity className="w-5 h-5 mx-auto mb-1 text-orange-500" />
-              <div className="font-semibold text-orange-500">{recentSession.calories}</div>
-              <div className="text-xs text-slate-gray">Calories</div>
-            </div>
-
-            {/* Mood */}
-            <div className="text-center p-3 bg-pink-50 rounded-lg">
-              <div className="text-xl mb-1">{getMoodEmoji(recentSession.moodRating)}</div>
-              <div className="font-semibold text-pink-600">Mood</div>
-              <div className="text-xs text-slate-gray">{recentSession.moodRating}/5</div>
-            </div>
-          </div>
-
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-gray">{recentSession.date}</span>
-              <div className="flex items-center space-x-4">
-                <span className="text-slate-gray">Benefits:</span>
-                <Badge variant="outline" className="text-xs">+15 IU Vitamin D</Badge>
-                <Badge variant="outline" className="text-xs">-12% Stress</Badge>
+            
+            <div className="flex items-center space-x-2">
+              <Heart className="w-5 h-5 text-red-500" />
+              <div className="flex space-x-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span 
+                    key={star} 
+                    className={`text-lg ${star <= lastSession.mood ? '⭐' : '☆'}`}
+                  >
+                    {star <= lastSession.mood ? '⭐' : '☆'}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

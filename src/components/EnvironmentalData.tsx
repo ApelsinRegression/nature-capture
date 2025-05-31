@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Wind, Droplets, Thermometer, Eye } from 'lucide-react';
+import { Beaker, Droplets, Wind, Microscope } from 'lucide-react';
 
 interface LocationData {
   latitude: number;
@@ -15,126 +13,66 @@ interface EnvironmentalDataProps {
 }
 
 const EnvironmentalData: React.FC<EnvironmentalDataProps> = ({ location }) => {
-  // Mock environmental data - in real app, this would come from APIs
-  const environmentalData = {
-    airQuality: {
-      aqi: 42,
-      status: 'Good',
-      pm25: 12,
-      ozone: 65
-    },
-    waterQuality: {
-      ph: 7.2,
-      turbidity: 1.8,
-      status: 'Excellent'
-    },
-    weather: {
-      temperature: 22,
-      humidity: 65,
-      windSpeed: 8,
-      uvIndex: 3
-    }
-  };
-
-  const getAQIColor = (aqi: number) => {
-    if (aqi <= 50) return 'bg-green-100 text-green-800';
-    if (aqi <= 100) return 'bg-yellow-100 text-yellow-800';
-    if (aqi <= 150) return 'bg-orange-100 text-orange-800';
-    return 'bg-red-100 text-red-800';
+  const scienceData = {
+    airQuality: { value: 42, status: 'Good', color: 'bg-forest-green' },
+    waterQuality: { value: 7.2, status: 'Clean', color: 'bg-bright-green' },
+    biodiversity: { value: 85, status: 'Rich', color: 'bg-yellow-accent' },
+    carbonOffset: { value: 12, status: 'kg CO₂', color: 'bg-orange-accent' }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl font-playfair text-forest-green flex items-center">
-          <Eye className="w-5 h-5 mr-2" />
-          Environmental Conditions
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {location?.granted ? (
-          <>
-            {/* Air Quality */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-earth-brown flex items-center">
-                  <Wind className="w-4 h-4 mr-2 text-sky-blue" />
-                  Air Quality
-                </h3>
-                <Badge className={getAQIColor(environmentalData.airQuality.aqi)}>
-                  AQI {environmentalData.airQuality.aqi} - {environmentalData.airQuality.status}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-slate-gray">PM₂.₅</p>
-                  <p className="font-semibold text-sky-blue">{environmentalData.airQuality.pm25} μg/m³</p>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-slate-gray">Ozone</p>
-                  <p className="font-semibold text-sky-blue">{environmentalData.airQuality.ozone} ppb</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Water Quality */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-earth-brown flex items-center">
-                  <Droplets className="w-4 h-4 mr-2 text-blue-500" />
-                  Water Quality
-                </h3>
-                <Badge className="bg-blue-100 text-blue-800">
-                  {environmentalData.waterQuality.status}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-slate-gray">pH Level</p>
-                  <p className="font-semibold text-blue-600">{environmentalData.waterQuality.ph}</p>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-slate-gray">Turbidity</p>
-                  <p className="font-semibold text-blue-600">{environmentalData.waterQuality.turbidity} NTU</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Weather Details */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-earth-brown flex items-center">
-                <Thermometer className="w-4 h-4 mr-2 text-orange-500" />
-                Weather Details
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <p className="text-slate-gray">Humidity</p>
-                  <p className="font-semibold text-orange-600">{environmentalData.weather.humidity}%</p>
-                </div>
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <p className="text-slate-gray">Wind Speed</p>
-                  <p className="font-semibold text-orange-600">{environmentalData.weather.windSpeed} km/h</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-sm text-forest-green font-medium">
-                🌱 Perfect conditions for outdoor activity! Clean air and moderate temperature.
-              </p>
-              <p className="text-xs text-slate-gray mt-1">
-                Bonus: 2× NatureCoins for sessions during good air quality.
-              </p>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-8">
-            <Eye className="w-12 h-12 mx-auto mb-4 text-slate-gray" />
-            <p className="text-slate-gray">Enable location access to see local environmental conditions</p>
+    <div className="duolingo-card">
+      <h2 className="text-2xl font-nunito font-bold text-bright-green mb-6 text-center">
+        🧪 Environmental Science
+      </h2>
+      
+      <div className="grid grid-cols-2 gap-6">
+        <div className="text-center">
+          <div className={`circle-stat ${scienceData.airQuality.color} text-white mx-auto mb-2`}>
+            <Wind className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{scienceData.airQuality.value}</div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="text-sm font-bold text-text-dark">Air Quality</div>
+          <div className="text-xs text-bright-green">{scienceData.airQuality.status}</div>
+        </div>
+
+        <div className="text-center">
+          <div className={`circle-stat ${scienceData.waterQuality.color} text-white mx-auto mb-2`}>
+            <Droplets className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{scienceData.waterQuality.value}</div>
+          </div>
+          <div className="text-sm font-bold text-text-dark">Water pH</div>
+          <div className="text-xs text-bright-green">{scienceData.waterQuality.status}</div>
+        </div>
+
+        <div className="text-center">
+          <div className={`circle-stat ${scienceData.biodiversity.color} text-bright-green mx-auto mb-2`}>
+            <Microscope className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{scienceData.biodiversity.value}%</div>
+          </div>
+          <div className="text-sm font-bold text-text-dark">Biodiversity</div>
+          <div className="text-xs text-bright-green">{scienceData.biodiversity.status}</div>
+        </div>
+
+        <div className="text-center">
+          <div className={`circle-stat ${scienceData.carbonOffset.color} text-white mx-auto mb-2`}>
+            <Beaker className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{scienceData.carbonOffset.value}</div>
+          </div>
+          <div className="text-sm font-bold text-text-dark">CO₂ Offset</div>
+          <div className="text-xs text-bright-green">{scienceData.carbonOffset.status}</div>
+        </div>
+      </div>
+
+      <div className="mt-6 bg-light-green rounded-2xl p-4">
+        <div className="text-center">
+          <p className="font-bold text-bright-green text-lg">🌱 Today's Impact</p>
+          <p className="text-sm text-text-dark mt-2">
+            Your 30 minutes outdoors helped offset 12kg of CO₂ and supported local biodiversity! 
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 
