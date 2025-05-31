@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { MapPin, Sun, Wind, Droplets, Timer, Route, Activity } from 'lucide-react';
+import { MapPin, Route, Timer, Activity, Heart } from 'lucide-react';
 import NatureTimerButton from './NatureTimerButton';
 import EnvironmentalData from './EnvironmentalData';
 import TodaySnapshot from './TodaySnapshot';
@@ -71,7 +69,6 @@ const Dashboard = () => {
     setIsSessionActive(false);
     setSessionStartTime(null);
     setSessionDuration(0);
-    // Here you would typically save the session data
   };
 
   const formatDuration = (seconds: number): string => {
@@ -83,23 +80,23 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-off-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+      <header className="bg-forest-green shadow-lg">
+        <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-forest-green rounded-xl flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center">
+                <MapPin className="w-8 h-8 text-forest-green" />
               </div>
               <div>
-                <h1 className="text-2xl font-playfair font-bold text-forest-green">NatureCapture</h1>
-                <p className="text-sm text-slate-gray">Connecting Mind, Body & Community</p>
+                <h1 className="text-3xl font-nunito font-bold text-white">🌿 NatureCapture</h1>
+                <p className="text-lg text-light-green font-semibold">Connecting Mind, Body & Community</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-sky-blue text-white">
+            <div className="flex items-center space-x-3">
+              <div className="bg-yellow-accent text-bright-green rounded-full px-4 py-2 font-bold text-lg">
                 🪙 247 NatureCoins
-              </Badge>
-              <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+              </div>
+              <div className="w-12 h-12 bg-white rounded-full border-4 border-light-green"></div>
             </div>
           </div>
         </div>
@@ -109,55 +106,47 @@ const Dashboard = () => {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Today's Overview */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Today's Snapshot */}
+          <div className="lg:col-span-2 space-y-8">
             <TodaySnapshot location={location} />
-            
-            {/* Recent Session */}
             <RecentSession />
-            
-            {/* Environmental Data */}
             <EnvironmentalData location={location} />
           </div>
 
           {/* Right Column - Session Controls */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Active Session Display */}
             {isSessionActive && (
-              <Card className="border-forest-green border-2 bg-gradient-to-br from-green-50 to-blue-50">
-                <CardHeader>
-                  <CardTitle className="text-forest-green flex items-center">
-                    <Activity className="w-5 h-5 mr-2" />
-                    Active Session
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center space-y-4">
-                    <div className="text-3xl font-bold text-forest-green">
-                      {formatDuration(sessionDuration)}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-slate-gray">Distance</p>
-                        <p className="font-semibold">0.8 km</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-gray">Calories</p>
-                        <p className="font-semibold">45 cal</p>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={handleStopSession}
-                      className="w-full bg-red-500 hover:bg-red-600"
-                    >
-                      Stop Session
-                    </Button>
+              <div className="duolingo-card border-forest-green border-4 bg-gradient-to-br from-light-green to-white">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-forest-green rounded-full mx-auto flex items-center justify-center bounce-in">
+                    <Activity className="w-8 h-8 text-white" />
                   </div>
-                </CardContent>
-              </Card>
+                  <h3 className="text-xl font-nunito font-bold text-bright-green">
+                    🏃 Active Session
+                  </h3>
+                  <div className="text-4xl font-bold text-forest-green">
+                    {formatDuration(sessionDuration)}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-yellow-accent rounded-2xl p-3">
+                      <p className="text-bright-green font-bold text-sm">Distance</p>
+                      <p className="font-bold text-lg">0.8 km</p>
+                    </div>
+                    <div className="bg-orange-accent rounded-2xl p-3 text-white">
+                      <p className="font-bold text-sm">Calories</p>
+                      <p className="font-bold text-lg">45 cal</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={handleStopSession}
+                    className="duolingo-button w-full bg-red-500 hover:bg-red-600"
+                  >
+                    ⏹️ Stop Session
+                  </Button>
+                </div>
+              </div>
             )}
 
-            {/* Nature Timer Button */}
             <NatureTimerButton 
               isActive={isSessionActive}
               onStart={handleStartSession}
@@ -165,46 +154,43 @@ const Dashboard = () => {
             />
 
             {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-playfair">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <Route className="w-4 h-4 mr-2" />
-                  View Journal
+            <div className="duolingo-card">
+              <h3 className="text-xl font-nunito font-bold text-bright-green mb-4 text-center">
+                ⚡ Quick Actions
+              </h3>
+              <div className="space-y-3">
+                <Button className="duolingo-button w-full bg-light-green text-bright-green hover:bg-bright-green hover:text-white">
+                  <Route className="w-5 h-5 mr-2" />
+                  📖 View Journal
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Timer className="w-4 h-4 mr-2" />
-                  Challenges (2/5)
+                <Button className="duolingo-button w-full bg-yellow-accent text-bright-green hover:bg-bright-green hover:text-white">
+                  <Timer className="w-5 h-5 mr-2" />
+                  🏆 Challenges (2/5)
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Explore Parks
+                <Button className="duolingo-button w-full bg-orange-accent text-white hover:bg-bright-green">
+                  <MapPin className="w-5 h-5 mr-2" />
+                  🗺️ Explore Parks
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Location Status */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2">
-                  <MapPin className={`w-4 h-4 ${location?.granted ? 'text-green-500' : 'text-red-500'}`} />
-                  <span className="text-sm">
-                    {location?.granted ? 'Location enabled' : 'Location required for tracking'}
-                  </span>
-                </div>
-                {!location?.granted && (
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto text-forest-green text-sm mt-2"
-                    onClick={requestLocationPermission}
-                  >
-                    Enable location access
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+            <div className="duolingo-card text-center">
+              <div className={`w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center ${location?.granted ? 'bg-forest-green' : 'bg-orange-accent'}`}>
+                <MapPin className="w-6 h-6 text-white" />
+              </div>
+              <p className="font-bold text-text-dark">
+                {location?.granted ? '✅ Location enabled' : '❌ Location required for tracking'}
+              </p>
+              {!location?.granted && (
+                <Button 
+                  className="duolingo-button mt-3 bg-forest-green"
+                  onClick={requestLocationPermission}
+                >
+                  📍 Enable Location
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </main>

@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,34 +15,35 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 123 47% 32%; /* Forest Green #2E7D32 */
+    --primary: 120 60% 45%; /* Bright Green #4CAF50 */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 197 100% 74%; /* Sky Blue #81D4FA */
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 120 40% 85%; /* Light Green #C8E6C9 */
+    --secondary-foreground: 120 100% 15%;
 
-    --muted: 85 50% 96%; /* Off-White #F9FBE7 */
+    --muted: 120 20% 96%; /* Very Light Green #F1F8E9 */
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 197 100% 74%; /* Sky Blue */
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 120 100% 35%; /* Vibrant Green #2E7D32 */
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 123 47% 32%;
+    --border: 120 30% 85%;
+    --input: 120 30% 90%;
+    --ring: 120 60% 45%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Custom NatureCapture colors */
-    --forest-green: 123 47% 32%; /* #2E7D32 */
-    --sky-blue: 197 100% 74%; /* #81D4FA */
-    --sunlight-yellow: 60 100% 62%; /* #FFEB3B */
-    --earth-brown: 15 25% 35%; /* #6D4C41 */
-    --off-white: 85 50% 96%; /* #F9FBE7 */
-    --slate-gray: 200 18% 26%; /* #37474F */
+    /* Custom NatureCapture colors - Duolingo style */
+    --forest-green: 120 60% 45%; /* #4CAF50 */
+    --light-green: 120 40% 85%; /* #C8E6C9 */
+    --bright-green: 120 100% 35%; /* #2E7D32 */
+    --yellow-accent: 45 100% 60%; /* #FFD54F */
+    --orange-accent: 25 100% 65%; /* #FF9800 */
+    --off-white: 120 20% 98%; /* #FAFAFA */
+    --text-dark: 0 0% 20%; /* #333333 */
   }
 
   .dark {
@@ -74,12 +75,14 @@
   }
 
   body {
-    @apply bg-off-white text-earth-brown font-inter;
-    font-family: 'Inter', sans-serif;
+    @apply bg-off-white text-text-dark;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
   }
 }
 
@@ -92,60 +95,93 @@
     background-color: hsl(var(--forest-green));
   }
   
-  .text-sky-blue {
-    color: hsl(var(--sky-blue));
+  .text-light-green {
+    color: hsl(var(--light-green));
   }
   
-  .bg-sky-blue {
-    background-color: hsl(var(--sky-blue));
+  .bg-light-green {
+    background-color: hsl(var(--light-green));
   }
   
-  .text-sunlight-yellow {
-    color: hsl(var(--sunlight-yellow));
+  .text-bright-green {
+    color: hsl(var(--bright-green));
   }
   
-  .bg-sunlight-yellow {
-    background-color: hsl(var(--sunlight-yellow));
+  .bg-bright-green {
+    background-color: hsl(var(--bright-green));
   }
   
-  .text-earth-brown {
-    color: hsl(var(--earth-brown));
+  .text-yellow-accent {
+    color: hsl(var(--yellow-accent));
   }
   
-  .bg-earth-brown {
-    background-color: hsl(var(--earth-brown));
+  .bg-yellow-accent {
+    background-color: hsl(var(--yellow-accent));
+  }
+  
+  .text-orange-accent {
+    color: hsl(var(--orange-accent));
+  }
+  
+  .bg-orange-accent {
+    background-color: hsl(var(--orange-accent));
   }
   
   .bg-off-white {
     background-color: hsl(var(--off-white));
   }
   
-  .text-slate-gray {
-    color: hsl(var(--slate-gray));
+  .text-text-dark {
+    color: hsl(var(--text-dark));
   }
   
-  .font-playfair {
-    font-family: 'Playfair Display', serif;
-  }
-  
-  .font-inter {
-    font-family: 'Inter', sans-serif;
+  .font-nunito {
+    font-family: 'Nunito', sans-serif;
   }
 
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
+  .duolingo-button {
+    @apply bg-forest-green text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95;
   }
 
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4);
+  .duolingo-card {
+    @apply bg-white rounded-3xl p-6 shadow-lg border-4 border-light-green;
+  }
+
+  .circle-stat {
+    @apply w-20 h-20 rounded-full flex flex-col items-center justify-center text-center font-bold;
+  }
+
+  .bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+
+  @keyframes bounceIn {
+    0% {
+      transform: scale(0.3);
+      opacity: 0;
     }
     50% {
-      box-shadow: 0 0 0 10px rgba(46, 125, 50, 0);
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
     }
   }
 
-  .gradient-nature {
-    background: linear-gradient(135deg, hsl(var(--forest-green)) 0%, hsl(var(--sky-blue)) 100%);
+  .pulse-green {
+    animation: pulseGreen 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseGreen {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 20px rgba(76, 175, 80, 0);
+    }
   }
 }

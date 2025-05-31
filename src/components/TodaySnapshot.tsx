@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Sun, Wind, Droplets, Timer } from 'lucide-react';
+import { Timer, Wind, Sun, Droplets } from 'lucide-react';
 
 interface LocationData {
   latitude: number;
@@ -15,7 +13,6 @@ interface TodaySnapshotProps {
 }
 
 const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ location }) => {
-  // Mock data - in real app, this would come from APIs
   const todayData = {
     timeOutside: 0,
     aqi: 42,
@@ -27,62 +24,73 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ location }) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl font-playfair text-forest-green">Today's Snapshot</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Time Outside */}
-          <div className="text-center p-4 bg-green-50 rounded-lg">
-            <Timer className="w-6 h-6 mx-auto mb-2 text-forest-green" />
-            <div className="text-2xl font-bold text-forest-green">{todayData.timeOutside}</div>
-            <div className="text-sm text-slate-gray">min outside</div>
+    <div className="duolingo-card">
+      <h2 className="text-2xl font-nunito font-bold text-bright-green mb-6 text-center">
+        📊 Today's Snapshot
+      </h2>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {/* Time Outside */}
+        <div className="text-center">
+          <div className="circle-stat bg-forest-green text-white mx-auto mb-2">
+            <Timer className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{todayData.timeOutside}</div>
           </div>
-
-          {/* Air Quality */}
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <Wind className="w-6 h-6 mx-auto mb-2 text-sky-blue" />
-            <div className="text-2xl font-bold text-sky-blue">{todayData.aqi}</div>
-            <div className="text-sm text-slate-gray">AQI ({todayData.aqiStatus})</div>
-          </div>
-
-          {/* Temperature */}
-          <div className="text-center p-4 bg-yellow-50 rounded-lg">
-            <Sun className="w-6 h-6 mx-auto mb-2 text-sunlight-yellow" />
-            <div className="text-2xl font-bold text-sunlight-yellow">{todayData.temperature}°C</div>
-            <div className="text-sm text-slate-gray">Current</div>
-          </div>
-
-          {/* UV Index */}
-          <div className="text-center p-4 bg-orange-50 rounded-lg">
-            <Droplets className="w-6 h-6 mx-auto mb-2 text-orange-500" />
-            <div className="text-2xl font-bold text-orange-500">{todayData.uvIndex}</div>
-            <div className="text-sm text-slate-gray">UV Index</div>
-          </div>
+          <div className="text-sm font-bold text-text-dark">Min Outside</div>
         </div>
 
-        {/* Sun Times */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <Sun className="w-4 h-4 text-sunlight-yellow" />
-              <span className="text-sm text-slate-gray">Sunrise: {todayData.sunrise}</span>
+        {/* Air Quality */}
+        <div className="text-center">
+          <div className="circle-stat bg-light-green text-bright-green mx-auto mb-2">
+            <Wind className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{todayData.aqi}</div>
+          </div>
+          <div className="text-sm font-bold text-text-dark">AQI ({todayData.aqiStatus})</div>
+        </div>
+
+        {/* Temperature */}
+        <div className="text-center">
+          <div className="circle-stat bg-yellow-accent text-bright-green mx-auto mb-2">
+            <Sun className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{todayData.temperature}°</div>
+          </div>
+          <div className="text-sm font-bold text-text-dark">Temperature</div>
+        </div>
+
+        {/* UV Index */}
+        <div className="text-center">
+          <div className="circle-stat bg-orange-accent text-white mx-auto mb-2">
+            <Droplets className="w-6 h-6 mb-1" />
+            <div className="text-lg font-bold">{todayData.uvIndex}</div>
+          </div>
+          <div className="text-sm font-bold text-text-dark">UV Index</div>
+        </div>
+      </div>
+
+      {/* Sun Times */}
+      <div className="mt-6 bg-light-green rounded-2xl p-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-yellow-accent rounded-full flex items-center justify-center">
+              <Sun className="w-4 h-4 text-bright-green" />
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-slate-gray">Sunset: {todayData.sunset}</span>
-              <Sun className="w-4 h-4 text-orange-500" />
+            <span className="font-bold text-bright-green">🌅 {todayData.sunrise}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="font-bold text-bright-green">🌅 {todayData.sunset}</span>
+            <div className="w-8 h-8 bg-orange-accent rounded-full flex items-center justify-center">
+              <Sun className="w-4 h-4 text-white" />
             </div>
           </div>
         </div>
+      </div>
 
-        {location?.granted && (
-          <Badge variant="secondary" className="mt-4 bg-green-100 text-forest-green">
-            Location: {location.latitude.toFixed(2)}, {location.longitude.toFixed(2)}
-          </Badge>
-        )}
-      </CardContent>
-    </Card>
+      {location?.granted && (
+        <div className="mt-4 bg-forest-green text-white rounded-full py-2 px-4 text-center font-bold">
+          📍 Location: {location.latitude.toFixed(2)}, {location.longitude.toFixed(2)}
+        </div>
+      )}
+    </div>
   );
 };
 

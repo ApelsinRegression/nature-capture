@@ -63,17 +63,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// NatureCapture custom colors
+				// Duolingo-inspired colors
 				'forest-green': 'hsl(var(--forest-green))',
-				'sky-blue': 'hsl(var(--sky-blue))',
-				'sunlight-yellow': 'hsl(var(--sunlight-yellow))',
-				'earth-brown': 'hsl(var(--earth-brown))',
+				'light-green': 'hsl(var(--light-green))',
+				'bright-green': 'hsl(var(--bright-green))',
+				'yellow-accent': 'hsl(var(--yellow-accent))',
+				'orange-accent': 'hsl(var(--orange-accent))',
 				'off-white': 'hsl(var(--off-white))',
-				'slate-gray': 'hsl(var(--slate-gray))'
+				'text-dark': 'hsl(var(--text-dark))'
 			},
 			fontFamily: {
-				'playfair': ['Playfair Display', 'serif'],
-				'inter': ['Inter', 'sans-serif']
+				'nunito': ['Nunito', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -97,19 +97,36 @@ export default {
 						height: '0'
 					}
 				},
-				'pulse-glow': {
-					'0%, 100%': {
-						boxShadow: '0 0 0 0 rgba(46, 125, 50, 0.4)'
+				'bounce-in': {
+					'0%': {
+						transform: 'scale(0.3)',
+						opacity: '0'
 					},
 					'50%': {
-						boxShadow: '0 0 0 10px rgba(46, 125, 50, 0)'
+						transform: 'scale(1.05)'
+					},
+					'70%': {
+						transform: 'scale(0.9)'
+					},
+					'100%': {
+						transform: 'scale(1)',
+						opacity: '1'
+					}
+				},
+				'pulse-green': {
+					'0%, 100%': {
+						boxShadow: '0 0 0 0 rgba(76, 175, 80, 0.4)'
+					},
+					'50%': {
+						boxShadow: '0 0 0 20px rgba(76, 175, 80, 0)'
 					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-glow': 'pulse-glow 2s ease-in-out infinite'
+				'bounce-in': 'bounce-in 0.6s ease-out',
+				'pulse-green': 'pulse-green 2s ease-in-out infinite'
 			}
 		}
 	},
