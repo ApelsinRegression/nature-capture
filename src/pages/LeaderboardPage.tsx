@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 const LeaderboardPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<'friends' | 'local' | 'global'>('global');
   const [showProfile, setShowProfile] = useState<number | null>(null);
+  const [joinedActivities, setJoinedActivities] = useState<number[]>([]);
 
   const leaderboardData = [
     { rank: 1, name: 'Alex Green', coins: 2847, avatar: '🌿', badge: 'Forest Guardian', isTop: true, location: '0.5km away', status: 'online' },
@@ -26,6 +27,21 @@ const LeaderboardPage: React.FC = () => {
     friends: '👥 Friends',
     local: '📍 Local',
     global: '🌍 Global'
+  };
+
+  const handleJoinActivity = (activityId: number) => {
+    if (joinedActivities.includes(activityId)) {
+      setJoinedActivities(joinedActivities.filter(id => id !== activityId));
+    } else {
+      setJoinedActivities([...joinedActivities, activityId]);
+      // Store in localStorage for profile page
+      const existing = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
+      const activity = groupActivities.find(a => a.id === activityId);
+      if (activity && !existing.find((a: any) => a.id === activityId)) {
+        existing.push(activity);
+        localStorage.setItem('joinedActivities', JSON.stringify(existing));
+      }
+    }
   };
 
   const getRankIcon = (rank: number) => {
@@ -66,7 +82,7 @@ const LeaderboardPage: React.FC = () => {
               <span className="text-4xl">{user?.avatar}</span>
               <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-2 border-white ${getStatusColor(user?.status || '')}`}></div>
             </div>
-            <h1 className="text-3xl font-nunito font-black text-white mb-2 animate-bounce-in">
+            <h1 className="text-3xl font-nunito font-black text-white mb-2">
               {user?.name}
             </h1>
             <p className="text-light-green text-lg font-bold">{user?.badge}</p>
@@ -82,7 +98,7 @@ const LeaderboardPage: React.FC = () => {
         </div>
 
         <div className="px-6 space-y-4">
-          <Button className="w-full bg-gradient-to-r from-yellow-accent to-orange-accent text-white font-black py-4 rounded-3xl text-xl shadow-xl transform transition-all hover:scale-105 animate-pulse">
+          <Button className="w-full bg-gradient-to-r from-yellow-accent to-orange-accent text-white font-black py-4 rounded-3xl text-xl shadow-xl transform transition-all hover:scale-105">
             <Calendar className="w-6 h-6 mr-3" />
             Invite for Nature Walk
           </Button>
@@ -119,10 +135,10 @@ const LeaderboardPage: React.FC = () => {
             <img 
               src="/lovable-uploads/f1457e39-8dd6-4e91-9962-d1b090e9bee1.png" 
               alt="Trees" 
-              className="w-16 h-16 animate-bounce"
+              className="w-16 h-16"
             />
           </div>
-          <h1 className="text-4xl font-nunito font-black text-white mb-2 animate-fade-in">
+          <h1 className="text-4xl font-nunito font-black text-white mb-2">
             🏆 Nature Champions
           </h1>
           <p className="text-light-green font-bold text-lg">Connect & Compete!</p>
@@ -159,7 +175,7 @@ const LeaderboardPage: React.FC = () => {
           </h2>
           <div className="space-y-3">
             {groupActivities.map((activity) => (
-              <div key={activity.id} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-4 border-3 border-forest-green">
+              <div key={activity.id} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-4 border-3 border-forest-green hover:scale-105 transition-transform">
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="flex items-center space-x-2 mb-1">
@@ -172,8 +188,15 @@ const LeaderboardPage: React.FC = () => {
                     <p className="text-sm font-bold text-text-dark">📍 {activity.location}</p>
                     <p className="text-sm font-bold text-forest-green">⏰ {activity.time} • 👥 {activity.participants} joined</p>
                   </div>
-                  <Button className="bg-yellow-accent text-bright-green font-black rounded-full px-6 py-2 hover:bg-bright-green hover:text-white transition-all transform hover:scale-105">
-                    Join
+                  <Button 
+                    onClick={() => handleJoinActivity(activity.id)}
+                    className={`font-black rounded-full px-6 py-2 transition-all transform hover:scale-105 ${
+                      joinedActivities.includes(activity.id)
+                        ? 'bg-bright-green text-white'
+                        : 'bg-yellow-accent text-bright-green hover:bg-bright-green hover:text-white'
+                    }`}
+                  >
+                    {joinedActivities.includes(activity.id) ? '✅ Joined' : 'Join'}
                   </Button>
                 </div>
               </div>
@@ -187,7 +210,7 @@ const LeaderboardPage: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
           <div className="flex items-end justify-center space-x-4">
             {/* 2nd Place */}
-            <div className="text-center animate-scale-in">
+            <div className="text-center">
               <div className="w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center mb-2 relative">
                 <span className="text-2xl">{leaderboardData[1].avatar}</span>
                 <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(leaderboardData[1].status)}`}></div>
@@ -200,7 +223,7 @@ const LeaderboardPage: React.FC = () => {
             </div>
 
             {/* 1st Place */}
-            <div className="text-center animate-bounce-in">
+            <div className="text-center">
               <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mb-2 border-4 border-yellow-accent relative">
                 <span className="text-3xl">{leaderboardData[0].avatar}</span>
                 <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${getStatusColor(leaderboardData[0].status)}`}></div>
@@ -213,7 +236,7 @@ const LeaderboardPage: React.FC = () => {
             </div>
 
             {/* 3rd Place */}
-            <div className="text-center animate-scale-in">
+            <div className="text-center">
               <div className="w-16 h-16 bg-orange-400 rounded-full flex items-center justify-center mb-2 relative">
                 <span className="text-2xl">{leaderboardData[2].avatar}</span>
                 <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(leaderboardData[2].status)}`}></div>
@@ -235,14 +258,13 @@ const LeaderboardPage: React.FC = () => {
             <div 
               key={user.rank}
               onClick={() => !user.isUser && setShowProfile(user.rank)}
-              className={`rounded-3xl p-4 border-3 transition-all transform hover:scale-102 cursor-pointer animate-fade-in ${
+              className={`rounded-3xl p-4 border-3 transition-all transform hover:scale-102 cursor-pointer ${
                 user.isUser 
                   ? 'bg-gradient-to-r from-yellow-accent to-orange-accent border-forest-green shadow-xl' 
                   : user.isTop
                   ? 'bg-white border-yellow-accent shadow-lg hover:shadow-xl'
                   : 'bg-white border-light-green hover:border-forest-green'
               }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">

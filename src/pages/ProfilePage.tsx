@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, LogOut, Star, Calendar, Target, Trophy, Edit, MessageSquare, Users } from 'lucide-react';
 
@@ -13,6 +13,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [selectedEmoji, setSelectedEmoji] = useState('🌱');
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [joinedActivities, setJoinedActivities] = useState<any[]>([]);
   
   const userStats = {
     totalSessions: 23,
@@ -52,6 +53,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     { name: 'Star Gazer', emoji: '⭐', unlocked: false },
   ];
 
+  useEffect(() => {
+    // Load joined activities from localStorage
+    const activities = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
+    setJoinedActivities(activities);
+  }, []);
+
   const handleSaveProfile = () => {
     localStorage.setItem('userName', userName);
     setIsEditing(false);
@@ -87,7 +94,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
             {calendarData.map((day, index) => (
               <div
                 key={index}
-                className={`aspect-square rounded-2xl flex items-center justify-center text-sm font-bold transition-all ${
+                className={`aspect-square rounded-2xl flex items-center justify-center text-sm font-bold transition-all hover:scale-110 ${
                   day.streak 
                     ? 'bg-gradient-to-br from-yellow-accent to-orange-accent text-white shadow-lg' 
                     : day.hasActivity 
@@ -153,8 +160,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
                   <button
                     key={index}
                     onClick={() => setSelectedEmoji(emoji)}
-                    className={`text-2xl p-2 rounded-full transition-all ${
-                      selectedEmoji === emoji ? 'bg-yellow-accent scale-125' : 'bg-white hover:scale-110'
+                    className={`text-2xl p-2 rounded-full transition-all hover:scale-110 ${
+                      selectedEmoji === emoji ? 'bg-yellow-accent scale-125' : 'bg-white'
                     }`}
                   >
                     {emoji}
@@ -188,6 +195,39 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
         </div>
       </div>
 
+      {/* Joined Group Activities */}
+      {joinedActivities.length > 0 && (
+        <div className="px-6 mb-8">
+          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
+            <h2 className="text-xl font-nunito font-bold text-bright-green mb-4 text-center flex items-center justify-center">
+              <Users className="w-6 h-6 mr-2" />
+              🚶 My Group Activities 🚶
+            </h2>
+            <div className="space-y-3">
+              {joinedActivities.map((activity, index) => (
+                <div key={index} className="bg-gradient-to-r from-yellow-accent to-light-green rounded-2xl p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="bg-bright-green text-white px-2 py-1 rounded-full text-xs font-black">
+                          {activity.type}
+                        </span>
+                        <span className="text-xs font-bold text-text-dark">{activity.difficulty}</span>
+                      </div>
+                      <p className="font-bold text-bright-green">{activity.title}</p>
+                      <p className="text-xs text-text-dark">📍 {activity.location} • ⏰ {activity.time}</p>
+                    </div>
+                    <div className="bg-white rounded-full px-3 py-1">
+                      <span className="text-xs font-bold text-bright-green">✅ Joined</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Friends Section */}
       <div className="px-6 mb-8">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
@@ -197,7 +237,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           </h2>
           <div className="space-y-3">
             {friends.map((friend, index) => (
-              <div key={index} className="flex items-center justify-between bg-light-green rounded-2xl p-3">
+              <div key={index} className="flex items-center justify-between bg-light-green rounded-2xl p-3 hover:scale-105 transition-transform">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
                     <span className="text-2xl">{friend.emoji}</span>
@@ -241,7 +281,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
             </div>
 
             <div 
-              className="text-center cursor-pointer"
+              className="text-center cursor-pointer hover:scale-105 transition-transform"
               onClick={() => setShowCalendar(true)}
             >
               <div className="w-16 h-16 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
@@ -290,7 +330,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           <div className="grid grid-cols-4 gap-3">
             {badges.map((badge, index) => (
               <div key={index} className="text-center">
-                <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center text-2xl ${
+                <div className={`w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center text-2xl hover:scale-110 transition-transform ${
                   badge.unlocked 
                     ? 'bg-gradient-to-br from-yellow-accent to-orange-accent shadow-lg' 
                     : 'bg-gray-200'
@@ -309,19 +349,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
       {/* Settings & Actions */}
       <div className="px-6">
         <div className="space-y-3">
-          <Button className="w-full bg-light-green text-bright-green font-bold py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all">
+          <Button className="w-full bg-light-green text-bright-green font-bold py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all hover:scale-105">
             <Settings className="w-6 h-6 mr-3" />
             ⚙️ Settings
           </Button>
           
-          <Button className="w-full bg-yellow-accent text-bright-green font-bold py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all">
+          <Button className="w-full bg-yellow-accent text-bright-green font-bold py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all hover:scale-105">
             <Trophy className="w-6 h-6 mr-3" />
             🏆 View Achievements
           </Button>
           
           <Button 
             onClick={onLogout}
-            className="w-full bg-red-500 text-white font-bold py-4 rounded-2xl text-lg hover:bg-red-600 transition-all"
+            className="w-full bg-red-500 text-white font-bold py-4 rounded-2xl text-lg hover:bg-red-600 transition-all hover:scale-105"
           >
             <LogOut className="w-6 h-6 mr-3" />
             🚪 Logout
