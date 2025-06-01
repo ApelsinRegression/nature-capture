@@ -1,10 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, LogOut, Star, Calendar, Target, Trophy, Edit, MessageSquare, Users } from 'lucide-react';
+import { Settings, LogOut, Star, Calendar, Target, Trophy, Edit, MessageSquare, Users, X } from 'lucide-react';
 
 interface ProfilePageProps {
   onLogout: () => void;
+}
+
+interface WalkingSession {
+  date: string;
+  distance: number;
+  time: number;
+  route: any[];
+  photos: any[];
+  comments: any[];
+  feeling: number;
+  activities: string[];
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
@@ -14,6 +24,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [joinedActivities, setJoinedActivities] = useState<any[]>([]);
+  const [walkingSessions, setWalkingSessions] = useState<WalkingSession[]>([]);
+  const [selectedSession, setSelectedSession] = useState<WalkingSession | null>(null);
+  const [tempUserName, setTempUserName] = useState(userName);
   
   const userStats = {
     totalSessions: 23,
@@ -36,11 +49,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     { name: 'River Blue', emoji: '🌊', status: 'online', lastSeen: 'Active now 🟢' },
   ];
 
-  const calendarData = Array.from({ length: 30 }, (_, i) => ({
-    day: i + 1,
-    hasActivity: Math.random() > 0.4,
-    streak: i >= 23 && i <= 29
-  }));
+  const calendarData = Array.from({ length: 30 }, (_, i) => {
+    const session = walkingSessions.find(s => {
+      const sessionDate = new Date(s.date);
+      const calendarDate = new Date();
+      calendarDate.setDate(calendarDate.getDate() - (29 - i));
+      return sessionDate.toDateString() === calendarDate.toDateString();
+    });
+    
+    return {
+      day: i + 1,
+      distance: session?.distance || 0,
+      hasActivity: !!session,
+      session: session || null
+    };
+  });
 
   const badges = [
     { name: 'First Steps', emoji: '👣', unlocked: true },
@@ -54,22 +77,120 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   ];
 
   useEffect(() => {
-    // Load joined activities from localStorage
+    // Load joined activities and walking sessions from localStorage
     const activities = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
+    const sessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
     setJoinedActivities(activities);
+    setWalkingSessions(sessions);
   }, []);
 
   const handleSaveProfile = () => {
-    localStorage.setItem('userName', userName);
+    setUserName(tempUserName);
+    localStorage.setItem('userName', tempUserName);
     setIsEditing(false);
   };
+
+  const handleCancelEdit = () => {
+    setTempUserName(userName);
+    setIsEditing(false);
+  };
+
+  const getDistanceColor = (distance: number) => {
+    if (distance === 0) return 'bg-gray-100';
+    if (distance < 1) return 'bg-green-200';
+    if (distance < 3) return 'bg-green-400';
+    if (distance < 5) return 'bg-green-600';
+    return 'bg-green-800';
+  };
+
+  if (selectedSession) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-black text-bright-green">📅 Session Details 📅</h2>
+            <Button 
+              onClick={() => setSelectedSession(null)}
+              className="bg-forest-green text-white rounded-full p-2"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="bg-light-green rounded-2xl p-4">
+              <h3 className="font-black text-bright-green text-lg mb-2">🗺️ Session Summary 🗺️</h3>
+              <p className="font-bold text-text-dark">📅 Date: {selectedSession.date}</p>
+              <p className="font-bold text-text-dark">📏 Distance: {selectedSession.distance.toFixed(2)} km</p>
+              <p className="font-bold text-text-dark">⏰ Time: {Math.floor(selectedSession.time / 60)}:{(selectedSession.time % 60).toString().padStart(2, '0')}</p>
+              {selectedSession.feeling > 0 && (
+                <p className="font-bold text-text-dark">
+                  ⭐ Feeling: {Array(selectedSession.feeling).fill('⭐').join('')}
+                </p>
+              )}
+            </div>
+
+            {selectedSession.route.length > 1 && (
+              <div className="bg-light-green rounded-2xl p-4">
+                <h3 className="font-black text-bright-green text-lg mb-2">🗺️ Route Map 🗺️</h3>
+                <div className="bg-gradient-to-br from-blue-100 to-green-100 rounded-2xl p-4 text-center">
+                  <div className="text-4xl mb-2">📍➡️📍</div>
+                  <p className="font-bold text-bright-green">Route with {selectedSession.route.length} GPS points</p>
+                  <p className="text-sm text-text-dark">Start → Journey → Finish</p>
+                </div>
+              </div>
+            )}
+
+            {selectedSession.photos.length > 0 && (
+              <div className="bg-light-green rounded-2xl p-4">
+                <h3 className="font-black text-bright-green text-lg mb-2">📸 Photos 📸</h3>
+                <div className="space-y-2">
+                  {selectedSession.photos.map((photo, index) => (
+                    <div key={index} className="bg-white rounded-xl p-3">
+                      <p className="font-bold text-text-dark">{photo.url}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedSession.comments.length > 0 && (
+              <div className="bg-light-green rounded-2xl p-4">
+                <h3 className="font-black text-bright-green text-lg mb-2">💬 Comments 💬</h3>
+                <div className="space-y-2">
+                  {selectedSession.comments.map((comment, index) => (
+                    <div key={index} className="bg-white rounded-xl p-3">
+                      <p className="font-bold text-text-dark">"{comment.text}"</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedSession.activities.length > 0 && (
+              <div className="bg-light-green rounded-2xl p-4">
+                <h3 className="font-black text-bright-green text-lg mb-2">🎯 Activities 🎯</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedSession.activities.map((activity, index) => (
+                    <span key={index} className="bg-forest-green text-white px-3 py-1 rounded-full text-sm font-bold">
+                      {activity}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showCalendar) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-bright-green">📅 Activity Calendar 📅</h2>
+            <h2 className="text-2xl font-black text-bright-green">📅 Walking Calendar 📅</h2>
             <Button 
               onClick={() => setShowCalendar(false)}
               className="bg-forest-green text-white rounded-full px-4 py-2"
@@ -79,7 +200,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           </div>
           
           <div className="mb-4">
-            <p className="text-lg font-bold text-bright-green text-center">🔥 Current Streak: {userStats.currentStreak} days! 🔥</p>
+            <p className="text-lg font-bold text-bright-green text-center">🚶 Daily Walking Distances 🚶</p>
           </div>
 
           <div className="grid grid-cols-7 gap-2 mb-4">
@@ -94,29 +215,33 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
             {calendarData.map((day, index) => (
               <div
                 key={index}
-                className={`aspect-square rounded-2xl flex items-center justify-center text-sm font-bold transition-all hover:scale-110 ${
-                  day.streak 
-                    ? 'bg-gradient-to-br from-yellow-accent to-orange-accent text-white shadow-lg' 
-                    : day.hasActivity 
-                    ? 'bg-light-green text-bright-green' 
-                    : 'bg-gray-100 text-gray-400'
-                }`}
+                onClick={() => day.session && setSelectedSession(day.session)}
+                className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-sm font-bold transition-all hover:scale-110 cursor-pointer ${getDistanceColor(day.distance)}`}
               >
-                {day.streak && '🔥'}
-                {day.hasActivity && !day.streak && '🌿'}
-                <span className="ml-1">{day.day}</span>
+                <span className="text-white">{day.day}</span>
+                {day.distance > 0 && (
+                  <span className="text-xs text-white">{day.distance.toFixed(1)}km</span>
+                )}
               </div>
             ))}
           </div>
 
           <div className="mt-6 flex justify-center space-x-4 text-sm">
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gradient-to-br from-yellow-accent to-orange-accent rounded"></div>
-              <span className="font-bold">🔥 Streak Days</span>
+              <div className="w-4 h-4 bg-green-200 rounded"></div>
+              <span className="font-bold">< 1km</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-light-green rounded"></div>
-              <span className="font-bold">🌿 Activity Days</span>
+              <div className="w-4 h-4 bg-green-400 rounded"></div>
+              <span className="font-bold">1-3km</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-green-600 rounded"></div>
+              <span className="font-bold">3-5km</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-green-800 rounded"></div>
+              <span className="font-bold">5km+</span>
             </div>
           </div>
         </div>
@@ -145,9 +270,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
             <div className="space-y-4">
               <input
                 type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
+                value={tempUserName}
+                onChange={(e) => setTempUserName(e.target.value)}
                 className="text-2xl font-bold text-center bg-white rounded-2xl px-4 py-2 text-bright-green border-2 border-yellow-accent"
+                placeholder="Enter your name"
               />
               <textarea
                 value={userBio}
@@ -168,12 +294,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
                   </button>
                 ))}
               </div>
-              <Button
-                onClick={handleSaveProfile}
-                className="bg-yellow-accent text-bright-green font-bold px-6 py-2 rounded-full hover:scale-105 transition-transform"
-              >
-                ✅ Save Profile
-              </Button>
+              <div className="flex space-x-3 justify-center">
+                <Button
+                  onClick={handleSaveProfile}
+                  className="bg-yellow-accent text-bright-green font-bold px-6 py-2 rounded-full hover:scale-105 transition-transform"
+                >
+                  ✅ Save
+                </Button>
+                <Button
+                  onClick={handleCancelEdit}
+                  className="bg-gray-500 text-white font-bold px-6 py-2 rounded-full hover:scale-105 transition-transform"
+                >
+                  ❌ Cancel
+                </Button>
+              </div>
             </div>
           ) : (
             <>

@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare } from 'lucide-react';
+import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star } from 'lucide-react';
 
 interface Position {
   lat: number;
   lng: number;
+}
+
+interface SessionPhoto {
+  id: string;
+  url: string;
+  timestamp: number;
+}
+
+interface SessionComment {
+  id: string;
+  text: string;
+  timestamp: number;
 }
 
 const MainPage: React.FC = () => {
@@ -20,6 +32,11 @@ const MainPage: React.FC = () => {
   const [showFriendMessage, setShowFriendMessage] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState('');
   const [messageText, setMessageText] = useState('');
+  const [sessionPhotos, setSessionPhotos] = useState<SessionPhoto[]>([]);
+  const [sessionComments, setSessionComments] = useState<SessionComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [feelingRating, setFeelingRating] = useState<number>(0);
+  const [showPhotoComment, setShowPhotoComment] = useState(false);
 
   const environmentalData = {
     airQuality: 42,
@@ -110,12 +127,32 @@ const MainPage: React.FC = () => {
       );
     } else if (isSessionActive) {
       setIsSessionActive(false);
+      // Save session data
+      const sessionData = {
+        date: new Date().toDateString(),
+        distance: calculateDistance(),
+        time: sessionTime,
+        route: sessionRoute,
+        photos: sessionPhotos,
+        comments: sessionComments,
+        feeling: feelingRating,
+        activities: completedActivities
+      };
+      
+      // Store in localStorage for calendar
+      const existingSessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
+      existingSessions.push(sessionData);
+      localStorage.setItem('walkingSessions', JSON.stringify(existingSessions));
+      
       setShowSessionComplete(true);
       setTimeout(() => {
         setShowSessionComplete(false);
         setSessionTime(0);
         setCompletedActivities([]);
         setSessionRoute([]);
+        setSessionPhotos([]);
+        setSessionComments([]);
+        setFeelingRating(0);
       }, 15000);
     } else {
       setIsSessionActive(true);
@@ -159,10 +196,12 @@ const MainPage: React.FC = () => {
 
   const handleSendMessage = () => {
     if (selectedFriend && messageText.trim()) {
-      alert(`Message sent to ${selectedFriend}: "${messageText}"`);
+      alert(`✅ Message sent to ${selectedFriend}: "${messageText}"`);
       setShowFriendMessage(false);
       setMessageText('');
       setSelectedFriend('');
+    } else {
+      alert('❌ Please select a friend and write a message!');
     }
   };
 
@@ -172,7 +211,6 @@ const MainPage: React.FC = () => {
     for (let i = 1; i < sessionRoute.length; i++) {
       const prev = sessionRoute[i - 1];
       const curr = sessionRoute[i];
-      // Simple distance calculation (in km)
       const R = 6371;
       const dLat = (curr.lat - prev.lat) * Math.PI / 180;
       const dLon = (curr.lng - prev.lng) * Math.PI / 180;
@@ -185,50 +223,89 @@ const MainPage: React.FC = () => {
     return distance;
   };
 
-  if (showFriendMessage) {
+  const handleTakePhoto = () => {
+    // Simulate taking a photo
+    const newPhoto: SessionPhoto = {
+      id: Date.now().toString(),
+      url: `📸 Photo taken at ${formatTime(sessionTime)}`,
+      timestamp: Date.now()
+    };
+    setSessionPhotos([...sessionPhotos, newPhoto]);
+    alert('📸 Photo captured! ✨');
+  };
+
+  const handleAddComment = () => {
+    if (newComment.trim()) {
+      const comment: SessionComment = {
+        id: Date.now().toString(),
+        text: newComment,
+        timestamp: Date.now()
+      };
+      setSessionComments([...sessionComments, comment]);
+      setNewComment('');
+      alert('💬 Comment added! ✨');
+    }
+  };
+
+  if (showPhotoComment) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
-          <h2 className="text-2xl font-black text-bright-green mb-6 text-center">💬 Send Message 💬</h2>
+          <h2 className="text-2xl font-black text-bright-green mb-6 text-center">📸 Add Photo & Comment 📸</h2>
           
-          <div className="space-y-4">
-            <div>
-              <label className="block text-lg font-bold text-bright-green mb-2">👥 Select Friend:</label>
-              <select
-                value={selectedFriend}
-                onChange={(e) => setSelectedFriend(e.target.value)}
-                className="w-full p-3 rounded-2xl border-2 border-light-green font-bold text-bright-green"
-              >
-                <option value="">Choose a friend...</option>
-                {friends.map((friend, index) => (
-                  <option key={index} value={friend.name}>
-                    {friend.avatar} {friend.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-6">
+            <Button
+              onClick={handleTakePhoto}
+              className="w-full bg-yellow-accent text-bright-green font-black py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all"
+            >
+              <Camera className="w-6 h-6 mr-3" />
+              📸 Take Photo
+            </Button>
 
             <div>
-              <label className="block text-lg font-bold text-bright-green mb-2">✉️ Message:</label>
+              <label className="block text-lg font-bold text-bright-green mb-2">💬 Add Comment:</label>
               <textarea
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                placeholder="Hey! Want to go for a nature walk together? 🌿"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Beautiful sunset by the lake! 🌅"
                 className="w-full p-3 rounded-2xl border-2 border-light-green font-bold text-bright-green resize-none"
-                rows={4}
+                rows={3}
               />
+              <Button
+                onClick={handleAddComment}
+                className="mt-2 bg-forest-green text-white font-black py-2 rounded-2xl hover:bg-bright-green transition-all"
+              >
+                ✅ Add Comment
+              </Button>
             </div>
 
-            <div className="flex space-x-3">
+            <div>
+              <label className="block text-lg font-bold text-bright-green mb-2">⭐ How do you feel? (1-5 stars)</label>
+              <div className="flex justify-center space-x-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setFeelingRating(star)}
+                    className={`text-3xl transition-all hover:scale-110 ${
+                      star <= feelingRating ? 'text-yellow-500' : 'text-gray-300'
+                    }`}
+                  >
+                    ⭐
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <Button
-                onClick={handleSendMessage}
-                className="flex-1 bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
+                onClick={() => setShowPhotoComment(false)}
+                className="bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
               >
-                📤 Send Message
+                ✅ Done
               </Button>
               <Button
-                onClick={() => setShowFriendMessage(false)}
-                className="flex-1 bg-gray-500 text-white font-black py-3 rounded-2xl hover:bg-gray-600 transition-all"
+                onClick={() => setShowPhotoComment(false)}
+                className="bg-gray-500 text-white font-black py-3 rounded-2xl hover:bg-gray-600 transition-all"
               >
                 ❌ Cancel
               </Button>
@@ -264,13 +341,26 @@ const MainPage: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-xl font-bold text-bright-green mb-4">🌟 Benefits Gained 🌟</h3>
             <div className="grid grid-cols-2 gap-3">
-              {healthBenefits.slice(0, 4).map((benefit, index) => (
-                <div key={index} className="bg-light-green rounded-2xl p-3">
-                  <div className="text-2xl mb-1">{benefit.icon}</div>
-                  <p className="font-bold text-bright-green text-sm">{benefit.name}</p>
-                  <p className="text-xs text-text-dark">{benefit.description}</p>
-                </div>
-              ))}
+              <div className="bg-light-green rounded-2xl p-3">
+                <div className="text-2xl mb-1">🧠</div>
+                <p className="font-bold text-bright-green text-sm">Cognitive Boost</p>
+                <p className="text-xs text-text-dark">+15% focus improvement</p>
+              </div>
+              <div className="bg-light-green rounded-2xl p-3">
+                <div className="text-2xl mb-1">☀️</div>
+                <p className="font-bold text-bright-green text-sm">Vitamin D</p>
+                <p className="text-xs text-text-dark">+25% daily requirement</p>
+              </div>
+              <div className="bg-light-green rounded-2xl p-3">
+                <div className="text-2xl mb-1">😌</div>
+                <p className="font-bold text-bright-green text-sm">Stress Relief</p>
+                <p className="text-xs text-text-dark">-30% cortisol levels</p>
+              </div>
+              <div className="bg-light-green rounded-2xl p-3">
+                <div className="text-2xl mb-1">😊</div>
+                <p className="font-bold text-bright-green text-sm">Mood Enhancement</p>
+                <p className="text-xs text-text-dark">+20% serotonin production</p>
+              </div>
             </div>
           </div>
 
@@ -359,16 +449,21 @@ const MainPage: React.FC = () => {
             <Wind className="w-6 h-6 mr-2" />
             🌤️ Today's Conditions 🌤️
           </h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
               <Thermometer className="w-8 h-8 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-2xl text-bright-green">{environmentalData.temperature}°C</p>
-              <p className="font-bold text-text-dark text-sm">Perfect for walking! 🚶‍♂️</p>
+              <p className="font-black text-2xl text-bright-green">22°C</p>
+              <p className="font-bold text-text-dark text-sm">Perfect! 🚶‍♂️</p>
             </div>
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
               <Eye className="w-8 h-8 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-2xl text-bright-green">{environmentalData.airQuality} AQI</p>
+              <p className="font-black text-2xl text-bright-green">42 AQI</p>
               <p className="font-bold text-text-dark text-sm">Air Quality 🌬️</p>
+            </div>
+            <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
+              <Wind className="w-8 h-8 text-forest-green mx-auto mb-2" />
+              <p className="font-black text-2xl text-bright-green">8 km/h</p>
+              <p className="font-bold text-text-dark text-sm">Wind 💨</p>
             </div>
           </div>
         </div>
@@ -382,7 +477,7 @@ const MainPage: React.FC = () => {
               <MapPin className="w-6 h-6 mr-2" />
               🗺️ Live Route Tracking 🗺️
             </h2>
-            <div className="bg-gradient-to-br from-light-green to-blue-100 rounded-2xl p-6 text-center">
+            <div className="bg-gradient-to-br from-light-green to-blue-100 rounded-2xl p-6 text-center mb-4">
               <div className="text-4xl mb-3">📍🛤️📍</div>
               <p className="font-black text-bright-green text-lg">Tracking your journey...</p>
               <p className="font-bold text-text-dark">Distance: {calculateDistance().toFixed(2)} km</p>
@@ -393,6 +488,14 @@ const MainPage: React.FC = () => {
                 </div>
               )}
             </div>
+            
+            <Button
+              onClick={() => setShowPhotoComment(true)}
+              className="w-full bg-yellow-accent text-bright-green font-black py-3 rounded-2xl hover:bg-bright-green hover:text-white transition-all"
+            >
+              <Camera className="w-6 h-6 mr-3" />
+              📸 Add Photo & Comment
+            </Button>
           </div>
         </div>
       )}

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trophy, Medal, Award, Crown, Users, MessageCircle, MapPin, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -7,6 +6,9 @@ const LeaderboardPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<'friends' | 'local' | 'global'>('global');
   const [showProfile, setShowProfile] = useState<number | null>(null);
   const [joinedActivities, setJoinedActivities] = useState<number[]>([]);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState('');
+  const [messageText, setMessageText] = useState('');
 
   const leaderboardData = [
     { rank: 1, name: 'Alex Green', coins: 2847, avatar: '🌿', badge: 'Forest Guardian', isTop: true, location: '0.5km away', status: 'online' },
@@ -23,6 +25,12 @@ const LeaderboardPage: React.FC = () => {
     { id: 3, type: 'Jogging', title: 'Evening River Run', time: '6:00 PM', participants: 15, difficulty: 'Hard', location: 'Riverside Trail' },
   ];
 
+  // Load joined activities from localStorage on component mount
+  useEffect(() => {
+    const savedJoinedActivities = JSON.parse(localStorage.getItem('joinedActivityIds') || '[]');
+    setJoinedActivities(savedJoinedActivities);
+  }, []);
+
   const filterLabels = {
     friends: '👥 Friends',
     local: '📍 Local',
@@ -30,18 +38,43 @@ const LeaderboardPage: React.FC = () => {
   };
 
   const handleJoinActivity = (activityId: number) => {
+    let updatedJoinedActivities;
+    
     if (joinedActivities.includes(activityId)) {
-      setJoinedActivities(joinedActivities.filter(id => id !== activityId));
+      updatedJoinedActivities = joinedActivities.filter(id => id !== activityId);
     } else {
-      setJoinedActivities([...joinedActivities, activityId]);
-      // Store in localStorage for profile page
-      const existing = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
+      updatedJoinedActivities = [...joinedActivities, activityId];
+      
+      // Store full activity details for profile page
       const activity = groupActivities.find(a => a.id === activityId);
-      if (activity && !existing.find((a: any) => a.id === activityId)) {
-        existing.push(activity);
-        localStorage.setItem('joinedActivities', JSON.stringify(existing));
+      if (activity) {
+        const existing = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
+        if (!existing.find((a: any) => a.id === activityId)) {
+          existing.push(activity);
+          localStorage.setItem('joinedActivities', JSON.stringify(existing));
+        }
       }
     }
+    
+    setJoinedActivities(updatedJoinedActivities);
+    // Save just the IDs for quick lookup
+    localStorage.setItem('joinedActivityIds', JSON.stringify(updatedJoinedActivities));
+  };
+
+  const handleSendMessage = () => {
+    if (selectedUser && messageText.trim()) {
+      alert(`✅ Message sent to ${selectedUser}: "${messageText}"`);
+      setShowMessageModal(false);
+      setMessageText('');
+      setSelectedUser('');
+    } else {
+      alert('❌ Please write a message!');
+    }
+  };
+
+  const openMessageModal = (userName: string) => {
+    setSelectedUser(userName);
+    setShowMessageModal(true);
   };
 
   const getRankIcon = (rank: number) => {
@@ -126,6 +159,48 @@ const LeaderboardPage: React.FC = () => {
     );
   }
 
+  if (showMessageModal) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
+          <h2 className="text-2xl font-black text-bright-green mb-6 text-center">💬 Send Message 💬</h2>
+          
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-lg font-bold text-bright-green">Sending to: {selectedUser} ✨</p>
+            </div>
+
+            <div>
+              <label className="block text-lg font-bold text-bright-green mb-2">✉️ Message:</label>
+              <textarea
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="Hey! Want to go for a nature walk together? 🌿"
+                className="w-full p-3 rounded-2xl border-2 border-light-green font-bold text-bright-green resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                onClick={handleSendMessage}
+                className="flex-1 bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
+              >
+                📤 Send Message
+              </Button>
+              <Button
+                onClick={() => setShowMessageModal(false)}
+                className="flex-1 bg-gray-500 text-white font-black py-3 rounded-2xl hover:bg-gray-600 transition-all"
+              >
+                ❌ Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
       {/* Header */}
@@ -171,7 +246,7 @@ const LeaderboardPage: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
           <h2 className="text-2xl font-black text-bright-green mb-4 flex items-center">
             <Users className="w-6 h-6 mr-2" />
-            🚶 Group Activities
+            🚶 Group Activities 🚶
           </h2>
           <div className="space-y-3">
             {groupActivities.map((activity) => (
@@ -190,7 +265,7 @@ const LeaderboardPage: React.FC = () => {
                   </div>
                   <Button 
                     onClick={() => handleJoinActivity(activity.id)}
-                    className={`font-black rounded-full px-6 py-2 transition-all transform hover:scale-105 ${
+                    className={`font-black rounded-full px-6 py-2 transition-all hover:scale-105 ${
                       joinedActivities.includes(activity.id)
                         ? 'bg-bright-green text-white'
                         : 'bg-yellow-accent text-bright-green hover:bg-bright-green hover:text-white'
@@ -258,7 +333,7 @@ const LeaderboardPage: React.FC = () => {
             <div 
               key={user.rank}
               onClick={() => !user.isUser && setShowProfile(user.rank)}
-              className={`rounded-3xl p-4 border-3 transition-all transform hover:scale-102 cursor-pointer ${
+              className={`rounded-3xl p-4 border-3 transition-all hover:scale-102 cursor-pointer ${
                 user.isUser 
                   ? 'bg-gradient-to-r from-yellow-accent to-orange-accent border-forest-green shadow-xl' 
                   : user.isTop
@@ -296,7 +371,13 @@ const LeaderboardPage: React.FC = () => {
                   </div>
                   {!user.isUser && (
                     <div className="flex space-x-1 mt-2">
-                      <button className="bg-forest-green text-white rounded-full p-2 hover:scale-110 transition-transform">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openMessageModal(user.name);
+                        }}
+                        className="bg-forest-green text-white rounded-full p-2 hover:scale-110 transition-transform"
+                      >
                         <MessageCircle className="w-4 h-4" />
                       </button>
                       <button className="bg-yellow-accent text-bright-green rounded-full p-2 hover:scale-110 transition-transform">
