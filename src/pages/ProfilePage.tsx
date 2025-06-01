@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, LogOut, Star, Calendar, Target, Trophy, Edit, MessageSquare, Users, X } from 'lucide-react';
@@ -229,7 +230,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           <div className="mt-6 flex justify-center space-x-4 text-sm">
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-green-200 rounded"></div>
-              <span className="font-bold">< 1km</span>
+              <span className="font-bold">Less than 1km</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-green-400 rounded"></div>
@@ -389,7 +390,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
             ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Stats Grid */}
       <div className="px-6 mb-8">
