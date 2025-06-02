@@ -10,9 +10,10 @@ interface Friend {
 
 interface FriendsSectionProps {
   friends: Friend[];
+  onMessageClick?: (friend: Friend) => void;
 }
 
-const FriendsSection: React.FC<FriendsSectionProps> = ({ friends }) => {
+const FriendsSection: React.FC<FriendsSectionProps> = ({ friends, onMessageClick }) => {
   return (
     <div className="px-6 mb-8">
       <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-bright-green">
@@ -32,7 +33,10 @@ const FriendsSection: React.FC<FriendsSectionProps> = ({ friends }) => {
                   <p className="text-xs text-forest-green">{friend.lastSeen}</p>
                 </div>
               </div>
-              <button className="bg-forest-green text-white px-3 py-1 rounded-full text-xs font-bold">
+              <button 
+                onClick={() => onMessageClick?.(friend)}
+                className="bg-forest-green text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-bright-green transition-all"
+              >
                 💬 Message
               </button>
             </div>
