@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star } from 'lucide-react';
+import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send } from 'lucide-react';
 
 interface Position {
   lat: number;
@@ -37,6 +37,7 @@ const MainPage: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [feelingRating, setFeelingRating] = useState<number>(0);
   const [showPhotoComment, setShowPhotoComment] = useState(false);
+  const [showMessaging, setShowMessaging] = useState(false);
 
   const environmentalData = {
     airQuality: 42,
@@ -189,7 +190,7 @@ const MainPage: React.FC = () => {
       },
       (error) => {
         console.error('Location permission error:', error);
-        alert('📍 Please enable location access in your browser settings to track your outdoor sessions. 🌿');
+        alert('📍 Please enable location access in your browser settings to track your outdoor sessions.');
       }
     );
   };
@@ -197,7 +198,7 @@ const MainPage: React.FC = () => {
   const handleSendMessage = () => {
     if (selectedFriend && messageText.trim()) {
       alert(`✅ Message sent to ${selectedFriend}: "${messageText}"`);
-      setShowFriendMessage(false);
+      setShowMessaging(false);
       setMessageText('');
       setSelectedFriend('');
     } else {
@@ -246,6 +247,66 @@ const MainPage: React.FC = () => {
       alert('💬 Comment added! ✨');
     }
   };
+
+  // Messaging Component
+  if (showMessaging) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
+          <h2 className="text-2xl font-black text-bright-green mb-6 text-center">💬 Send Message 💬</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-lg font-bold text-bright-green mb-3">👥 Select Friend:</label>
+              <div className="grid grid-cols-2 gap-3">
+                {friends.map((friend, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedFriend(friend.name)}
+                    className={`p-3 rounded-2xl border-2 transition-all ${
+                      selectedFriend === friend.name
+                        ? 'bg-forest-green text-white border-forest-green'
+                        : 'bg-light-green border-bright-green text-bright-green hover:bg-bright-green hover:text-white'
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">{friend.avatar}</div>
+                    <div className="text-sm font-bold">{friend.name}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-lg font-bold text-bright-green mb-2">💬 Your Message:</label>
+              <textarea
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="Hey! Want to go for a nature walk together? 🌿"
+                className="w-full p-3 rounded-2xl border-2 border-light-green font-bold text-bright-green resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={handleSendMessage}
+                className="bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
+              >
+                <Send className="w-5 h-5 mr-2" />
+                ✅ Send Message
+              </Button>
+              <Button
+                onClick={() => setShowMessaging(false)}
+                className="bg-gray-500 text-white font-black py-3 rounded-2xl hover:bg-gray-600 transition-all"
+              >
+                ❌ Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showPhotoComment) {
     return (
@@ -431,13 +492,18 @@ const MainPage: React.FC = () => {
               alt="Leaf" 
               className="w-12 h-12"
             />
-            <div>
-              <h1 className="text-3xl font-nunito font-black text-white">🌿 NatureCapture</h1>
-              <p className="text-light-green font-bold text-lg">Ready for adventure? 🌟</p>
+            <div className="mt-2">
+              <h1 className="text-2xl font-nunito font-black text-white">NatureCapture</h1>
+              <p className="text-light-green font-bold text-sm">Ready for adventure? 🌟</p>
             </div>
           </div>
-          <div className="bg-yellow-accent rounded-full px-4 py-2">
-            <span className="font-black text-bright-green text-lg">🪙 247</span>
+          <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <span className="text-yellow-500 text-sm font-black">🪙</span>
+              </div>
+              <span className="font-black text-white text-lg">247</span>
+            </div>
           </div>
         </div>
       </div>
@@ -445,25 +511,25 @@ const MainPage: React.FC = () => {
       {/* Environmental Data */}
       <div className="px-6 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
-          <h2 className="text-2xl font-black text-bright-green mb-4 flex items-center">
-            <Wind className="w-6 h-6 mr-2" />
+          <h2 className="text-xl font-black text-bright-green mb-4 flex items-center">
+            <Wind className="w-5 h-5 mr-2" />
             🌤️ Today's Conditions 🌤️
           </h2>
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-              <Thermometer className="w-8 h-8 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-2xl text-bright-green">22°C</p>
-              <p className="font-bold text-text-dark text-sm">Perfect! 🚶‍♂️</p>
+              <Thermometer className="w-6 h-6 text-forest-green mx-auto mb-2" />
+              <p className="font-black text-xl text-bright-green">22°C</p>
+              <p className="font-bold text-text-dark text-xs">Perfect! 🚶‍♂️</p>
             </div>
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-              <Eye className="w-8 h-8 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-2xl text-bright-green">42 AQI</p>
-              <p className="font-bold text-text-dark text-sm">Air Quality 🌬️</p>
+              <Eye className="w-6 h-6 text-forest-green mx-auto mb-2" />
+              <p className="font-black text-lg text-bright-green">42 AQI</p>
+              <p className="font-bold text-text-dark text-xs">Air Quality 🌬️</p>
             </div>
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-              <Wind className="w-8 h-8 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-2xl text-bright-green">8 km/h</p>
-              <p className="font-bold text-text-dark text-sm">Wind 💨</p>
+              <Wind className="w-6 h-6 text-forest-green mx-auto mb-2" />
+              <p className="font-black text-xl text-bright-green">8 km/h</p>
+              <p className="font-bold text-text-dark text-xs">Wind 💨</p>
             </div>
           </div>
         </div>
@@ -551,8 +617,8 @@ const MainPage: React.FC = () => {
                 <h2 className="text-4xl font-nunito font-black text-bright-green">
                   🌈 Ready to Explore? 🌈
                 </h2>
-                <p className="text-text-dark text-xl font-bold">
-                  Start your nature journey and earn NatureCoins! 🪙✨
+                <p className="text-text-dark text-lg font-bold">
+                  Start your nature time and earn NatureCoins! 🪙✨
                 </p>
               </div>
             )}
@@ -663,7 +729,7 @@ const MainPage: React.FC = () => {
       {/* Messaging Button */}
       <div className="px-6 mb-6">
         <Button 
-          onClick={() => setShowFriendMessage(true)}
+          onClick={() => setShowMessaging(true)}
           className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-black py-4 rounded-2xl text-lg hover:scale-105 transition-transform"
         >
           <MessageSquare className="w-6 h-6 mr-3" />

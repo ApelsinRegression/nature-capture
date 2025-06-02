@@ -30,7 +30,7 @@ const Leaderboard: React.FC = () => {
         {leaderboardData.map((user) => (
           <div 
             key={user.rank}
-            className={`flex items-center justify-between p-4 rounded-2xl ${
+            className={`flex items-center justify-between p-4 rounded-2xl relative ${
               user.isUser 
                 ? 'bg-gradient-to-r from-yellow-accent to-orange-accent border-4 border-forest-green' 
                 : 'bg-light-green'
@@ -41,7 +41,9 @@ const Leaderboard: React.FC = () => {
                 {getRankIcon(user.rank)}
               </div>
               
-              <div className="text-3xl">{user.avatar}</div>
+              <div className="relative">
+                <div className="text-3xl relative z-10">{user.avatar}</div>
+              </div>
               
               <div>
                 <p className={`font-bold text-lg ${user.isUser ? 'text-white' : 'text-bright-green'}`}>
