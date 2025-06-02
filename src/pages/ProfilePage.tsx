@@ -9,6 +9,8 @@ import ProfileActions from '../components/profile/ProfileActions';
 import CalendarView from '../components/profile/CalendarView';
 import SessionDetails from '../components/profile/SessionDetails';
 import MessageHistory from '../components/messaging/MessageHistory';
+import Button from '../components/Button';
+import Send from '../components/Send';
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -31,6 +33,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showMessageHistory, setShowMessageHistory] = useState(false);
+  const [showMessaging, setShowMessaging] = useState(false);
   const [joinedActivities, setJoinedActivities] = useState<any[]>([]);
   const [walkingSessions, setWalkingSessions] = useState<WalkingSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<WalkingSession | null>(null);
@@ -129,6 +132,57 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     );
   }
 
+  if (showMessaging) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
+          <h2 className="text-2xl font-black text-bright-green mb-6 text-center">💬 Send Message 💬</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-lg font-bold text-bright-green mb-3">👥 Select Friend:</label>
+              <div className="grid grid-cols-2 gap-3">
+                {friends.map((friend, index) => (
+                  <button
+                    key={index}
+                    className="p-3 rounded-2xl border-2 bg-light-green border-bright-green text-bright-green hover:bg-bright-green hover:text-white transition-all"
+                  >
+                    <div className="text-2xl mb-1">{friend.emoji}</div>
+                    <div className="text-sm font-bold">{friend.name}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-lg font-bold text-bright-green mb-2">💬 Your Message:</label>
+              <textarea
+                placeholder="Hey! Want to go for a nature walk together? 🌿"
+                className="w-full p-3 rounded-2xl border-2 border-light-green font-bold text-bright-green resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                className="bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
+              >
+                <Send className="w-5 h-5 mr-2" />
+                ✅ Send Message
+              </Button>
+              <Button
+                onClick={() => setShowMessaging(false)}
+                className="bg-gray-500 text-white font-black py-3 rounded-2xl hover:bg-gray-600 transition-all"
+              >
+                ❌ Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green pb-6">
       <ProfileHeader
@@ -166,6 +220,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
       <ProfileActions 
         onCalendarClick={() => setShowCalendar(true)}
         onMessageHistoryClick={() => setShowMessageHistory(true)}
+        onMessageFriendsClick={() => setShowMessaging(true)}
         onLogout={onLogout}
       />
     </div>

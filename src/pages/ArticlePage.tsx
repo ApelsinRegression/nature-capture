@@ -58,7 +58,7 @@ const ArticlePage: React.FC = () => {
               className="w-16 h-16"
             />
           </div>
-          <h1 className="text-3xl font-nunito font-bold text-white mb-2">
+          <h1 className="text-2xl font-nunito font-black text-white mb-2">
             📚 Nature Wisdom
           </h1>
           <p className="text-light-green">Discover the science behind nature's healing power</p>

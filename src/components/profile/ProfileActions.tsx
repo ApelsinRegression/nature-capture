@@ -1,17 +1,19 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Calendar, MessageSquare } from 'lucide-react';
+import { LogOut, Calendar, MessageSquare, Send } from 'lucide-react';
 
 interface ProfileActionsProps {
   onCalendarClick: () => void;
   onMessageHistoryClick: () => void;
+  onMessageFriendsClick: () => void;
   onLogout: () => void;
 }
 
 const ProfileActions: React.FC<ProfileActionsProps> = ({ 
   onCalendarClick, 
   onMessageHistoryClick,
+  onMessageFriendsClick,
   onLogout 
 }) => {
   return (
@@ -35,6 +37,14 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
           >
             <MessageSquare className="w-5 h-5 mr-3" />
             📨 Message History
+          </Button>
+
+          <Button
+            onClick={onMessageFriendsClick}
+            className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-bold py-4 rounded-2xl text-base shadow-lg"
+          >
+            <Send className="w-5 h-5 mr-3" />
+            💬 Send Message to Friends
           </Button>
           
           <Button

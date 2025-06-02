@@ -518,17 +518,17 @@ const MainPage: React.FC = () => {
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
               <Thermometer className="w-6 h-6 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-xl text-bright-green">22°C</p>
+              <p className="font-black text-lg text-bright-green">22°C</p>
               <p className="font-bold text-text-dark text-xs">Perfect! 🚶‍♂️</p>
             </div>
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
               <Eye className="w-6 h-6 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-lg text-bright-green">42 AQI</p>
+              <p className="font-black text-sm text-bright-green">42 AQI</p>
               <p className="font-bold text-text-dark text-xs">Air Quality 🌬️</p>
             </div>
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
               <Wind className="w-6 h-6 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-xl text-bright-green">8 km/h</p>
+              <p className="font-black text-sm text-bright-green">8 km/h</p>
               <p className="font-bold text-text-dark text-xs">Wind 💨</p>
             </div>
           </div>
@@ -625,7 +625,7 @@ const MainPage: React.FC = () => {
             
             <Button
               onClick={handleStartStop}
-              className={`w-full mt-8 text-3xl font-black py-8 rounded-3xl shadow-2xl transform transition-all hover:scale-105 ${
+              className={`w-full mt-8 text-xl font-black py-8 rounded-3xl shadow-2xl transform transition-all hover:scale-105 ${
                 isSessionActive
                   ? 'bg-red-500 hover:bg-red-600 text-white'
                   : 'bg-gradient-to-r from-forest-green to-bright-green text-white hover:shadow-2xl'
