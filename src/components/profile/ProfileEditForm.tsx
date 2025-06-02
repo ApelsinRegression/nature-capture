@@ -31,13 +31,13 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         type="text"
         value={tempUserName}
         onChange={(e) => onNameChange(e.target.value)}
-        className="text-2xl font-bold text-center bg-white rounded-2xl px-4 py-2 text-bright-green border-2 border-yellow-accent"
+        className="text-xl font-bold text-center bg-white rounded-2xl px-4 py-2 text-bright-green border-2 border-yellow-accent w-full"
         placeholder="Enter your name"
       />
       <textarea
         value={userBio}
         onChange={(e) => onBioChange(e.target.value)}
-        className="w-full text-center bg-white rounded-2xl px-4 py-2 text-bright-green border-2 border-yellow-accent resize-none"
+        className="w-full text-center bg-white rounded-2xl px-4 py-2 text-bright-green border-2 border-yellow-accent resize-none text-sm"
         rows={2}
       />
       <div className="flex flex-wrap justify-center gap-2 max-w-xs mx-auto">
@@ -45,7 +45,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
           <button
             key={index}
             onClick={() => onEmojiSelect(emoji)}
-            className={`text-2xl p-2 rounded-full transition-all hover:scale-110 ${
+            className={`text-2xl p-2 rounded-full ${
               selectedEmoji === emoji ? 'bg-yellow-accent scale-125' : 'bg-white'
             }`}
           >
@@ -56,13 +56,13 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       <div className="flex space-x-3 justify-center">
         <Button
           onClick={onSave}
-          className="bg-yellow-accent text-bright-green font-bold px-6 py-2 rounded-full hover:scale-105 transition-transform"
+          className="bg-yellow-accent text-bright-green font-bold px-6 py-2 rounded-full"
         >
           ✅ Save
         </Button>
         <Button
           onClick={onCancel}
-          className="bg-gray-500 text-white font-bold px-6 py-2 rounded-full hover:scale-105 transition-transform"
+          className="bg-gray-500 text-white font-bold px-6 py-2 rounded-full"
         >
           ❌ Cancel
         </Button>

@@ -33,7 +33,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
           <Button
             onClick={onEditClick}
-            className="absolute -bottom-2 right-1/2 transform translate-x-1/2 bg-yellow-accent text-bright-green rounded-full p-2 hover:scale-110 transition-transform"
+            className="absolute -bottom-2 right-1/2 transform translate-x-1/2 bg-yellow-accent text-bright-green rounded-full p-2"
           >
             <Edit className="w-4 h-4" />
           </Button>
@@ -41,17 +41,17 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         
         {!isEditing && (
           <>
-            <h1 className="text-3xl font-nunito font-bold text-white mb-2">
+            <h1 className="text-2xl font-nunito font-bold text-white mb-2 break-words">
               {userName} ✨
             </h1>
-            <p className="text-light-green text-lg mb-2">{userStats.level} 🎯</p>
-            <p className="text-white text-sm font-semibold">{userBio}</p>
+            <p className="text-light-green text-base mb-2">{userStats.level} 🎯</p>
+            <p className="text-white text-xs font-semibold break-words px-2">{userBio}</p>
             <div className="flex justify-center space-x-4 mt-4">
-              <div className="bg-yellow-accent rounded-full px-4 py-2">
-                <span className="font-bold text-bright-green">🪙 {userStats.coins}</span>
+              <div className="bg-yellow-accent rounded-full px-3 py-1">
+                <span className="font-bold text-bright-green text-sm">🪙 {userStats.coins}</span>
               </div>
-              <div className="bg-white rounded-full px-4 py-2">
-                <span className="font-bold text-forest-green">#{userStats.rank} 🏆</span>
+              <div className="bg-white rounded-full px-3 py-1">
+                <span className="font-bold text-forest-green text-sm">#{userStats.rank} 🏆</span>
               </div>
             </div>
           </>

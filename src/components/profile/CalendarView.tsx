@@ -43,7 +43,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
       <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-bright-green">📅 Walking Calendar 📅</h2>
+          <h2 className="text-lg font-black text-bright-green">📅 Walking Calendar 📅</h2>
           <Button 
             onClick={onBackClick}
             className="bg-forest-green text-white rounded-full px-4 py-2"
@@ -53,12 +53,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
         
         <div className="mb-4">
-          <p className="text-lg font-bold text-bright-green text-center">🚶 Daily Walking Distances 🚶</p>
+          <p className="text-base font-bold text-bright-green text-center">🚶 Daily Walking Distances 🚶</p>
         </div>
 
         <div className="grid grid-cols-7 gap-2 mb-4">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-            <div key={index} className="text-center font-bold text-bright-green p-2">
+            <div key={index} className="text-center font-bold text-bright-green p-2 text-sm">
               {day}
             </div>
           ))}
@@ -69,9 +69,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             <div
               key={index}
               onClick={() => day.session && onSessionClick(day.session)}
-              className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-sm font-bold transition-all hover:scale-110 cursor-pointer ${getDistanceColor(day.distance)}`}
+              className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-sm font-bold cursor-pointer ${getDistanceColor(day.distance)}`}
             >
-              <span className="text-white">{day.day}</span>
+              <span className="text-white text-xs">{day.day}</span>
               {day.distance > 0 && (
                 <span className="text-xs text-white">{day.distance.toFixed(1)}km</span>
               )}
@@ -79,21 +79,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           ))}
         </div>
 
-        <div className="mt-6 flex justify-center space-x-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-200 rounded"></div>
+        <div className="mt-6 flex justify-center space-x-2 text-xs">
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-green-200 rounded"></div>
             <span className="font-bold">Less than 1km</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-400 rounded"></div>
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-green-400 rounded"></div>
             <span className="font-bold">1-3km</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-600 rounded"></div>
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-green-600 rounded"></div>
             <span className="font-bold">3-5km</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-800 rounded"></div>
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-green-800 rounded"></div>
             <span className="font-bold">5km+</span>
           </div>
         </div>
