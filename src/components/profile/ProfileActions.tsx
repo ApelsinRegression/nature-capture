@@ -1,14 +1,19 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, LogOut, Calendar } from 'lucide-react';
+import { LogOut, Calendar, MessageSquare } from 'lucide-react';
 
 interface ProfileActionsProps {
   onCalendarClick: () => void;
+  onMessageHistoryClick: () => void;
   onLogout: () => void;
 }
 
-const ProfileActions: React.FC<ProfileActionsProps> = ({ onCalendarClick, onLogout }) => {
+const ProfileActions: React.FC<ProfileActionsProps> = ({ 
+  onCalendarClick, 
+  onMessageHistoryClick,
+  onLogout 
+}) => {
   return (
     <div className="px-6 mb-8">
       <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
@@ -23,10 +28,13 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ onCalendarClick, onLogo
             <Calendar className="w-5 h-5 mr-3" />
             📅 View Walking Calendar
           </Button>
-          
-          <Button className="w-full bg-gradient-to-r from-yellow-accent to-orange-accent text-bright-green font-bold py-4 rounded-2xl text-base shadow-lg">
-            <Settings className="w-5 h-5 mr-3" />
-            ⚙️ Settings
+
+          <Button
+            onClick={onMessageHistoryClick}
+            className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white font-bold py-4 rounded-2xl text-base shadow-lg"
+          >
+            <MessageSquare className="w-5 h-5 mr-3" />
+            📨 Message History
           </Button>
           
           <Button

@@ -4,11 +4,9 @@ import { Button } from '@/components/ui/button';
 
 interface ProfileEditFormProps {
   tempUserName: string;
-  userBio: string;
   selectedEmoji: string;
   natureEmojis: string[];
   onNameChange: (name: string) => void;
-  onBioChange: (bio: string) => void;
   onEmojiSelect: (emoji: string) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -16,11 +14,9 @@ interface ProfileEditFormProps {
 
 const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
   tempUserName,
-  userBio,
   selectedEmoji,
   natureEmojis,
   onNameChange,
-  onBioChange,
   onEmojiSelect,
   onSave,
   onCancel
@@ -32,13 +28,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         value={tempUserName}
         onChange={(e) => onNameChange(e.target.value)}
         className="text-xl font-bold text-center bg-white rounded-2xl px-4 py-2 text-bright-green border-2 border-yellow-accent w-full"
-        placeholder="Enter your name"
-      />
-      <textarea
-        value={userBio}
-        onChange={(e) => onBioChange(e.target.value)}
-        className="w-full text-center bg-white rounded-2xl px-4 py-2 text-bright-green border-2 border-yellow-accent resize-none text-sm"
-        rows={2}
+        placeholder="Enter your username"
       />
       <div className="flex flex-wrap justify-center gap-2 max-w-xs mx-auto">
         {natureEmojis.map((emoji, index) => (

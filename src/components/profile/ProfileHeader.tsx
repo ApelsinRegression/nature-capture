@@ -6,7 +6,6 @@ import { Edit } from 'lucide-react';
 interface ProfileHeaderProps {
   userName: string;
   selectedEmoji: string;
-  userBio: string;
   userStats: {
     level: string;
     coins: number;
@@ -19,7 +18,6 @@ interface ProfileHeaderProps {
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   userName,
   selectedEmoji,
-  userBio,
   userStats,
   isEditing,
   onEditClick
@@ -44,8 +42,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <h1 className="text-2xl font-nunito font-bold text-white mb-2 break-words">
               {userName} ✨
             </h1>
-            <p className="text-light-green text-base mb-2">{userStats.level} 🎯</p>
-            <p className="text-white text-xs font-semibold break-words px-2">{userBio}</p>
+            <p className="text-light-green text-base mb-4">{userStats.level} 🎯</p>
             <div className="flex justify-center space-x-4 mt-4">
               <div className="bg-yellow-accent rounded-full px-3 py-1">
                 <span className="font-bold text-bright-green text-sm">🪙 {userStats.coins}</span>

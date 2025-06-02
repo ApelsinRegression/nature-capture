@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileEditForm from '../components/profile/ProfileEditForm';
@@ -9,6 +8,7 @@ import ProfileBadges from '../components/profile/ProfileBadges';
 import ProfileActions from '../components/profile/ProfileActions';
 import CalendarView from '../components/profile/CalendarView';
 import SessionDetails from '../components/profile/SessionDetails';
+import MessageHistory from '../components/messaging/MessageHistory';
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -26,11 +26,11 @@ interface WalkingSession {
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
-  const [userName, setUserName] = useState(localStorage.getItem('userName') || 'Nature Explorer');
-  const [userBio, setUserBio] = useState('🌱 Nature enthusiast spreading green vibes! 🌿');
+  const [userName, setUserName] = useState(localStorage.getItem('userName') || 'amirdayirov09');
   const [selectedEmoji, setSelectedEmoji] = useState('🌱');
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showMessageHistory, setShowMessageHistory] = useState(false);
   const [joinedActivities, setJoinedActivities] = useState<any[]>([]);
   const [walkingSessions, setWalkingSessions] = useState<WalkingSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<WalkingSession | null>(null);
@@ -121,12 +121,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     );
   }
 
+  if (showMessageHistory) {
+    return (
+      <MessageHistory 
+        onBack={() => setShowMessageHistory(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green pb-6">
       <ProfileHeader
         userName={userName}
         selectedEmoji={selectedEmoji}
-        userBio={userBio}
         userStats={userStats}
         isEditing={isEditing}
         onEditClick={() => setIsEditing(!isEditing)}
@@ -137,11 +144,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-3xl">
             <ProfileEditForm
               tempUserName={tempUserName}
-              userBio={userBio}
               selectedEmoji={selectedEmoji}
               natureEmojis={natureEmojis}
               onNameChange={setTempUserName}
-              onBioChange={setUserBio}
               onEmojiSelect={setSelectedEmoji}
               onSave={handleSaveProfile}
               onCancel={handleCancelEdit}
@@ -160,6 +165,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
       
       <ProfileActions 
         onCalendarClick={() => setShowCalendar(true)}
+        onMessageHistoryClick={() => setShowMessageHistory(true)}
         onLogout={onLogout}
       />
     </div>
