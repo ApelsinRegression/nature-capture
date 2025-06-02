@@ -9,8 +9,8 @@ import ProfileActions from '../components/profile/ProfileActions';
 import CalendarView from '../components/profile/CalendarView';
 import SessionDetails from '../components/profile/SessionDetails';
 import MessageHistory from '../components/messaging/MessageHistory';
-import Button from '../components/Button';
-import Send from '../components/Send';
+import { Button } from '@/components/ui/button';
+import { Send } from 'lucide-react';
 
 interface ProfilePageProps {
   onLogout: () => void;
