@@ -44,6 +44,7 @@ const MainPage: React.FC = () => {
   const [showPhotoComment, setShowPhotoComment] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
+  const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
 
   const environmentalData = {
     airQuality: 42,
@@ -92,13 +93,19 @@ const MainPage: React.FC = () => {
   }, [isSessionActive]);
 
   useEffect(() => {
+    // Auto-request location permission on component mount
+    if (!locationPermissionRequested) {
+      requestLocationPermission();
+      setLocationPermissionRequested(true);
+    }
+    
     // Cleanup location watch when component unmounts
     return () => {
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [watchId]);
+  }, [watchId, locationPermissionRequested]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -108,16 +115,16 @@ const MainPage: React.FC = () => {
 
   const startLocationTracking = () => {
     if ('geolocation' in navigator) {
+      console.log('Starting location tracking...');
       const id = navigator.geolocation.watchPosition(
         (position) => {
           const newPos = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
+          console.log('Location updated:', newPos);
           setCurrentPosition(newPos);
           setLocation({ granted: true });
-          
-          console.log('Location updated:', newPos);
           
           // Add to route if session is active
           if (isSessionActive) {
@@ -126,22 +133,21 @@ const MainPage: React.FC = () => {
         },
         (error) => {
           console.error('Location tracking error:', error);
-          setLocation({ granted: false });
+          // Don't set granted to false here, just log the error
         },
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 60000
+          maximumAge: 30000
         }
       );
       
       setWatchId(id);
-    } else {
-      alert('❌ Geolocation is not supported by this browser.');
     }
   };
 
   const requestLocationPermission = () => {
+    console.log('Requesting location permission...');
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -149,6 +155,7 @@ const MainPage: React.FC = () => {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
+          console.log('Location permission granted:', newPos);
           setCurrentPosition(newPos);
           setLocation({ granted: true });
           
@@ -157,7 +164,9 @@ const MainPage: React.FC = () => {
         },
         (error) => {
           console.error('Location permission error:', error);
-          alert('📍 Please enable location access in your browser settings to track your outdoor sessions.');
+          setLocation({ granted: false });
+          // Show user-friendly message
+          alert('📍 Location access is needed to track your outdoor sessions. Please enable location in your browser settings and refresh the page.');
         },
         {
           enableHighAccuracy: true,
@@ -171,13 +180,17 @@ const MainPage: React.FC = () => {
   };
 
   const handleStartStop = () => {
+    console.log('Handle start/stop clicked. Location granted:', location.granted, 'Session active:', isSessionActive);
+    
     if (!location.granted && !isSessionActive) {
       // Request location first
+      console.log('Requesting location permission...');
       requestLocationPermission();
       return;
     }
     
     if (isSessionActive) {
+      console.log('Stopping session...');
       setIsSessionActive(false);
       // Save session data
       const sessionData = {
@@ -208,6 +221,7 @@ const MainPage: React.FC = () => {
       }, 15000);
     } else {
       // Start session
+      console.log('Starting session...');
       setIsSessionActive(true);
       if (currentPosition) {
         setSessionRoute([currentPosition]);
@@ -527,26 +541,28 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Real-time Date and Time */}
-      <div className="px-6 pt-6">
-        <DateTimeDisplay />
-      </div>
-
-      {/* Header */}
+      {/* Header - Combined headline and time, moved coin circle to the right */}
       <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-b-3xl mb-6 mx-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-1">
             <img 
               src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
               alt="Leaf" 
               className="w-12 h-12"
             />
-            <div className="mt-2">
-              <h1 className="text-2xl font-nunito font-black text-white">NatureCapture</h1>
-              <p className="text-light-green font-bold text-sm">Ready for adventure? 🌟</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-nunito font-black text-white">NatureCapture</h1>
+                  <p className="text-light-green font-bold text-sm">Ready for adventure? 🌟</p>
+                </div>
+                <div className="mr-4">
+                  <DateTimeDisplay />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white">
+          <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white ml-2">
             <div className="flex items-center space-x-2">
               <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
                 <span className="text-yellow-500 text-sm font-black">🪙</span>
@@ -574,7 +590,7 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Environmental Data with Real-time AQI and Weather */}
+      {/* Environmental Data with Real-time AQI and Weather - Fixed AQI frame size */}
       <div className="px-6 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
           <h2 className="text-xl font-black text-bright-green mb-4 flex items-center">
@@ -582,14 +598,16 @@ const MainPage: React.FC = () => {
             🌤️ Real-time Conditions 🌤️
           </h2>
           
-          {/* Main Weather and AQI */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <WeatherMonitor position={currentPosition} />
-          </div>
-          
-          {/* AQI Display */}
-          <div className="mb-4">
-            <AirQualityMonitor position={currentPosition} />
+          {/* Main Weather and AQI - Grid layout to make frames same size */}
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-4">
+              <WeatherMonitor position={currentPosition} />
+            </div>
+            
+            {/* AQI Display - Now same size as weather components */}
+            <div className="grid grid-cols-1">
+              <AirQualityMonitor position={currentPosition} />
+            </div>
           </div>
         </div>
       </div>
