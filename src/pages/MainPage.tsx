@@ -45,6 +45,7 @@ const MainPage: React.FC = () => {
   const [showMessaging, setShowMessaging] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
+  const [suggestedActivities, setSuggestedActivities] = useState<string[]>([]);
 
   const environmentalData = {
     airQuality: 42,
@@ -54,7 +55,7 @@ const MainPage: React.FC = () => {
     uvIndex: 4
   };
 
-  const suggestedActivities = [
+  const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
     { name: 'Park Yoga', icon: '🧘', duration: '45 min', calories: '180 cal', difficulty: 'Medium', coins: 45 },
     { name: 'Nature Photography', icon: '📸', duration: '60 min', calories: '90 cal', difficulty: 'Easy', coins: 35 },
@@ -218,9 +219,10 @@ const MainPage: React.FC = () => {
         setSessionPhotos([]);
         setSessionComments([]);
         setFeelingRating(0);
+        setSuggestedActivities([]);
       }, 15000);
     } else {
-      // Start session
+      // Start session with suggested activities
       console.log('Starting session...');
       setIsSessionActive(true);
       if (currentPosition) {
@@ -235,10 +237,17 @@ const MainPage: React.FC = () => {
     }
   };
 
+  const handleTryActivity = (activityName: string) => {
+    if (!suggestedActivities.includes(activityName)) {
+      setSuggestedActivities([...suggestedActivities, activityName]);
+    }
+    alert(`✅ ${activityName} added to your session suggestions! Start your session to track this activity.`);
+  };
+
   const calculateTotalCoins = () => {
     const baseCoins = Math.floor(sessionTime / 60);
     const activityCoins = completedActivities.reduce((total, activityName) => {
-      const activity = suggestedActivities.find(a => a.name === activityName);
+      const activity = allActivities.find(a => a.name === activityName);
       return total + (activity?.coins || 0);
     }, 0);
     return baseCoins + activityCoins;
@@ -487,7 +496,7 @@ const MainPage: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-lg font-bold text-bright-green mb-3">🎯 What did you do? 🎯</h3>
             <div className="space-y-2">
-              {suggestedActivities.slice(0, 3).map((activity, index) => (
+              {allActivities.slice(0, 3).map((activity, index) => (
                 <button
                   key={index}
                   onClick={() => handleActivityComplete(activity.name)}
@@ -541,56 +550,49 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Header - Combined headline and time, moved coin circle to the right */}
-      <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-b-3xl mb-6 mx-6">
+      {/* Header - Fixed layout */}
+      <div className="bg-gradient-to-r from-forest-green to-bright-green p-4 rounded-b-3xl mb-6 mx-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 flex-1">
+          <div className="flex items-center space-x-3">
             <img 
               src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
               alt="Leaf" 
-              className="w-12 h-12"
+              className="w-10 h-10"
             />
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-nunito font-black text-white">NatureCapture</h1>
-                  <p className="text-light-green font-bold text-sm">Ready for adventure? 🌟</p>
-                </div>
-                <div className="mr-4">
-                  <DateTimeDisplay />
-                </div>
-              </div>
+            <div>
+              <h1 className="text-xl font-nunito font-black text-white">NatureCapture</h1>
+              <p className="text-light-green font-bold text-xs">Ready for adventure? 🌟</p>
             </div>
           </div>
-          <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white ml-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                <span className="text-yellow-500 text-sm font-black">🪙</span>
+          <div className="flex items-center space-x-3">
+            <DateTimeDisplay />
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-2 shadow-lg border-2 border-white">
+              <div className="flex items-center space-x-1">
+                <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-yellow-500 text-xs font-black">🪙</span>
+                </div>
+                <span className="font-black text-white text-sm">247</span>
               </div>
-              <span className="font-black text-white text-lg">247</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Location Display */}
+      {/* Location Display - Single line */}
       {currentPosition && (
         <div className="px-6 mb-6">
-          <div className="bg-white rounded-3xl p-4 shadow-xl border-4 border-bright-green">
-            <h2 className="text-lg font-black text-bright-green mb-2 text-center">📍 Your Location 📍</h2>
-            <div className="text-center">
-              <p className="font-bold text-forest-green">
-                🌍 Latitude: {currentPosition.lat.toFixed(6)}
-              </p>
-              <p className="font-bold text-forest-green">
-                🌍 Longitude: {currentPosition.lng.toFixed(6)}
+          <div className="bg-white rounded-xl p-3 shadow-lg border-2 border-bright-green">
+            <div className="flex items-center justify-center">
+              <span className="text-lg mr-2">📍</span>
+              <p className="font-bold text-forest-green text-sm">
+                {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Environmental Data with Real-time AQI and Weather - Fixed AQI frame size */}
+      {/* Environmental Data with Real-time AQI and Weather - Fixed AQI size */}
       <div className="px-6 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
           <h2 className="text-xl font-black text-bright-green mb-4 flex items-center">
@@ -598,14 +600,14 @@ const MainPage: React.FC = () => {
             🌤️ Real-time Conditions 🌤️
           </h2>
           
-          {/* Main Weather and AQI - Grid layout to make frames same size */}
+          {/* Main Weather and AQI - Adjusted grid */}
           <div className="grid grid-cols-1 gap-4 mb-4">
             <div className="grid grid-cols-2 gap-4">
               <WeatherMonitor position={currentPosition} />
             </div>
             
-            {/* AQI Display - Now same size as weather components */}
-            <div className="grid grid-cols-1">
+            {/* AQI Display - Smaller size */}
+            <div className="w-full max-w-sm mx-auto">
               <AirQualityMonitor position={currentPosition} />
             </div>
           </div>
@@ -641,6 +643,44 @@ const MainPage: React.FC = () => {
               <Camera className="w-6 h-6 mr-3" />
               📸 Add Photo & Comment
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Suggested Activities during session */}
+      {isSessionActive && suggestedActivities.length > 0 && (
+        <div className="px-6 mb-6">
+          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
+            <h2 className="text-2xl font-black text-bright-green mb-4">🎯 Your Suggested Activities</h2>
+            <div className="space-y-3">
+              {suggestedActivities.map((activityName, index) => {
+                const activity = allActivities.find(a => a.name === activityName);
+                if (!activity) return null;
+                return (
+                  <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-4 border-2 border-forest-green">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-3xl">{activity.icon}</span>
+                        <div>
+                          <p className="font-black text-bright-green text-lg">{activity.name}</p>
+                          <p className="text-sm font-bold text-text-dark">{activity.duration} • {activity.calories}</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleActivityComplete(activity.name)}
+                        className={`font-black rounded-full px-4 py-2 transition-all ${
+                          completedActivities.includes(activity.name)
+                            ? 'bg-green-500 text-white'
+                            : 'bg-forest-green text-white hover:bg-bright-green'
+                        }`}
+                      >
+                        {completedActivities.includes(activity.name) ? '✅ Done' : 'Complete'}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -732,7 +772,7 @@ const MainPage: React.FC = () => {
           <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
             <h2 className="text-2xl font-black text-bright-green mb-4">🎯 Suggested for You</h2>
             <div className="space-y-3">
-              {suggestedActivities.map((activity, index) => (
+              {allActivities.map((activity, index) => (
                 <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-4 border-2 border-forest-green transform hover:scale-105 transition-all">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -742,7 +782,10 @@ const MainPage: React.FC = () => {
                         <p className="text-sm font-bold text-text-dark">{activity.duration} • {activity.calories} • {activity.difficulty}</p>
                       </div>
                     </div>
-                    <Button className="bg-forest-green text-white font-black rounded-full px-4 py-2 hover:bg-bright-green transition-all transform hover:scale-110">
+                    <Button 
+                      onClick={() => handleTryActivity(activity.name)}
+                      className="bg-forest-green text-white font-black rounded-full px-4 py-2 hover:bg-bright-green transition-all transform hover:scale-110"
+                    >
                       Try
                     </Button>
                   </div>
