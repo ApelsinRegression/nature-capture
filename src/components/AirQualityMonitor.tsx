@@ -12,7 +12,6 @@ interface AirQualityData {
   status: string;
   color: string;
   dominant: string;
-  station: string;
 }
 
 interface AirQualityMonitorProps {
@@ -59,8 +58,7 @@ const AirQualityMonitor: React.FC<AirQualityMonitorProps> = ({ position }) => {
             aqi: aqi,
             status: statusInfo.status,
             color: statusInfo.color,
-            dominant: data.data.dominentpol || 'N/A',
-            station: data.data.city?.name || 'Unknown'
+            dominant: data.data.dominentpol || 'N/A'
           });
         } else {
           throw new Error('Invalid data received');
@@ -129,10 +127,6 @@ const AirQualityMonitor: React.FC<AirQualityMonitorProps> = ({ position }) => {
         </div>
       </div>
       <p className="font-bold text-center text-xs">{aqiData.status}</p>
-      <div className="mt-2 text-xs text-center opacity-90">
-        <p>Station: {aqiData.station}</p>
-        <p>Dominant: {aqiData.dominant}</p>
-      </div>
     </div>
   );
 };

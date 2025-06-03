@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send } from 'lucide-react';
 import RealTimeMap from '../components/RealTimeMap';
 import AirQualityMonitor from '../components/AirQualityMonitor';
+import WeatherMonitor from '../components/WeatherMonitor';
+import ExtendedWeatherInfo from '../components/ExtendedWeatherInfo';
+import DateTimeDisplay from '../components/DateTimeDisplay';
 
 interface Position {
   lat: number;
@@ -40,6 +43,7 @@ const MainPage: React.FC = () => {
   const [feelingRating, setFeelingRating] = useState<number>(0);
   const [showPhotoComment, setShowPhotoComment] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
+  const [watchId, setWatchId] = useState<number | null>(null);
 
   const environmentalData = {
     airQuality: 42,
@@ -87,33 +91,93 @@ const MainPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [isSessionActive]);
 
+  useEffect(() => {
+    // Cleanup location watch when component unmounts
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [watchId]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleStartStop = () => {
-    if (!location.granted && !isSessionActive) {
-      navigator.geolocation.getCurrentPosition(
+  const startLocationTracking = () => {
+    if ('geolocation' in navigator) {
+      const id = navigator.geolocation.watchPosition(
         (position) => {
+          const newPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setCurrentPosition(newPos);
           setLocation({ granted: true });
-          setCurrentPosition({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          setSessionRoute([{
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          }]);
-          setIsSessionActive(true);
+          
+          console.log('Location updated:', newPos);
+          
+          // Add to route if session is active
+          if (isSessionActive) {
+            setSessionRoute(prev => [...prev, newPos]);
+          }
         },
         (error) => {
-          console.error('Location error:', error);
-          alert('📍 Location access needed for outdoor tracking! Please enable location in your browser settings.');
+          console.error('Location tracking error:', error);
+          setLocation({ granted: false });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
         }
       );
-    } else if (isSessionActive) {
+      
+      setWatchId(id);
+    } else {
+      alert('❌ Geolocation is not supported by this browser.');
+    }
+  };
+
+  const requestLocationPermission = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setCurrentPosition(newPos);
+          setLocation({ granted: true });
+          
+          // Start continuous tracking
+          startLocationTracking();
+        },
+        (error) => {
+          console.error('Location permission error:', error);
+          alert('📍 Please enable location access in your browser settings to track your outdoor sessions.');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      alert('❌ Geolocation is not supported by this browser.');
+    }
+  };
+
+  const handleStartStop = () => {
+    if (!location.granted && !isSessionActive) {
+      // Request location first
+      requestLocationPermission();
+      return;
+    }
+    
+    if (isSessionActive) {
       setIsSessionActive(false);
       // Save session data
       const sessionData = {
@@ -143,7 +207,11 @@ const MainPage: React.FC = () => {
         setFeelingRating(0);
       }, 15000);
     } else {
+      // Start session
       setIsSessionActive(true);
+      if (currentPosition) {
+        setSessionRoute([currentPosition]);
+      }
     }
   };
 
@@ -164,22 +232,6 @@ const MainPage: React.FC = () => {
 
   const handleStreakClick = () => {
     navigate('/profile');
-  };
-
-  const requestLocationPermission = () => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({ granted: true });
-        setCurrentPosition({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      },
-      (error) => {
-        console.error('Location permission error:', error);
-        alert('📍 Please enable location access in your browser settings to track your outdoor sessions.');
-      }
-    );
   };
 
   const handlePositionUpdate = (position: Position) => {
@@ -475,8 +527,13 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
+      {/* Real-time Date and Time */}
+      <div className="px-6 pt-6">
+        <DateTimeDisplay />
+      </div>
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-b-3xl mb-6">
+      <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-b-3xl mb-6 mx-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img 
@@ -500,26 +557,48 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Environmental Data with Real-time AQI */}
+      {/* Location Display */}
+      {currentPosition && (
+        <div className="px-6 mb-6">
+          <div className="bg-white rounded-3xl p-4 shadow-xl border-4 border-bright-green">
+            <h2 className="text-lg font-black text-bright-green mb-2 text-center">📍 Your Location 📍</h2>
+            <div className="text-center">
+              <p className="font-bold text-forest-green">
+                🌍 Latitude: {currentPosition.lat.toFixed(6)}
+              </p>
+              <p className="font-bold text-forest-green">
+                🌍 Longitude: {currentPosition.lng.toFixed(6)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Environmental Data with Real-time AQI and Weather */}
       <div className="px-6 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
           <h2 className="text-xl font-black text-bright-green mb-4 flex items-center">
             <Wind className="w-5 h-5 mr-2" />
             🌤️ Real-time Conditions 🌤️
           </h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-              <Thermometer className="w-6 h-6 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-lg text-bright-green">22°C</p>
-              <p className="font-bold text-text-dark text-xs">Perfect! 🚶‍♂️</p>
-            </div>
-            <AirQualityMonitor position={currentPosition} />
-            <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-              <Wind className="w-6 h-6 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-sm text-bright-green">8 km/h</p>
-              <p className="font-bold text-text-dark text-xs">Wind 💨</p>
-            </div>
+          
+          {/* Main Weather and AQI */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <WeatherMonitor position={currentPosition} />
           </div>
+          
+          {/* AQI Display */}
+          <div className="mb-4">
+            <AirQualityMonitor position={currentPosition} />
+          </div>
+        </div>
+      </div>
+
+      {/* Extended Weather Information */}
+      <div className="px-6 mb-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
+          <h2 className="text-xl font-black text-bright-green mb-4">🌈 More Weather Info 🌈</h2>
+          <ExtendedWeatherInfo position={currentPosition} />
         </div>
       </div>
 
@@ -737,7 +816,7 @@ const MainPage: React.FC = () => {
               <MapPin className="w-4 h-4 text-white" />
             </div>
             <p className="font-black text-text-dark text-lg">
-              {location.granted ? '✅ Location Ready 📍' : '📍 Enable Location 🗺️'}
+              {location.granted ? '✅ Location Active 📍' : '📍 Enable Location 🗺️'}
             </p>
           </div>
           {!location.granted && (
