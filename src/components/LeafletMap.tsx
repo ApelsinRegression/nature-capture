@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -23,21 +23,9 @@ interface LeafletMapProps {
   route: Position[];
 }
 
-// Component to update map view when position changes
-const MapUpdater: React.FC<{ position: Position | null }> = ({ position }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (position) {
-      map.setView([position.lat, position.lng], 16);
-    }
-  }, [position, map]);
-  
-  return null;
-};
-
 const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, route }) => {
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
+  const [mapKey, setMapKey] = useState(0);
 
   useEffect(() => {
     if (!isActive) return;
@@ -65,6 +53,13 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
     };
   }, [isActive, onPositionUpdate]);
 
+  // Force map re-render when position changes
+  useEffect(() => {
+    if (currentPosition) {
+      setMapKey(prev => prev + 1);
+    }
+  }, [currentPosition]);
+
   // Default center (will be updated when we get user location)
   const defaultCenter: [number, number] = [51.505, -0.09];
   const center: [number, number] = currentPosition ? [currentPosition.lat, currentPosition.lng] : defaultCenter;
@@ -75,8 +70,9 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
   return (
     <div className="relative">
       <MapContainer
+        key={mapKey}
         center={center}
-        zoom={13}
+        zoom={currentPosition ? 16 : 13}
         style={{ height: '250px', width: '100%' }}
         className="rounded-xl"
       >
@@ -84,8 +80,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
-        <MapUpdater position={currentPosition} />
         
         {currentPosition && (
           <Marker position={[currentPosition.lat, currentPosition.lng]} />
