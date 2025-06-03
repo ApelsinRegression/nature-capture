@@ -25,7 +25,6 @@ interface LeafletMapProps {
 
 const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, route }) => {
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
-  const [mapKey, setMapKey] = useState(0);
 
   useEffect(() => {
     if (!isActive) return;
@@ -53,13 +52,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
     };
   }, [isActive, onPositionUpdate]);
 
-  // Force map re-render when position changes
-  useEffect(() => {
-    if (currentPosition) {
-      setMapKey(prev => prev + 1);
-    }
-  }, [currentPosition]);
-
   // Default center (will be updated when we get user location)
   const defaultCenter: [number, number] = [51.505, -0.09];
   const center: [number, number] = currentPosition ? [currentPosition.lat, currentPosition.lng] : defaultCenter;
@@ -70,7 +62,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
   return (
     <div className="relative">
       <MapContainer
-        key={mapKey}
         center={center}
         zoom={currentPosition ? 16 : 13}
         style={{ height: '250px', width: '100%' }}
