@@ -85,11 +85,10 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
+        <MapUpdater position={currentPosition} />
+        
         {currentPosition && (
-          <>
-            <MapUpdater position={currentPosition} />
-            <Marker position={[currentPosition.lat, currentPosition.lng]} />
-          </>
+          <Marker position={[currentPosition.lat, currentPosition.lng]} />
         )}
         
         {route.length > 1 && (
