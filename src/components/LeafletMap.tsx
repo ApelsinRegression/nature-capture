@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
+import React, { useEffect, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -23,38 +23,67 @@ interface LeafletMapProps {
   route: Position[];
 }
 
+// Separate component to handle map updates within the MapContainer context
+const MapUpdater: React.FC<{ center: Position | null; zoom: number }> = ({ center, zoom }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center) {
+      map.setView([center.lat, center.lng], zoom);
+    }
+  }, [center, zoom, map]);
+  
+  return null;
+};
+
 const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, route }) => {
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
+  const watchIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!isActive) return;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const newPos = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        
-        setCurrentPosition(newPos);
-        onPositionUpdate(newPos);
-      },
-      (error) => console.error('Position tracking error:', error),
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
+    if (!isActive) {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
-    );
+      return;
+    }
+
+    if (navigator.geolocation) {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const newPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          
+          console.log('Position updated:', newPos);
+          setCurrentPosition(newPos);
+          onPositionUpdate(newPos);
+        },
+        (error) => {
+          console.error('Position tracking error:', error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 5000
+        }
+      );
+    }
 
     return () => {
-      navigator.geolocation.clearWatch(watchId);
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
     };
   }, [isActive, onPositionUpdate]);
 
-  // Default center (will be updated when we get user location)
-  const defaultCenter: [number, number] = [51.505, -0.09];
-  const center: [number, number] = currentPosition ? [currentPosition.lat, currentPosition.lng] : defaultCenter;
+  // Default center (London)
+  const defaultCenter: Position = { lat: 51.505, lng: -0.09 };
+  const center = currentPosition || defaultCenter;
+  const zoom = currentPosition ? 16 : 13;
 
   // Convert route to format expected by Polyline
   const routeCoordinates: [number, number][] = route.map(pos => [pos.lat, pos.lng]);
@@ -62,15 +91,18 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
   return (
     <div className="relative">
       <MapContainer
-        center={center}
-        zoom={currentPosition ? 16 : 13}
+        center={[center.lat, center.lng]}
+        zoom={zoom}
         style={{ height: '250px', width: '100%' }}
         className="rounded-xl"
+        key={`map-${center.lat}-${center.lng}`} // Force remount when center changes significantly
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        
+        <MapUpdater center={currentPosition} zoom={zoom} />
         
         {currentPosition && (
           <Marker position={[currentPosition.lat, currentPosition.lng]} />
