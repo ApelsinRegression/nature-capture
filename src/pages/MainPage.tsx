@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send } from 'lucide-react';
+import RealTimeMap from '../components/RealTimeMap';
+import AirQualityMonitor from '../components/AirQualityMonitor';
 
 interface Position {
   lat: number;
@@ -80,25 +82,10 @@ const MainPage: React.FC = () => {
     if (isSessionActive) {
       interval = setInterval(() => {
         setSessionTime(prev => prev + 1);
-        
-        // Track position every 5 seconds during session
-        if (navigator.geolocation && sessionTime % 5 === 0) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const newPos = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              };
-              setCurrentPosition(newPos);
-              setSessionRoute(prev => [...prev, newPos]);
-            },
-            (error) => console.error('Position tracking error:', error)
-          );
-        }
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isSessionActive, sessionTime]);
+  }, [isSessionActive]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -193,6 +180,11 @@ const MainPage: React.FC = () => {
         alert('📍 Please enable location access in your browser settings to track your outdoor sessions.');
       }
     );
+  };
+
+  const handlePositionUpdate = (position: Position) => {
+    setCurrentPosition(position);
+    setSessionRoute(prev => [...prev, position]);
   };
 
   const handleSendMessage = () => {
@@ -384,15 +376,15 @@ const MainPage: React.FC = () => {
           <div className="text-6xl mb-6">🎉</div>
           <h2 className="text-3xl font-black text-bright-green mb-6">✨ Session Complete! ✨</h2>
           
-          {/* Route Map Preview */}
+          {/* Route Summary */}
           {sessionRoute.length > 1 && (
             <div className="mb-6">
               <h3 className="text-xl font-bold text-bright-green mb-3">🗺️ Your Route 🗺️</h3>
               <div className="bg-light-green rounded-2xl p-4 border-2 border-forest-green">
                 <div className="text-center">
-                  <div className="text-4xl mb-2">📍➡️📍</div>
+                  <div className="text-4xl mb-2">🛤️</div>
                   <p className="font-bold text-bright-green">Distance: {calculateDistance().toFixed(2)} km</p>
-                  <p className="text-sm font-bold text-text-dark">{sessionRoute.length} GPS points tracked</p>
+                  <p className="text-sm font-bold text-text-dark">Route tracked with GPS</p>
                 </div>
               </div>
             </div>
@@ -508,12 +500,12 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Environmental Data */}
+      {/* Environmental Data with Real-time AQI */}
       <div className="px-6 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
           <h2 className="text-xl font-black text-bright-green mb-4 flex items-center">
             <Wind className="w-5 h-5 mr-2" />
-            🌤️ Today's Conditions 🌤️
+            🌤️ Real-time Conditions 🌤️
           </h2>
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
@@ -521,11 +513,7 @@ const MainPage: React.FC = () => {
               <p className="font-black text-lg text-bright-green">22°C</p>
               <p className="font-bold text-text-dark text-xs">Perfect! 🚶‍♂️</p>
             </div>
-            <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
-              <Eye className="w-6 h-6 text-forest-green mx-auto mb-2" />
-              <p className="font-black text-sm text-bright-green">42 AQI</p>
-              <p className="font-bold text-text-dark text-xs">Air Quality 🌬️</p>
-            </div>
+            <AirQualityMonitor position={currentPosition} />
             <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 text-center hover:scale-105 transition-transform">
               <Wind className="w-6 h-6 text-forest-green mx-auto mb-2" />
               <p className="font-black text-sm text-bright-green">8 km/h</p>
@@ -535,7 +523,7 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Session Map View */}
+      {/* Real-time Map View */}
       {isSessionActive && (
         <div className="px-6 mb-6">
           <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
@@ -543,21 +531,25 @@ const MainPage: React.FC = () => {
               <MapPin className="w-6 h-6 mr-2" />
               🗺️ Live Route Tracking 🗺️
             </h2>
-            <div className="bg-gradient-to-br from-light-green to-blue-100 rounded-2xl p-6 text-center mb-4">
-              <div className="text-4xl mb-3">📍🛤️📍</div>
-              <p className="font-black text-bright-green text-lg">Tracking your journey...</p>
-              <p className="font-bold text-text-dark">Distance: {calculateDistance().toFixed(2)} km</p>
-              <p className="text-sm font-bold text-forest-green">{sessionRoute.length} GPS points</p>
-              {currentPosition && (
-                <div className="mt-3 text-xs font-bold text-text-dark">
-                  📍 Lat: {currentPosition.lat.toFixed(4)}, Lng: {currentPosition.lng.toFixed(4)}
-                </div>
-              )}
+            <RealTimeMap 
+              isActive={isSessionActive}
+              onPositionUpdate={handlePositionUpdate}
+              route={sessionRoute}
+            />
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="bg-yellow-accent rounded-2xl p-3 text-center">
+                <p className="font-black text-bright-green">📍 Distance</p>
+                <p className="text-xl font-black">{calculateDistance().toFixed(2)} km</p>
+              </div>
+              <div className="bg-orange-accent rounded-2xl p-3 text-center text-white">
+                <p className="font-black">⏱️ Time</p>
+                <p className="text-xl font-black">{formatTime(sessionTime)}</p>
+              </div>
             </div>
             
             <Button
               onClick={() => setShowPhotoComment(true)}
-              className="w-full bg-yellow-accent text-bright-green font-black py-3 rounded-2xl hover:bg-bright-green hover:text-white transition-all"
+              className="w-full mt-4 bg-yellow-accent text-bright-green font-black py-3 rounded-2xl hover:bg-bright-green hover:text-white transition-all"
             >
               <Camera className="w-6 h-6 mr-3" />
               📸 Add Photo & Comment
