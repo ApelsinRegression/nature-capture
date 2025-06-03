@@ -74,44 +74,44 @@ const WeatherMonitor: React.FC<WeatherMonitorProps> = ({ position }) => {
 
   if (!position) {
     return (
-      <div className="bg-light-green rounded-2xl p-4 text-center">
-        <Thermometer className="w-6 h-6 text-forest-green mx-auto mb-2" />
-        <p className="font-bold text-bright-green text-sm">📍 Location needed</p>
+      <div className="bg-light-green rounded-xl p-3 text-center">
+        <Thermometer className="w-5 h-5 text-forest-green mx-auto mb-1" />
+        <p className="font-bold text-bright-green text-xs">📍 Location needed</p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="bg-light-green rounded-2xl p-4 text-center">
-        <Thermometer className="w-6 h-6 text-forest-green mx-auto mb-2 animate-spin" />
-        <p className="font-bold text-bright-green text-sm">🔄 Loading...</p>
+      <div className="bg-light-green rounded-xl p-3 text-center">
+        <Thermometer className="w-5 h-5 text-forest-green mx-auto mb-1 animate-spin" />
+        <p className="font-bold text-bright-green text-xs">🔄 Loading...</p>
       </div>
     );
   }
 
   if (error || !weatherData) {
     return (
-      <div className="bg-red-100 rounded-2xl p-4 text-center">
-        <Thermometer className="w-6 h-6 text-red-500 mx-auto mb-2" />
-        <p className="font-bold text-red-600 text-sm">❌ Weather Error</p>
+      <div className="bg-red-100 rounded-xl p-3 text-center">
+        <Thermometer className="w-5 h-5 text-red-500 mx-auto mb-1" />
+        <p className="font-bold text-red-600 text-xs">❌ Weather Error</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-3">
       {/* Temperature */}
-      <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl p-4 text-white text-center">
-        <Thermometer className="w-6 h-6 mx-auto mb-2" />
-        <p className="font-black text-2xl">{Math.round(weatherData.temperature)}°C</p>
+      <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-xl p-3 text-white text-center">
+        <Thermometer className="w-5 h-5 mx-auto mb-1" />
+        <p className="font-black text-lg">{Math.round(weatherData.temperature)}°C</p>
         <p className="font-bold text-xs">Temperature</p>
       </div>
 
       {/* Wind Speed */}
-      <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-4 text-white text-center">
-        <Wind className="w-6 h-6 mx-auto mb-2" />
-        <p className="font-black text-2xl">{Math.round(weatherData.windspeed)}</p>
+      <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl p-3 text-white text-center">
+        <Wind className="w-5 h-5 mx-auto mb-1" />
+        <p className="font-black text-lg">{Math.round(weatherData.windspeed)}</p>
         <p className="font-bold text-xs">km/h Wind</p>
       </div>
     </div>

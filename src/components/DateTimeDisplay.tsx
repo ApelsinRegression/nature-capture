@@ -15,9 +15,8 @@ const DateTimeDisplay: React.FC = () => {
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
+      weekday: 'short',
+      month: 'short',
       day: 'numeric'
     });
   };
@@ -25,27 +24,24 @@ const DateTimeDisplay: React.FC = () => {
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      minute: '2-digit'
     });
   };
 
   return (
-    <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-2xl p-4 text-white mb-4">
+    <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-xl p-3 text-white mb-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Calendar className="w-6 h-6" />
+        <div className="flex items-center space-x-2">
+          <Calendar className="w-4 h-4" />
           <div>
-            <p className="font-bold text-sm">📅 Today</p>
-            <p className="font-black text-lg">{formatDate(currentTime)}</p>
+            <p className="font-bold text-xs">📅 {formatDate(currentTime)}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           <div className="text-right">
-            <p className="font-bold text-sm">🕐 Time</p>
-            <p className="font-black text-xl">{formatTime(currentTime)}</p>
+            <p className="font-bold text-xs">🕐 {formatTime(currentTime)}</p>
           </div>
-          <Clock className="w-6 h-6" />
+          <Clock className="w-4 h-4" />
         </div>
       </div>
     </div>
