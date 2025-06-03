@@ -76,7 +76,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
           <Marker position={[currentPosition.lat, currentPosition.lng]} />
         )}
         
-        {route.length > 1 && (
+        {routeCoordinates.length > 1 && (
           <Polyline
             positions={routeCoordinates}
             color="#22c55e"
