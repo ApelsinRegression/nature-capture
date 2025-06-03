@@ -23,22 +23,19 @@ interface LeafletMapProps {
   route: Position[];
 }
 
-// Separate component to handle map updates within the MapContainer context
-const MapUpdater: React.FC<{ center: Position | null; zoom: number }> = ({ center, zoom }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (center) {
-      map.setView([center.lat, center.lng], zoom);
-    }
-  }, [center, zoom, map]);
-  
-  return null;
-};
-
 const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, route }) => {
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const watchIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    // Add a small delay to ensure everything is properly initialized
+    const timer = setTimeout(() => {
+      setMapReady(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!isActive) {
@@ -80,6 +77,20 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
     };
   }, [isActive, onPositionUpdate]);
 
+  // Don't render the map until everything is ready
+  if (!mapReady) {
+    return (
+      <div className="relative">
+        <div 
+          style={{ height: '250px', width: '100%' }}
+          className="rounded-xl bg-gray-200 flex items-center justify-center"
+        >
+          <p className="text-gray-600 font-bold">🗺️ Loading Map...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Default center (London)
   const defaultCenter: Position = { lat: 51.505, lng: -0.09 };
   const center = currentPosition || defaultCenter;
@@ -95,14 +106,12 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ isActive, onPositionUpdate, rou
         zoom={zoom}
         style={{ height: '250px', width: '100%' }}
         className="rounded-xl"
-        key={`map-${center.lat}-${center.lng}`} // Force remount when center changes significantly
+        key={`map-ready-${mapReady}`}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
-        <MapUpdater center={currentPosition} zoom={zoom} />
         
         {currentPosition && (
           <Marker position={[currentPosition.lat, currentPosition.lng]} />
