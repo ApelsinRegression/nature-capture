@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -611,21 +610,11 @@ const MainPage: React.FC = () => {
               <MapPin className="w-6 h-6 mr-2" />
               🗺️ Live Route Tracking 🗺️
             </h2>
-            <RealTimeMap 
+            <LeafletMap 
               isActive={isSessionActive}
               onPositionUpdate={handlePositionUpdate}
               route={sessionRoute}
             />
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="bg-yellow-accent rounded-2xl p-3 text-center">
-                <p className="font-black text-bright-green">📍 Distance</p>
-                <p className="text-xl font-black">{calculateDistance().toFixed(2)} km</p>
-              </div>
-              <div className="bg-orange-accent rounded-2xl p-3 text-center text-white">
-                <p className="font-black">⏱️ Time</p>
-                <p className="text-xl font-black">{formatTime(sessionTime)}</p>
-              </div>
-            </div>
             
             <Button
               onClick={() => setShowPhotoComment(true)}
