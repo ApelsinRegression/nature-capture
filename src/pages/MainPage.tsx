@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send } from 'lucide-react';
-import LeafletMap from '../components/LeafletMap';
+import RealTimeMap from '../components/RealTimeMap';
 import AirQualityMonitor from '../components/AirQualityMonitor';
 import WeatherMonitor from '../components/WeatherMonitor';
 import ExtendedWeatherInfo from '../components/ExtendedWeatherInfo';
@@ -550,22 +550,21 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Header - Fixed layout */}
-      <div className="bg-gradient-to-r from-forest-green to-bright-green p-4 rounded-b-3xl mb-6 mx-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
-              alt="Leaf" 
-              className="w-10 h-10"
-            />
-            <div>
-              <h1 className="text-xl font-nunito font-black text-white">NatureCapture</h1>
-              <p className="text-light-green font-bold text-xs">Ready for adventure? 🌟</p>
+      {/* Redesigned Header with proper positioning */}
+      <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-4 shadow-xl">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-3">
+              <img 
+                src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
+                alt="Leaf" 
+                className="w-10 h-10"
+              />
+              <div>
+                <h1 className="text-xl font-nunito font-black text-white">NatureCapture</h1>
+                <p className="text-light-green font-bold text-xs">Ready for adventure? 🌟</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <DateTimeDisplay />
             <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-2 shadow-lg border-2 border-white">
               <div className="flex items-center space-x-1">
                 <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
@@ -575,106 +574,100 @@ const MainPage: React.FC = () => {
               </div>
             </div>
           </div>
+          
+          {/* Date and Time properly positioned */}
+          <div className="flex justify-center">
+            <DateTimeDisplay />
+          </div>
         </div>
       </div>
 
-      {/* Location Display - Single line */}
+      {/* Location Display - Clean single line */}
       {currentPosition && (
-        <div className="px-6 mb-6">
-          <div className="bg-white rounded-xl p-3 shadow-lg border-2 border-bright-green">
-            <div className="flex items-center justify-center">
-              <span className="text-lg mr-2">📍</span>
-              <p className="font-bold text-forest-green text-sm">
-                {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
+        <div className="px-4 mb-4">
+          <div className="bg-white rounded-xl p-2 shadow-md border border-bright-green">
+            <div className="flex items-center justify-center space-x-2">
+              <MapPin className="w-4 h-4 text-forest-green" />
+              <p className="font-bold text-forest-green text-xs">
+                📍 {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Environmental Data with Real-time AQI and Weather - Fixed AQI size */}
-      <div className="px-6 mb-6">
-        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
-          <h2 className="text-xl font-black text-bright-green mb-4 flex items-center">
-            <Wind className="w-5 h-5 mr-2" />
-            🌤️ Real-time Conditions 🌤️
+      {/* Real-time Map View - Full implementation */}
+      <div className="px-4 mb-6">
+        <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-forest-green">
+          <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
+            <MapPin className="w-5 h-5 mr-2" />
+            🗺️ Live Map 🗺️
+          </h2>
+          <RealTimeMap 
+            isActive={true}
+            onPositionUpdate={handlePositionUpdate}
+            route={sessionRoute}
+          />
+        </div>
+      </div>
+
+      {/* Redesigned Environmental Data - Compact layout */}
+      <div className="px-4 mb-6">
+        <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-light-green">
+          <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
+            <Wind className="w-4 h-4 mr-2" />
+            🌤️ Conditions 🌤️
           </h2>
           
-          {/* Main Weather and AQI - Adjusted grid */}
-          <div className="grid grid-cols-1 gap-4 mb-4">
-            <div className="grid grid-cols-2 gap-4">
-              <WeatherMonitor position={currentPosition} />
-            </div>
-            
-            {/* AQI Display - Smaller size */}
-            <div className="w-full max-w-sm mx-auto">
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <WeatherMonitor position={currentPosition} />
+          </div>
+          
+          {/* Compact AQI Display */}
+          <div className="flex justify-center">
+            <div className="w-32">
               <AirQualityMonitor position={currentPosition} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Extended Weather Information */}
-      <div className="px-6 mb-6">
-        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
-          <h2 className="text-xl font-black text-bright-green mb-4">🌈 More Weather Info 🌈</h2>
+      {/* Extended Weather Information - More compact */}
+      <div className="px-4 mb-6">
+        <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
+          <h2 className="text-lg font-black text-bright-green mb-3">🌈 Weather Details 🌈</h2>
           <ExtendedWeatherInfo position={currentPosition} />
         </div>
       </div>
 
-      {/* Real-time Map View */}
-      {isSessionActive && (
-        <div className="px-6 mb-6">
-          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
-            <h2 className="text-2xl font-black text-bright-green mb-4 flex items-center">
-              <MapPin className="w-6 h-6 mr-2" />
-              🗺️ Live Route Tracking 🗺️
-            </h2>
-            <LeafletMap 
-              isActive={isSessionActive}
-              onPositionUpdate={handlePositionUpdate}
-              route={sessionRoute}
-            />
-            
-            <Button
-              onClick={() => setShowPhotoComment(true)}
-              className="w-full mt-4 bg-yellow-accent text-bright-green font-black py-3 rounded-2xl hover:bg-bright-green hover:text-white transition-all"
-            >
-              <Camera className="w-6 h-6 mr-3" />
-              📸 Add Photo & Comment
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Suggested Activities during session */}
       {isSessionActive && suggestedActivities.length > 0 && (
-        <div className="px-6 mb-6">
-          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
-            <h2 className="text-2xl font-black text-bright-green mb-4">🎯 Your Suggested Activities</h2>
+        <div className="px-4 mb-6">
+          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
+            <h2 className="text-lg font-black text-bright-green mb-3">🎯 Your Activities</h2>
             <div className="space-y-3">
               {suggestedActivities.map((activityName, index) => {
                 const activity = allActivities.find(a => a.name === activityName);
                 if (!activity) return null;
                 return (
-                  <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-4 border-2 border-forest-green">
+                  <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border border-forest-green">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <span className="text-3xl">{activity.icon}</span>
+                        <span className="text-2xl">{activity.icon}</span>
                         <div>
-                          <p className="font-black text-bright-green text-lg">{activity.name}</p>
-                          <p className="text-sm font-bold text-text-dark">{activity.duration} • {activity.calories}</p>
+                          <p className="font-black text-bright-green text-sm">{activity.name}</p>
+                          <p className="text-xs font-bold text-text-dark">{activity.duration} • {activity.calories}</p>
                         </div>
                       </div>
                       <Button 
                         onClick={() => handleActivityComplete(activity.name)}
-                        className={`font-black rounded-full px-4 py-2 transition-all ${
+                        className={`font-black rounded-full px-3 py-1 text-xs transition-all ${
                           completedActivities.includes(activity.name)
                             ? 'bg-green-500 text-white'
                             : 'bg-forest-green text-white hover:bg-bright-green'
                         }`}
                       >
-                        {completedActivities.includes(activity.name) ? '✅ Done' : 'Complete'}
+                        {completedActivities.includes(activity.name) ? '✅' : 'Complete'}
                       </Button>
                     </div>
                   </div>
@@ -685,10 +678,10 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Timer Section */}
-      <div className="px-6 mb-8">
-        <div className="bg-white rounded-3xl p-8 shadow-xl border-4 border-forest-green relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
+      {/* Main Timer Section - Cleaner design */}
+      <div className="px-4 mb-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-forest-green relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5">
             <img 
               src="/lovable-uploads/32708266-d62b-4f42-a05b-822c91a021a8.png" 
               alt="Nature" 
@@ -698,45 +691,52 @@ const MainPage: React.FC = () => {
           
           <div className="relative z-10 text-center">
             {isSessionActive ? (
-              <div className="space-y-6">
-                <div className="w-24 h-24 bg-forest-green rounded-full mx-auto flex items-center justify-center">
-                  <Activity className="w-12 h-12 text-white" />
+              <div className="space-y-4">
+                <div className="w-16 h-16 bg-forest-green rounded-full mx-auto flex items-center justify-center">
+                  <Activity className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-4xl font-nunito font-black text-bright-green">
+                <h2 className="text-2xl font-nunito font-black text-bright-green">
                   🌟 Active Session! 🌟
                 </h2>
-                <div className="text-7xl font-black text-forest-green">
+                <div className="text-5xl font-black text-forest-green">
                   {formatTime(sessionTime)}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-yellow-accent rounded-2xl p-4 transform hover:scale-105 transition-transform">
-                    <p className="text-bright-green font-black text-lg">📍 Distance</p>
-                    <p className="text-3xl font-black">{calculateDistance().toFixed(1)} km</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-yellow-accent rounded-2xl p-3">
+                    <p className="text-bright-green font-black text-sm">📍 Distance</p>
+                    <p className="text-xl font-black">{calculateDistance().toFixed(1)} km</p>
                   </div>
-                  <div className="bg-orange-accent rounded-2xl p-4 text-white transform hover:scale-105 transition-transform">
-                    <p className="font-black text-lg">🔥 Calories</p>
-                    <p className="text-3xl font-black">{Math.floor(sessionTime / 2)}</p>
+                  <div className="bg-orange-accent rounded-2xl p-3 text-white">
+                    <p className="font-black text-sm">🔥 Calories</p>
+                    <p className="text-xl font-black">{Math.floor(sessionTime / 2)}</p>
                   </div>
                 </div>
+                <Button
+                  onClick={() => setShowPhotoComment(true)}
+                  className="w-full bg-yellow-accent text-bright-green font-black py-2 rounded-2xl hover:bg-bright-green hover:text-white transition-all"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  📸 Add Photo
+                </Button>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="flex justify-center space-x-4">
                   <img 
                     src="/lovable-uploads/f1457e39-8dd6-4e91-9962-d1b090e9bee1.png" 
                     alt="Trees" 
-                    className="w-16 h-16"
+                    className="w-12 h-12"
                   />
                   <img 
                     src="/lovable-uploads/55626c2e-ff58-47bb-bdcb-ea80a1c497bc.png" 
                     alt="Footprints" 
-                    className="w-16 h-16"
+                    className="w-12 h-12"
                   />
                 </div>
-                <h2 className="text-4xl font-nunito font-black text-bright-green">
+                <h2 className="text-2xl font-nunito font-black text-bright-green">
                   🌈 Ready to Explore? 🌈
                 </h2>
-                <p className="text-text-dark text-lg font-bold">
+                <p className="text-text-dark font-bold">
                   Start your nature time and earn NatureCoins! 🪙✨
                 </p>
               </div>
@@ -744,20 +744,20 @@ const MainPage: React.FC = () => {
             
             <Button
               onClick={handleStartStop}
-              className={`w-full mt-8 text-xl font-black py-8 rounded-3xl shadow-2xl transform transition-all hover:scale-105 ${
+              className={`w-full mt-6 text-lg font-black py-6 rounded-3xl shadow-lg transform transition-all hover:scale-105 ${
                 isSessionActive
                   ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-gradient-to-r from-forest-green to-bright-green text-white hover:shadow-2xl'
+                  : 'bg-gradient-to-r from-forest-green to-bright-green text-white'
               }`}
             >
               {isSessionActive ? (
                 <>
-                  <Pause className="w-8 h-8 mr-3" />
+                  <Pause className="w-6 h-6 mr-2" />
                   🛑 Stop Adventure
                 </>
               ) : (
                 <>
-                  <Play className="w-8 h-8 mr-3" />
+                  <Play className="w-6 h-6 mr-2" />
                   🚀 Start Nature Time
                 </>
               )}
@@ -766,25 +766,25 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Suggested Activities */}
+      {/* Suggested Activities - Cleaner design */}
       {!isSessionActive && (
-        <div className="px-6 mb-6">
-          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
-            <h2 className="text-2xl font-black text-bright-green mb-4">🎯 Suggested for You</h2>
-            <div className="space-y-3">
+        <div className="px-4 mb-6">
+          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
+            <h2 className="text-lg font-black text-bright-green mb-3">🎯 Suggested for You</h2>
+            <div className="space-y-2">
               {allActivities.map((activity, index) => (
-                <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-4 border-2 border-forest-green transform hover:scale-105 transition-all">
+                <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border border-forest-green">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <span className="text-3xl">{activity.icon}</span>
+                      <span className="text-2xl">{activity.icon}</span>
                       <div>
-                        <p className="font-black text-bright-green text-lg">{activity.name}</p>
-                        <p className="text-sm font-bold text-text-dark">{activity.duration} • {activity.calories} • {activity.difficulty}</p>
+                        <p className="font-black text-bright-green text-sm">{activity.name}</p>
+                        <p className="text-xs font-bold text-text-dark">{activity.duration} • {activity.calories}</p>
                       </div>
                     </div>
                     <Button 
                       onClick={() => handleTryActivity(activity.name)}
-                      className="bg-forest-green text-white font-black rounded-full px-4 py-2 hover:bg-bright-green transition-all transform hover:scale-110"
+                      className="bg-forest-green text-white font-black rounded-full px-3 py-1 text-xs hover:bg-bright-green transition-all"
                     >
                       Try
                     </Button>
@@ -798,21 +798,21 @@ const MainPage: React.FC = () => {
 
       {/* Nearby Parks */}
       {isSessionActive && (
-        <div className="px-6 mb-6">
-          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
-            <h2 className="text-2xl font-black text-bright-green mb-4 flex items-center">
-              <MapPin className="w-6 h-6 mr-2" />
+        <div className="px-4 mb-6">
+          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-forest-green">
+            <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
+              <MapPin className="w-5 h-5 mr-2" />
               🌳 Parks Nearby
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {nearbyParks.map((park, index) => (
-                <div key={index} className="bg-light-green rounded-2xl p-4 border-2 border-forest-green hover:scale-105 transition-transform">
+                <div key={index} className="bg-light-green rounded-2xl p-3 border border-forest-green">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-black text-bright-green text-lg">{park.name}</p>
-                      <p className="text-sm font-bold text-text-dark">📍 {park.distance} • ⭐ {park.rating} • {park.type}</p>
+                      <p className="font-black text-bright-green text-sm">{park.name}</p>
+                      <p className="text-xs font-bold text-text-dark">📍 {park.distance} • ⭐ {park.rating}</p>
                     </div>
-                    <Button className="bg-yellow-accent text-bright-green font-black rounded-full px-4 py-2 hover:bg-bright-green hover:text-white transition-all">
+                    <Button className="bg-yellow-accent text-bright-green font-black rounded-full px-3 py-1 text-xs hover:bg-bright-green hover:text-white transition-all">
                       Go
                     </Button>
                   </div>
@@ -824,58 +824,58 @@ const MainPage: React.FC = () => {
       )}
 
       {/* Quick Stats */}
-      <div className="px-6 mb-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl p-4 border-3 border-light-green transform hover:scale-105 transition-transform">
+      <div className="px-4 mb-6">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl p-3 border-2 border-light-green">
             <div className="text-center">
-              <div className="w-12 h-12 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-white font-black text-xl">23</span>
+              <div className="w-10 h-10 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
+                <span className="text-white font-black text-sm">23</span>
               </div>
-              <p className="font-black text-text-dark text-lg">📊 Sessions</p>
+              <p className="font-black text-text-dark text-sm">📊 Sessions</p>
             </div>
           </div>
           <div 
-            className="bg-white rounded-2xl p-4 border-3 border-light-green transform hover:scale-105 transition-transform cursor-pointer"
+            className="bg-white rounded-2xl p-3 border-2 border-light-green cursor-pointer"
             onClick={handleStreakClick}
           >
             <div className="text-center">
-              <div className="w-12 h-12 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-bright-green font-black text-xl">7</span>
+              <div className="w-10 h-10 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
+                <span className="text-bright-green font-black text-sm">7</span>
               </div>
-              <p className="font-black text-text-dark text-lg">🔥 Streak</p>
+              <p className="font-black text-text-dark text-sm">🔥 Streak</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Messaging Button */}
-      <div className="px-6 mb-6">
+      <div className="px-4 mb-6">
         <Button 
           onClick={() => setShowMessaging(true)}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-black py-4 rounded-2xl text-lg hover:scale-105 transition-transform"
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-black py-3 rounded-2xl hover:scale-105 transition-transform"
         >
-          <MessageSquare className="w-6 h-6 mr-3" />
-          💬 Send Message to Friends
+          <MessageSquare className="w-5 h-5 mr-2" />
+          💬 Message Friends
         </Button>
       </div>
 
       {/* Location Status */}
-      <div className="px-6 mt-6">
-        <div className="bg-white rounded-2xl p-4 border-3 border-light-green flex items-center justify-between">
+      <div className="px-4 pb-6">
+        <div className="bg-white rounded-2xl p-3 border-2 border-light-green flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${location.granted ? 'bg-forest-green' : 'bg-orange-accent'}`}>
-              <MapPin className="w-4 h-4 text-white" />
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${location.granted ? 'bg-forest-green' : 'bg-orange-accent'}`}>
+              <MapPin className="w-3 h-3 text-white" />
             </div>
-            <p className="font-black text-text-dark text-lg">
-              {location.granted ? '✅ Location Active 📍' : '📍 Enable Location 🗺️'}
+            <p className="font-black text-text-dark text-sm">
+              {location.granted ? '✅ Location Active' : '📍 Enable Location'}
             </p>
           </div>
           {!location.granted && (
             <Button 
               onClick={requestLocationPermission}
-              className="bg-gradient-to-r from-forest-green to-bright-green text-white font-black rounded-full px-6 py-2 hover:scale-105 transition-transform"
+              className="bg-gradient-to-r from-forest-green to-bright-green text-white font-black rounded-full px-4 py-1 text-xs hover:scale-105 transition-transform"
             >
-              🔓 Enable
+              Enable
             </Button>
           )}
         </div>
