@@ -29,7 +29,7 @@ const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
-  const [location, setLocation] = useState<{granted: boolean}>({ granted: false });
+  const [locationGranted, setLocationGranted] = useState(false);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [sessionRoute, setSessionRoute] = useState<Position[]>([]);
@@ -44,16 +44,7 @@ const MainPage: React.FC = () => {
   const [showPhotoComment, setShowPhotoComment] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
-  const [locationPermissionRequested, setLocationPermissionRequested] = useState(false);
   const [suggestedActivities, setSuggestedActivities] = useState<string[]>([]);
-
-  const environmentalData = {
-    airQuality: 42,
-    temperature: 22,
-    humidity: 65,
-    windSpeed: 8,
-    uvIndex: 4
-  };
 
   const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
@@ -67,13 +58,6 @@ const MainPage: React.FC = () => {
     { name: 'Central Green Park', distance: '0.3 km', rating: 4.8, type: 'Urban Park' },
     { name: 'Riverside Trail', distance: '0.8 km', rating: 4.9, type: 'Nature Trail' },
     { name: 'Sunset Hill', distance: '1.2 km', rating: 4.7, type: 'Hiking' },
-  ];
-
-  const healthBenefits = [
-    { name: 'Cognitive Boost', icon: '🧠', description: '+15% focus improvement' },
-    { name: 'Vitamin D', icon: '☀️', description: '+25% daily requirement' },
-    { name: 'Stress Relief', icon: '😌', description: '-30% cortisol levels' },
-    { name: 'Mood Enhancement', icon: '😊', description: '+20% serotonin production' },
   ];
 
   const friends = [
@@ -94,19 +78,15 @@ const MainPage: React.FC = () => {
   }, [isSessionActive]);
 
   useEffect(() => {
-    // Auto-request location permission on component mount
-    if (!locationPermissionRequested) {
-      requestLocationPermission();
-      setLocationPermissionRequested(true);
-    }
+    // Request location permission on mount
+    requestLocationPermission();
     
-    // Cleanup location watch when component unmounts
     return () => {
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [watchId, locationPermissionRequested]);
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -114,86 +94,81 @@ const MainPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const startLocationTracking = () => {
-    if ('geolocation' in navigator) {
-      console.log('Starting location tracking...');
-      const id = navigator.geolocation.watchPosition(
-        (position) => {
-          const newPos = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          console.log('Location updated:', newPos);
-          setCurrentPosition(newPos);
-          setLocation({ granted: true });
-          
-          // Add to route if session is active
-          if (isSessionActive) {
-            setSessionRoute(prev => [...prev, newPos]);
-          }
-        },
-        (error) => {
-          console.error('Location tracking error:', error);
-          // Don't set granted to false here, just log the error
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 30000
-        }
-      );
-      
-      setWatchId(id);
-    }
-  };
-
   const requestLocationPermission = () => {
     console.log('Requesting location permission...');
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const newPos = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          console.log('Location permission granted:', newPos);
-          setCurrentPosition(newPos);
-          setLocation({ granted: true });
-          
-          // Start continuous tracking
-          startLocationTracking();
-        },
-        (error) => {
-          console.error('Location permission error:', error);
-          setLocation({ granted: false });
-          // Show user-friendly message
-          alert('📍 Location access is needed to track your outdoor sessions. Please enable location in your browser settings and refresh the page.');
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    } else {
-      alert('❌ Geolocation is not supported by this browser.');
+    if (!navigator.geolocation) {
+      console.error('Geolocation is not supported');
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newPos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        console.log('Location permission granted:', newPos);
+        setCurrentPosition(newPos);
+        setLocationGranted(true);
+        startLocationTracking();
+      },
+      (error) => {
+        console.error('Location permission error:', error);
+        setLocationGranted(false);
+        // Show user-friendly message based on error
+        if (error.code === error.PERMISSION_DENIED) {
+          alert('📍 Location access was denied. Please enable location in your browser settings and refresh the page.');
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          alert('📍 Location information is unavailable. Please try again.');
+        } else if (error.code === error.TIMEOUT) {
+          alert('📍 Location request timed out. Please try again.');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60000
+      }
+    );
+  };
+
+  const startLocationTracking = () => {
+    if (!navigator.geolocation) return;
+    
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        const newPos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        console.log('Location updated:', newPos);
+        setCurrentPosition(newPos);
+        
+        if (isSessionActive) {
+          setSessionRoute(prev => [...prev, newPos]);
+        }
+      },
+      (error) => {
+        console.error('Location tracking error:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000
+      }
+    );
+    
+    setWatchId(id);
   };
 
   const handleStartStop = () => {
-    console.log('Handle start/stop clicked. Location granted:', location.granted, 'Session active:', isSessionActive);
-    
-    if (!location.granted && !isSessionActive) {
-      // Request location first
-      console.log('Requesting location permission...');
+    if (!locationGranted && !isSessionActive) {
       requestLocationPermission();
       return;
     }
     
     if (isSessionActive) {
-      console.log('Stopping session...');
       setIsSessionActive(false);
-      // Save session data
       const sessionData = {
         date: new Date().toDateString(),
         distance: calculateDistance(),
@@ -205,7 +180,6 @@ const MainPage: React.FC = () => {
         activities: completedActivities
       };
       
-      // Store in localStorage for calendar
       const existingSessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
       existingSessions.push(sessionData);
       localStorage.setItem('walkingSessions', JSON.stringify(existingSessions));
@@ -222,8 +196,6 @@ const MainPage: React.FC = () => {
         setSuggestedActivities([]);
       }, 15000);
     } else {
-      // Start session with suggested activities
-      console.log('Starting session...');
       setIsSessionActive(true);
       if (currentPosition) {
         setSessionRoute([currentPosition]);
@@ -259,17 +231,8 @@ const MainPage: React.FC = () => {
 
   const handlePositionUpdate = (position: Position) => {
     setCurrentPosition(position);
-    setSessionRoute(prev => [...prev, position]);
-  };
-
-  const handleSendMessage = () => {
-    if (selectedFriend && messageText.trim()) {
-      alert(`✅ Message sent to ${selectedFriend}: "${messageText}"`);
-      setShowMessaging(false);
-      setMessageText('');
-      setSelectedFriend('');
-    } else {
-      alert('❌ Please select a friend and write a message!');
+    if (isSessionActive) {
+      setSessionRoute(prev => [...prev, position]);
     }
   };
 
@@ -356,7 +319,16 @@ const MainPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <Button
-                onClick={handleSendMessage}
+                onClick={() => {
+                  if (selectedFriend && messageText.trim()) {
+                    alert(`✅ Message sent to ${selectedFriend}: "${messageText}"`);
+                    setShowMessaging(false);
+                    setMessageText('');
+                    setSelectedFriend('');
+                  } else {
+                    alert('❌ Please select a friend and write a message!');
+                  }
+                }}
                 className="bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
               >
                 <Send className="w-5 h-5 mr-2" />
@@ -383,7 +355,15 @@ const MainPage: React.FC = () => {
           
           <div className="space-y-6">
             <Button
-              onClick={handleTakePhoto}
+              onClick={() => {
+                const newPhoto: SessionPhoto = {
+                  id: Date.now().toString(),
+                  url: `📸 Photo taken at ${formatTime(sessionTime)}`,
+                  timestamp: Date.now()
+                };
+                setSessionPhotos([...sessionPhotos, newPhoto]);
+                alert('📸 Photo captured! ✨');
+              }}
               className="w-full bg-yellow-accent text-bright-green font-black py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all"
             >
               <Camera className="w-6 h-6 mr-3" />
@@ -400,7 +380,18 @@ const MainPage: React.FC = () => {
                 rows={3}
               />
               <Button
-                onClick={handleAddComment}
+                onClick={() => {
+                  if (newComment.trim()) {
+                    const comment: SessionComment = {
+                      id: Date.now().toString(),
+                      text: newComment,
+                      timestamp: Date.now()
+                    };
+                    setSessionComments([...sessionComments, comment]);
+                    setNewComment('');
+                    alert('💬 Comment added! ✨');
+                  }
+                }}
                 className="mt-2 bg-forest-green text-white font-black py-2 rounded-2xl hover:bg-bright-green transition-all"
               >
                 ✅ Add Comment
@@ -451,7 +442,6 @@ const MainPage: React.FC = () => {
           <div className="text-6xl mb-6">🎉</div>
           <h2 className="text-3xl font-black text-bright-green mb-6">✨ Session Complete! ✨</h2>
           
-          {/* Route Summary */}
           {sessionRoute.length > 1 && (
             <div className="mb-6">
               <h3 className="text-xl font-bold text-bright-green mb-3">🗺️ Your Route 🗺️</h3>
@@ -465,7 +455,6 @@ const MainPage: React.FC = () => {
             </div>
           )}
 
-          {/* Health Benefits */}
           <div className="mb-6">
             <h3 className="text-xl font-bold text-bright-green mb-4">🌟 Benefits Gained 🌟</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -492,7 +481,6 @@ const MainPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Activity Tracking */}
           <div className="mb-6">
             <h3 className="text-lg font-bold text-bright-green mb-3">🎯 What did you do? 🎯</h3>
             <div className="space-y-2">
@@ -514,7 +502,6 @@ const MainPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Coins and Streak */}
           <div className="space-y-4 mb-6">
             <div className="bg-gradient-to-r from-yellow-accent to-orange-accent rounded-2xl p-4 text-white">
               <p className="font-black text-xl">🪙 +{calculateTotalCoins()} NatureCoins</p>
@@ -526,13 +513,11 @@ const MainPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Did You Know */}
           <div className="bg-forest-green rounded-2xl p-4 text-white mb-6">
             <p className="font-bold text-sm mb-2">🌱 Did you know? 🌱</p>
             <p className="font-bold">Spending just 20 minutes in nature can significantly reduce stress hormones and boost your mood! 🧠✨</p>
           </div>
 
-          {/* Session Stats */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-light-green rounded-xl p-3">
               <p className="font-black text-bright-green">⏰ Time Outside</p>
@@ -550,53 +535,47 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Improved Header with better date/time positioning */}
-      <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-4 shadow-xl">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
+      {/* Header with bigger title and improved date/time */}
+      <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-6 shadow-xl">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
                 alt="Leaf" 
-                className="w-10 h-10"
+                className="w-12 h-12"
               />
               <div>
-                <h1 className="text-xl font-nunito font-black text-white">NatureCapture</h1>
-                <p className="text-light-green font-bold text-xs">Ready for adventure? 🌟</p>
+                <h1 className="text-3xl font-nunito font-black text-white">NatureCapture</h1>
+                <p className="text-light-green font-bold text-sm">🌟 Ready for your next adventure? 🌟</p>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-2 shadow-lg border-2 border-white">
-              <div className="flex items-center space-x-1">
-                <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-yellow-500 text-xs font-black">🪙</span>
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-yellow-500 text-sm font-black">🪙</span>
                 </div>
-                <span className="font-black text-white text-sm">247</span>
+                <span className="font-black text-white text-lg">247</span>
               </div>
             </div>
           </div>
           
-          {/* Date and Time - Better positioned */}
-          <div className="flex justify-center mb-2">
+          {/* Date, Time and Location as a single line */}
+          <div className="flex items-center justify-center space-x-4 text-white">
             <DateTimeDisplay />
+            {currentPosition && (
+              <div className="flex items-center space-x-2 bg-white/20 rounded-xl px-3 py-2 backdrop-blur-sm">
+                <MapPin className="w-4 h-4" />
+                <span className="font-bold text-sm">
+                  📍 {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Location Display - Compact single line */}
-      {currentPosition && (
-        <div className="px-4 mb-4">
-          <div className="bg-white rounded-xl p-2 shadow-md border border-bright-green">
-            <div className="flex items-center justify-center space-x-2">
-              <MapPin className="w-4 h-4 text-forest-green" />
-              <p className="font-bold text-forest-green text-xs">
-                📍 {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Real-time Map View - Full Leaflet implementation */}
+      {/* Real-time Map */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-forest-green">
           <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
@@ -604,48 +583,35 @@ const MainPage: React.FC = () => {
             🗺️ Live Map 🗺️
           </h2>
           <RealTimeMap 
-            isActive={true}
+            isActive={isSessionActive}
             onPositionUpdate={handlePositionUpdate}
             route={sessionRoute}
           />
         </div>
       </div>
 
-      {/* Environmental Data - Aligned conditions */}
+      {/* Environmental Conditions - Aligned properly */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-light-green">
           <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
             <Wind className="w-4 h-4 mr-2" />
-            🌤️ Conditions 🌤️
+            🌤️ Current Conditions 🌤️
           </h2>
           
-          {/* Aligned grid layout for conditions */}
           <div className="grid grid-cols-3 gap-3">
-            {/* Temperature */}
-            <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-xl p-3 text-white text-center">
-              <Thermometer className="w-5 h-5 mx-auto mb-1" />
-              <p className="font-black text-lg">22°C</p>
-              <p className="font-bold text-xs">Temperature</p>
-            </div>
-
-            {/* Wind Speed */}
-            <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl p-3 text-white text-center">
-              <Wind className="w-5 h-5 mx-auto mb-1" />
-              <p className="font-black text-lg">8 km/h</p>
-              <p className="font-bold text-xs">Wind Speed</p>
-            </div>
-
-            {/* AQI - Compact size */}
+            {/* AQI */}
             <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-3 text-white text-center">
               <Eye className="w-5 h-5 mx-auto mb-1" />
-              <p className="font-black text-lg">42</p>
-              <p className="font-bold text-xs">AQI Good</p>
+              <AirQualityMonitor position={currentPosition} />
             </div>
+
+            {/* Weather Conditions */}
+            <WeatherMonitor position={currentPosition} />
           </div>
         </div>
       </div>
 
-      {/* Extended Weather Information - More compact */}
+      {/* Extended Weather Information */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
           <h2 className="text-lg font-black text-bright-green mb-3">🌈 Weather Details 🌈</h2>
@@ -691,7 +657,7 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Timer Section - Cleaner design */}
+      {/* Main Start/Stop Button */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-forest-green relative overflow-hidden">
           <div className="absolute inset-0 opacity-5">
@@ -705,13 +671,13 @@ const MainPage: React.FC = () => {
           <div className="relative z-10 text-center">
             {isSessionActive ? (
               <div className="space-y-4">
-                <div className="w-16 h-16 bg-forest-green rounded-full mx-auto flex items-center justify-center">
+                <div className="w-16 h-16 bg-forest-green rounded-full mx-auto flex items-center justify-center animate-pulse">
                   <Activity className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-2xl font-nunito font-black text-bright-green">
-                  🌟 Active Session! 🌟
+                  🌟 Session Active! 🌟
                 </h2>
-                <div className="text-5xl font-black text-forest-green">
+                <div className="text-5xl font-black text-forest-green mb-4">
                   {formatTime(sessionTime)}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -726,15 +692,15 @@ const MainPage: React.FC = () => {
                 </div>
                 <Button
                   onClick={() => setShowPhotoComment(true)}
-                  className="w-full bg-yellow-accent text-bright-green font-black py-2 rounded-2xl hover:bg-bright-green hover:text-white transition-all"
+                  className="w-full bg-yellow-accent text-bright-green font-black py-3 rounded-2xl hover:bg-bright-green hover:text-white transition-all transform hover:scale-105"
                 >
-                  <Camera className="w-4 h-4 mr-2" />
-                  📸 Add Photo
+                  <Camera className="w-5 h-5 mr-2" />
+                  📸 Add Photo & Comment
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex justify-center space-x-4">
+                <div className="flex justify-center space-x-4 mb-4">
                   <img 
                     src="/lovable-uploads/f1457e39-8dd6-4e91-9962-d1b090e9bee1.png" 
                     alt="Trees" 
@@ -747,20 +713,32 @@ const MainPage: React.FC = () => {
                   />
                 </div>
                 <h2 className="text-2xl font-nunito font-black text-bright-green">
-                  🌈 Ready to Explore? 🌈
+                  🌈 Ready for Nature Time? 🌈
                 </h2>
-                <p className="text-text-dark font-bold">
-                  Start your nature time and earn NatureCoins! 🪙✨
+                <p className="text-text-dark font-bold mb-4">
+                  Start your outdoor adventure and earn NatureCoins! 🪙✨
                 </p>
+                
+                {!locationGranted && (
+                  <div className="bg-orange-100 border-2 border-orange-accent rounded-2xl p-3 mb-4">
+                    <div className="flex items-center justify-center space-x-2 text-orange-600">
+                      <MapPin className="w-5 h-5" />
+                      <span className="font-bold">📍 Location access needed to track your adventure</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
             <Button
               onClick={handleStartStop}
-              className={`w-full mt-6 text-lg font-black py-6 rounded-3xl shadow-lg transform transition-all hover:scale-105 ${
+              disabled={!locationGranted && !isSessionActive}
+              className={`w-full mt-6 text-xl font-black py-6 rounded-3xl shadow-lg transform transition-all ${
                 isSessionActive
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-gradient-to-r from-forest-green to-bright-green text-white'
+                  ? 'bg-red-500 hover:bg-red-600 text-white hover:scale-105'
+                  : locationGranted
+                    ? 'bg-gradient-to-r from-forest-green to-bright-green text-white hover:scale-105'
+                    : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
               }`}
             >
               {isSessionActive ? (
@@ -779,11 +757,11 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Suggested Activities - Cleaner design */}
+      {/* Suggested Activities */}
       {!isSessionActive && (
         <div className="px-4 mb-6">
           <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
-            <h2 className="text-lg font-black text-bright-green mb-3">🎯 Suggested for You</h2>
+            <h2 className="text-lg font-black text-bright-green mb-3">🎯 Suggested Activities</h2>
             <div className="space-y-2">
               {allActivities.map((activity, index) => (
                 <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border border-forest-green">
@@ -792,12 +770,12 @@ const MainPage: React.FC = () => {
                       <span className="text-2xl">{activity.icon}</span>
                       <div>
                         <p className="font-black text-bright-green text-sm">{activity.name}</p>
-                        <p className="text-xs font-bold text-text-dark">{activity.duration} • {activity.calories}</p>
+                        <p className="text-xs font-bold text-text-dark">{activity.duration} • {activity.calories} • 🪙 {activity.coins}</p>
                       </div>
                     </div>
                     <Button 
                       onClick={() => handleTryActivity(activity.name)}
-                      className="bg-forest-green text-white font-black rounded-full px-3 py-1 text-xs hover:bg-bright-green transition-all"
+                      className="bg-forest-green text-white font-black rounded-full px-4 py-2 text-xs hover:bg-bright-green transition-all transform hover:scale-105"
                     >
                       Try
                     </Button>
@@ -809,60 +787,34 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Nearby Parks */}
-      {isSessionActive && (
-        <div className="px-4 mb-6">
-          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-forest-green">
-            <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
-              <MapPin className="w-5 h-5 mr-2" />
-              🌳 Parks Nearby
-            </h2>
-            <div className="space-y-2">
-              {nearbyParks.map((park, index) => (
-                <div key={index} className="bg-light-green rounded-2xl p-3 border border-forest-green">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-black text-bright-green text-sm">{park.name}</p>
-                      <p className="text-xs font-bold text-text-dark">📍 {park.distance} • ⭐ {park.rating}</p>
-                    </div>
-                    <Button className="bg-yellow-accent text-bright-green font-black rounded-full px-3 py-1 text-xs hover:bg-bright-green hover:text-white transition-all">
-                      Go
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Stats */}
+      {/* Quick Stats and Messaging */}
       <div className="px-4 mb-6">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl p-3 border-2 border-light-green">
-            <div className="text-center">
-              <div className="w-10 h-10 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-white font-black text-sm">23</span>
-              </div>
-              <p className="font-black text-text-dark text-sm">📊 Sessions</p>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="bg-white rounded-2xl p-3 border-2 border-light-green text-center">
+            <div className="w-10 h-10 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
+              <span className="text-white font-black text-sm">23</span>
             </div>
+            <p className="font-black text-text-dark text-sm">📊 Sessions</p>
           </div>
           <div 
-            className="bg-white rounded-2xl p-3 border-2 border-light-green cursor-pointer"
+            className="bg-white rounded-2xl p-3 border-2 border-light-green text-center cursor-pointer hover:scale-105 transition-transform"
             onClick={handleStreakClick}
           >
-            <div className="text-center">
-              <div className="w-10 h-10 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-bright-green font-black text-sm">7</span>
-              </div>
-              <p className="font-black text-text-dark text-sm">🔥 Streak</p>
+            <div className="w-10 h-10 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
+              <span className="text-bright-green font-black text-sm">7</span>
             </div>
+            <p className="font-black text-text-dark text-sm">🔥 Streak</p>
+          </div>
+          <div className="bg-white rounded-2xl p-3 border-2 border-light-green text-center">
+            <div className={`w-6 h-6 rounded-full mx-auto mb-2 flex items-center justify-center ${locationGranted ? 'bg-forest-green' : 'bg-orange-accent'}`}>
+              <MapPin className="w-3 h-3 text-white" />
+            </div>
+            <p className="font-black text-text-dark text-xs">
+              {locationGranted ? '✅ GPS' : '📍 Enable'}
+            </p>
           </div>
         </div>
-      </div>
-
-      {/* Messaging Button */}
-      <div className="px-4 mb-6">
+        
         <Button 
           onClick={() => setShowMessaging(true)}
           className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-black py-3 rounded-2xl hover:scale-105 transition-transform"
@@ -872,27 +824,18 @@ const MainPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Location Status */}
-      <div className="px-4 pb-6">
-        <div className="bg-white rounded-2xl p-3 border-2 border-light-green flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${location.granted ? 'bg-forest-green' : 'bg-orange-accent'}`}>
-              <MapPin className="w-3 h-3 text-white" />
-            </div>
-            <p className="font-black text-text-dark text-sm">
-              {location.granted ? '✅ Location Active' : '📍 Enable Location'}
-            </p>
-          </div>
-          {!location.granted && (
-            <Button 
-              onClick={requestLocationPermission}
-              className="bg-gradient-to-r from-forest-green to-bright-green text-white font-black rounded-full px-4 py-1 text-xs hover:scale-105 transition-transform"
-            >
-              Enable
-            </Button>
-          )}
+      {/* Location Enable Button */}
+      {!locationGranted && (
+        <div className="px-4 pb-6">
+          <Button 
+            onClick={requestLocationPermission}
+            className="w-full bg-gradient-to-r from-orange-accent to-red-500 text-white font-black py-4 rounded-2xl hover:scale-105 transition-transform"
+          >
+            <MapPin className="w-6 h-6 mr-2" />
+            🌍 Enable Location Access
+          </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

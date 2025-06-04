@@ -1,17 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Wind, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 interface Position {
   lat: number;
   lng: number;
 }
 
-interface AirQualityData {
+interface AQIData {
   aqi: number;
   status: string;
-  color: string;
-  dominant: string;
 }
 
 interface AirQualityMonitorProps {
@@ -19,17 +17,26 @@ interface AirQualityMonitorProps {
 }
 
 const AirQualityMonitor: React.FC<AirQualityMonitorProps> = ({ position }) => {
-  const [aqiData, setAqiData] = useState<AirQualityData | null>(null);
+  const [aqiData, setAqiData] = useState<AQIData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getAQIStatus = (aqi: number) => {
-    if (aqi <= 50) return { status: 'Good', color: 'bg-green-500', icon: CheckCircle };
-    if (aqi <= 100) return { status: 'Moderate', color: 'bg-yellow-500', icon: AlertTriangle };
-    if (aqi <= 150) return { status: 'Unhealthy for Sensitive Groups', color: 'bg-orange-500', icon: AlertTriangle };
-    if (aqi <= 200) return { status: 'Unhealthy', color: 'bg-red-500', icon: XCircle };
-    if (aqi <= 300) return { status: 'Very Unhealthy', color: 'bg-purple-500', icon: XCircle };
-    return { status: 'Hazardous', color: 'bg-red-800', icon: XCircle };
+  const getAQIDescription = (aqi: number) => {
+    if (aqi <= 50) return 'Good';
+    if (aqi <= 100) return 'Moderate';
+    if (aqi <= 150) return 'Unhealthy for Sensitive';
+    if (aqi <= 200) return 'Unhealthy';
+    if (aqi <= 300) return 'Very Unhealthy';
+    return 'Hazardous';
+  };
+
+  const getAQIColor = (aqi: number) => {
+    if (aqi <= 50) return 'text-green-600';
+    if (aqi <= 100) return 'text-yellow-600';
+    if (aqi <= 150) return 'text-orange-600';
+    if (aqi <= 200) return 'text-red-600';
+    if (aqi <= 300) return 'text-purple-600';
+    return 'text-red-800';
   };
 
   useEffect(() => {
@@ -45,23 +52,18 @@ const AirQualityMonitor: React.FC<AirQualityMonitorProps> = ({ position }) => {
         );
         
         if (!response.ok) {
-          throw new Error('Failed to fetch air quality data');
+          throw new Error('Failed to fetch AQI data');
         }
         
         const data = await response.json();
         
         if (data.status === 'ok' && data.data) {
-          const aqi = data.data.aqi;
-          const statusInfo = getAQIStatus(aqi);
-          
           setAqiData({
-            aqi: aqi,
-            status: statusInfo.status,
-            color: statusInfo.color,
-            dominant: data.data.dominentpol || 'N/A'
+            aqi: data.data.aqi,
+            status: getAQIDescription(data.data.aqi)
           });
         } else {
-          throw new Error('Invalid data received');
+          throw new Error('Invalid AQI data received');
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -72,62 +74,44 @@ const AirQualityMonitor: React.FC<AirQualityMonitorProps> = ({ position }) => {
     };
 
     fetchAQI();
-    // Refresh every 10 minutes
-    const interval = setInterval(fetchAQI, 10 * 60 * 1000);
+    // Refresh every 30 minutes
+    const interval = setInterval(fetchAQI, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [position]);
 
   if (!position) {
     return (
-      <div className="bg-light-green rounded-2xl p-4 text-center">
-        <Wind className="w-6 h-6 text-forest-green mx-auto mb-2" />
-        <p className="font-bold text-bright-green text-sm">📍 Location needed for AQI</p>
-      </div>
+      <>
+        <p className="font-black text-lg">--</p>
+        <p className="font-bold text-xs">Need Location</p>
+      </>
     );
   }
 
   if (loading) {
     return (
-      <div className="bg-light-green rounded-2xl p-4 text-center">
-        <Wind className="w-6 h-6 text-forest-green mx-auto mb-2 animate-spin" />
-        <p className="font-bold text-bright-green text-sm">🔄 Loading AQI...</p>
-      </div>
+      <>
+        <p className="font-black text-lg animate-pulse">...</p>
+        <p className="font-bold text-xs">Loading</p>
+      </>
     );
   }
 
-  if (error) {
+  if (error || !aqiData) {
     return (
-      <div className="bg-red-100 rounded-2xl p-4 text-center">
-        <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-        <p className="font-bold text-red-600 text-sm">❌ AQI Error</p>
-        <p className="text-xs text-red-500">{error}</p>
-      </div>
+      <>
+        <p className="font-black text-lg text-red-500">ERR</p>
+        <p className="font-bold text-xs">AQI Error</p>
+      </>
     );
   }
-
-  if (!aqiData) {
-    return (
-      <div className="bg-gray-100 rounded-2xl p-4 text-center">
-        <Wind className="w-6 h-6 text-gray-500 mx-auto mb-2" />
-        <p className="font-bold text-gray-600 text-sm">📊 No AQI data</p>
-      </div>
-    );
-  }
-
-  const StatusIcon = getAQIStatus(aqiData.aqi).icon;
 
   return (
-    <div className={`rounded-2xl p-4 text-white ${aqiData.color}`}>
-      <div className="flex items-center justify-center mb-2">
-        <StatusIcon className="w-6 h-6 mr-2" />
-        <div className="text-center">
-          <p className="font-black text-2xl">{aqiData.aqi}</p>
-          <p className="font-bold text-xs">AQI</p>
-        </div>
-      </div>
-      <p className="font-bold text-center text-xs">{aqiData.status}</p>
-    </div>
+    <>
+      <p className="font-black text-lg">{aqiData.aqi}</p>
+      <p className="font-bold text-xs">AQI {aqiData.status}</p>
+    </>
   );
 };
 
