@@ -31,6 +31,7 @@ const MainPage: React.FC = () => {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [locationGranted, setLocationGranted] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [sessionRoute, setSessionRoute] = useState<Position[]>([]);
@@ -56,12 +57,6 @@ const MainPage: React.FC = () => {
     { name: 'Bird Watching', icon: '🦅', duration: '40 min', calories: '80 cal', difficulty: 'Easy', coins: 40 },
   ];
 
-  const nearbyParks = [
-    { name: 'Central Green Park', distance: '0.3 km', rating: 4.8, type: 'Urban Park' },
-    { name: 'Riverside Trail', distance: '0.8 km', rating: 4.9, type: 'Nature Trail' },
-    { name: 'Sunset Hill', distance: '1.2 km', rating: 4.7, type: 'Hiking' },
-  ];
-
   const friends = [
     { name: 'Alex Green', avatar: '🌿' },
     { name: 'Maya Forest', avatar: '🌳' },
@@ -80,7 +75,8 @@ const MainPage: React.FC = () => {
   }, [isSessionActive]);
 
   useEffect(() => {
-    requestLocationPermission();
+    // Check location permission on load
+    checkLocationPermission();
     
     return () => {
       if (watchId !== null) {
@@ -95,13 +91,32 @@ const MainPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const requestLocationPermission = () => {
-    console.log('Requesting location permission...');
+  const checkLocationPermission = async () => {
     if (!navigator.geolocation) {
-      console.error('Geolocation is not supported');
+      setLocationError('Geolocation is not supported by this browser');
       return;
     }
 
+    try {
+      // Check if permission is already granted
+      if ('permissions' in navigator) {
+        const permission = await navigator.permissions.query({ name: 'geolocation' });
+        if (permission.state === 'granted') {
+          getCurrentLocation();
+        } else {
+          setLocationGranted(false);
+        }
+      } else {
+        // Fallback for browsers without permissions API
+        getCurrentLocation();
+      }
+    } catch (error) {
+      console.error('Error checking location permission:', error);
+      setLocationGranted(false);
+    }
+  };
+
+  const getCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newPos = {
@@ -111,17 +126,26 @@ const MainPage: React.FC = () => {
         console.log('Location permission granted:', newPos);
         setCurrentPosition(newPos);
         setLocationGranted(true);
+        setLocationError(null);
         startLocationTracking();
       },
       (error) => {
         console.error('Location permission error:', error);
         setLocationGranted(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          alert('📍 Location access was denied. Please enable location in your browser settings and refresh the page.');
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          alert('📍 Location information is unavailable. Please try again.');
-        } else if (error.code === error.TIMEOUT) {
-          alert('📍 Location request timed out. Please try again.');
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError('Location access was denied. Please enable location in your browser settings.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setLocationError('Location information is unavailable. Please try again.');
+            break;
+          case error.TIMEOUT:
+            setLocationError('Location request timed out. Please try again.');
+            break;
+          default:
+            setLocationError('An unknown error occurred while retrieving location.');
+            break;
         }
       },
       {
@@ -132,9 +156,16 @@ const MainPage: React.FC = () => {
     );
   };
 
+  const requestLocationPermission = () => {
+    console.log('Requesting location permission...');
+    setLocationError(null);
+    getCurrentLocation();
+  };
+
   const startLocationTracking = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation || watchId !== null) return;
     
+    console.log('Starting location tracking...');
     const id = navigator.geolocation.watchPosition(
       (position) => {
         const newPos = {
@@ -150,6 +181,7 @@ const MainPage: React.FC = () => {
       },
       (error) => {
         console.error('Location tracking error:', error);
+        setLocationError('Error tracking location. Please check your settings.');
       },
       {
         enableHighAccuracy: true,
@@ -170,6 +202,7 @@ const MainPage: React.FC = () => {
     if (isSessionActive) {
       setIsSessionActive(false);
       const sessionData = {
+        id: Date.now().toString(),
         date: new Date().toISOString(),
         distance: calculateDistance(),
         time: sessionTime,
@@ -194,6 +227,7 @@ const MainPage: React.FC = () => {
         setFeelingRating(0);
         setSuggestedActivities([]);
         setAddedActivities([]);
+        // Don't reset the route here - keep it displayed
       }, 15000);
     } else {
       setIsSessionActive(true);
@@ -257,7 +291,14 @@ const MainPage: React.FC = () => {
   const handleTakePhoto = async () => {
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          } 
+        });
+        
         const video = document.createElement('video');
         video.srcObject = stream;
         video.play();
@@ -282,14 +323,15 @@ const MainPage: React.FC = () => {
               setNewComment('');
               alert('📸 Photo captured! ✨');
             }
-          });
+          }, 'image/jpeg', 0.8);
           
           stream.getTracks().forEach(track => track.stop());
         });
       } else {
+        // Fallback for devices without camera
         const newPhoto: SessionPhoto = {
           id: Date.now().toString(),
-          url: `📸 Photo taken at ${formatTime(sessionTime)}`,
+          url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23e5e7eb"/><text x="200" y="150" text-anchor="middle" fill="%23374151" font-size="16">📸 Photo taken at ${formatTime(sessionTime)}</text></svg>`,
           timestamp: Date.now(),
           comment: newComment
         };
@@ -299,9 +341,10 @@ const MainPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error taking photo:', error);
+      // Fallback photo
       const newPhoto: SessionPhoto = {
         id: Date.now().toString(),
-        url: `📸 Photo taken at ${formatTime(sessionTime)}`,
+        url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23e5e7eb"/><text x="200" y="150" text-anchor="middle" fill="%23374151" font-size="16">📸 Photo taken at ${formatTime(sessionTime)}</text></svg>`,
         timestamp: Date.now(),
         comment: newComment
       };
@@ -577,7 +620,7 @@ const MainPage: React.FC = () => {
                 <p className="text-light-green font-bold text-sm">🌟 Ready for your next adventure? 🌟</p>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white mt-4">
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white mt-6">
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
                   <span className="text-yellow-500 text-sm font-black">🪙</span>
@@ -683,7 +726,7 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Start/Stop Button - Fixed */}
+      {/* Main Start/Stop Button */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-forest-green relative overflow-hidden">
           <div className="absolute inset-0 opacity-5">
@@ -751,6 +794,9 @@ const MainPage: React.FC = () => {
                       <MapPin className="w-5 h-5" />
                       <span className="font-bold">📍 Location access needed to track your adventure</span>
                     </div>
+                    {locationError && (
+                      <p className="text-red-600 text-sm mt-2 font-bold">{locationError}</p>
+                    )}
                   </div>
                 )}
               </div>
