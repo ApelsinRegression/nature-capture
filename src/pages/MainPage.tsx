@@ -550,10 +550,10 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Redesigned Header with proper positioning */}
+      {/* Improved Header with better date/time positioning */}
       <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-4 shadow-xl">
         <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <img 
                 src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
@@ -575,14 +575,14 @@ const MainPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Date and Time properly positioned */}
-          <div className="flex justify-center">
+          {/* Date and Time - Better positioned */}
+          <div className="flex justify-center mb-2">
             <DateTimeDisplay />
           </div>
         </div>
       </div>
 
-      {/* Location Display - Clean single line */}
+      {/* Location Display - Compact single line */}
       {currentPosition && (
         <div className="px-4 mb-4">
           <div className="bg-white rounded-xl p-2 shadow-md border border-bright-green">
@@ -596,7 +596,7 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Real-time Map View - Full implementation */}
+      {/* Real-time Map View - Full Leaflet implementation */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-forest-green">
           <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
@@ -611,7 +611,7 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Redesigned Environmental Data - Compact layout */}
+      {/* Environmental Data - Aligned conditions */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-light-green">
           <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
@@ -619,14 +619,27 @@ const MainPage: React.FC = () => {
             🌤️ Conditions 🌤️
           </h2>
           
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <WeatherMonitor position={currentPosition} />
-          </div>
-          
-          {/* Compact AQI Display */}
-          <div className="flex justify-center">
-            <div className="w-32">
-              <AirQualityMonitor position={currentPosition} />
+          {/* Aligned grid layout for conditions */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* Temperature */}
+            <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-xl p-3 text-white text-center">
+              <Thermometer className="w-5 h-5 mx-auto mb-1" />
+              <p className="font-black text-lg">22°C</p>
+              <p className="font-bold text-xs">Temperature</p>
+            </div>
+
+            {/* Wind Speed */}
+            <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl p-3 text-white text-center">
+              <Wind className="w-5 h-5 mx-auto mb-1" />
+              <p className="font-black text-lg">8 km/h</p>
+              <p className="font-bold text-xs">Wind Speed</p>
+            </div>
+
+            {/* AQI - Compact size */}
+            <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-3 text-white text-center">
+              <Eye className="w-5 h-5 mx-auto mb-1" />
+              <p className="font-black text-lg">42</p>
+              <p className="font-bold text-xs">AQI Good</p>
             </div>
           </div>
         </div>

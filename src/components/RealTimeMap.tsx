@@ -1,7 +1,7 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface Position {
   lat: number;
@@ -14,135 +14,91 @@ interface RealTimeMapProps {
   route: Position[];
 }
 
+// Fix for default markers
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
 const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, route }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const currentMarkerRef = useRef<L.Marker | null>(null);
+  const routePolylineRef = useRef<L.Polyline | null>(null);
 
   useEffect(() => {
-    // Prompt user for Mapbox token if not set
-    if (!mapboxToken) {
-      const token = prompt('Please enter your Mapbox public token (get it from https://mapbox.com/):');
-      if (token) {
-        setMapboxToken(token);
-      }
-    }
-  }, [mapboxToken]);
+    if (!mapRef.current) return;
 
-  useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    // Initialize map
+    mapInstanceRef.current = L.map(mapRef.current).setView([51.505, -0.09], 13);
 
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/outdoors-v12',
-      zoom: 15,
-      center: [0, 0],
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(mapInstanceRef.current);
 
     return () => {
-      map.current?.remove();
-    };
-  }, [mapboxToken]);
-
-  useEffect(() => {
-    if (!isActive || !map.current) return;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const newPos = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        
-        setCurrentPosition(newPos);
-        onPositionUpdate(newPos);
-        
-        // Center map on current position
-        map.current?.flyTo({
-          center: [newPos.lng, newPos.lat],
-          zoom: 16
-        });
-
-        // Add/update current position marker
-        const markers = document.querySelectorAll('.current-position-marker');
-        markers.forEach(marker => marker.remove());
-        
-        new mapboxgl.Marker({ color: '#22c55e', scale: 1.2 })
-          .setLngLat([newPos.lng, newPos.lat])
-          .addTo(map.current!);
-      },
-      (error) => console.error('Position tracking error:', error),
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
-    );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
     };
-  }, [isActive, onPositionUpdate]);
+  }, []);
 
+  // Update current position marker
   useEffect(() => {
-    if (!map.current || route.length < 2) return;
+    if (!mapInstanceRef.current || route.length === 0) return;
 
-    // Draw route line
-    if (map.current.getSource('route')) {
-      map.current.removeLayer('route');
-      map.current.removeSource('route');
+    const currentPosition = route[route.length - 1];
+
+    // Remove existing marker
+    if (currentMarkerRef.current) {
+      mapInstanceRef.current.removeLayer(currentMarkerRef.current);
     }
 
-    map.current.addSource('route', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: route.map(pos => [pos.lng, pos.lat])
-        }
-      }
-    });
+    // Add new marker
+    currentMarkerRef.current = L.marker([currentPosition.lat, currentPosition.lng])
+      .addTo(mapInstanceRef.current)
+      .bindPopup('You are here!')
+      .openPopup();
 
-    map.current.addLayer({
-      id: 'route',
-      type: 'line',
-      source: 'route',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-      },
-      paint: {
-        'line-color': '#22c55e',
-        'line-width': 4
-      }
-    });
+    // Center map on current position
+    mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 15);
   }, [route]);
 
-  if (!mapboxToken) {
-    return (
-      <div className="bg-gradient-to-br from-light-green to-blue-100 rounded-2xl p-6 text-center">
-        <div className="text-4xl mb-3">🗺️</div>
-        <p className="font-black text-bright-green text-lg">Map Loading...</p>
-        <p className="font-bold text-text-dark text-sm">Enter your Mapbox token to view real-time map</p>
-      </div>
-    );
-  }
+  // Update route polyline
+  useEffect(() => {
+    if (!mapInstanceRef.current || route.length < 2) return;
+
+    // Remove existing route
+    if (routePolylineRef.current) {
+      mapInstanceRef.current.removeLayer(routePolylineRef.current);
+    }
+
+    // Add new route
+    const latLngs: L.LatLngExpression[] = route.map(pos => [pos.lat, pos.lng]);
+    routePolylineRef.current = L.polyline(latLngs, { 
+      color: 'blue', 
+      weight: 4,
+      opacity: 0.7 
+    }).addTo(mapInstanceRef.current);
+
+    // Fit map to show entire route
+    mapInstanceRef.current.fitBounds(routePolylineRef.current.getBounds());
+  }, [route]);
 
   return (
     <div className="relative">
-      <div ref={mapContainer} className="w-full h-64 rounded-2xl" />
-      {currentPosition && (
-        <div className="absolute top-2 left-2 bg-white rounded-lg p-2 shadow-lg">
-          <p className="text-xs font-bold text-bright-green">
-            📍 {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
-          </p>
+      <div 
+        ref={mapRef}
+        style={{ height: '250px', width: '100%' }}
+        className="rounded-xl overflow-hidden"
+      />
+      {route.length > 1 && (
+        <div className="absolute top-2 left-2 bg-white/90 rounded-lg p-2 text-xs font-bold text-forest-green">
+          🛤️ Route Points: {route.length}
         </div>
       )}
     </div>
