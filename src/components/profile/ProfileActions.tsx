@@ -1,70 +1,75 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Calendar, MessageSquare, Send, Plus } from 'lucide-react';
+import { Calendar, MessageSquare, MessageCircle, Users, LogOut, UserPlus, Plus } from 'lucide-react';
 
 interface ProfileActionsProps {
   onCalendarClick: () => void;
   onMessageHistoryClick: () => void;
   onMessageFriendsClick: () => void;
   onCreateEventClick: () => void;
+  onFriendsManagerClick?: () => void;
   onLogout: () => void;
 }
 
 const ProfileActions: React.FC<ProfileActionsProps> = ({ 
-  onCalendarClick, 
+  onCalendarClick,
   onMessageHistoryClick,
   onMessageFriendsClick,
   onCreateEventClick,
-  onLogout 
+  onFriendsManagerClick,
+  onLogout
 }) => {
   return (
-    <div className="px-6 mb-8">
-      <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
+    <div className="px-6 space-y-4">
+      {/* Main Actions */}
+      <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-bright-green">
         <h2 className="text-lg font-nunito font-bold text-bright-green mb-4 text-center">
-          ⚙️ Profile Actions ⚙️
+          🎯 Quick Actions 🎯
         </h2>
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={onCalendarClick}
-            className="w-full bg-gradient-to-r from-light-green to-bright-green text-white font-bold py-4 rounded-2xl text-base shadow-lg"
+            className="bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all transform hover:scale-105"
           >
-            <Calendar className="w-5 h-5 mr-3" />
-            📅 View Walking Calendar
+            <Calendar className="w-5 h-5 mr-2" />
+            📅 Calendar
           </Button>
-
-          <Button
-            onClick={onCreateEventClick}
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-4 rounded-2xl text-base shadow-lg"
-          >
-            <Plus className="w-5 h-5 mr-3" />
-            🌿 Create Event
-          </Button>
-
-          <Button
-            onClick={onMessageHistoryClick}
-            className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white font-bold py-4 rounded-2xl text-base shadow-lg"
-          >
-            <MessageSquare className="w-5 h-5 mr-3" />
-            📨 Message History
-          </Button>
-
           <Button
             onClick={onMessageFriendsClick}
-            className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-bold py-4 rounded-2xl text-base shadow-lg"
+            className="bg-blue-500 text-white font-black py-3 rounded-2xl hover:bg-blue-600 transition-all transform hover:scale-105"
           >
-            <Send className="w-5 h-5 mr-3" />
-            💬 Send Message to Friends
+            <MessageSquare className="w-5 h-5 mr-2" />
+            💬 Messages
           </Button>
-          
           <Button
-            onClick={onLogout}
-            className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-4 rounded-2xl text-base shadow-lg"
+            onClick={onCreateEventClick}
+            className="bg-yellow-accent text-bright-green font-black py-3 rounded-2xl hover:bg-bright-green hover:text-white transition-all transform hover:scale-105"
           >
-            <LogOut className="w-5 h-5 mr-3" />
-            🚪 Sign Out
+            <Plus className="w-5 h-5 mr-2" />
+            📅 Create Event
           </Button>
+          {onFriendsManagerClick && (
+            <Button
+              onClick={onFriendsManagerClick}
+              className="bg-purple-500 text-white font-black py-3 rounded-2xl hover:bg-purple-600 transition-all transform hover:scale-105"
+            >
+              <UserPlus className="w-5 h-5 mr-2" />
+              👥 Friends
+            </Button>
+          )}
         </div>
+      </div>
+
+      {/* Logout */}
+      <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-red-300">
+        <Button
+          onClick={onLogout}
+          className="w-full bg-red-500 text-white font-black py-4 rounded-2xl hover:bg-red-600 transition-all transform hover:scale-105"
+        >
+          <LogOut className="w-6 h-6 mr-2" />
+          🚪 Logout
+        </Button>
       </div>
     </div>
   );

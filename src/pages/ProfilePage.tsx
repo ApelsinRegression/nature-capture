@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileEditForm from '../components/profile/ProfileEditForm';
@@ -8,12 +9,10 @@ import ProfileBadges from '../components/profile/ProfileBadges';
 import ProfileActions from '../components/profile/ProfileActions';
 import CalendarView from '../components/profile/CalendarView';
 import SessionDetails from '../components/profile/SessionDetails';
-import MessageHistory from '../components/messaging/MessageHistory';
-import MessagingInterface from '../components/messaging/MessagingInterface';
-import ConversationView from '../components/messaging/ConversationView';
+import MessagingSystem from '../components/messaging/MessagingSystem';
+import FriendsManager from '../components/friends/FriendsManager';
 import EventCreator from '../components/events/EventCreator';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -42,8 +41,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [selectedEmoji, setSelectedEmoji] = useState('🌱');
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showMessageHistory, setShowMessageHistory] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
+  const [showFriendsManager, setShowFriendsManager] = useState(false);
   const [showEventCreator, setShowEventCreator] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [joinedActivities, setJoinedActivities] = useState<any[]>([]);
@@ -141,29 +140,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     );
   }
 
-  if (showMessageHistory) {
-    return (
-      <MessageHistory 
-        onBack={() => setShowMessageHistory(false)}
-      />
-    );
-  }
-
-  if (selectedFriend) {
-    return (
-      <ConversationView 
-        friend={selectedFriend}
-        onBack={() => setSelectedFriend(null)}
-      />
-    );
-  }
-
   if (showMessaging) {
     return (
-      <MessagingInterface 
-        friends={friends}
+      <MessagingSystem 
         onBack={() => setShowMessaging(false)}
-        onSelectFriend={handleSelectFriend}
+      />
+    );
+  }
+
+  if (showFriendsManager) {
+    return (
+      <FriendsManager 
+        onBack={() => setShowFriendsManager(false)}
       />
     );
   }
@@ -215,9 +203,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
       
       <ProfileActions 
         onCalendarClick={() => setShowCalendar(true)}
-        onMessageHistoryClick={() => setShowMessageHistory(true)}
+        onMessageHistoryClick={() => setShowMessaging(true)}
         onMessageFriendsClick={() => setShowMessaging(true)}
         onCreateEventClick={() => setShowEventCreator(true)}
+        onFriendsManagerClick={() => setShowFriendsManager(true)}
         onLogout={onLogout}
       />
     </div>

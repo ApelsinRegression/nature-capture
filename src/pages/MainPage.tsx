@@ -17,6 +17,7 @@ interface SessionPhoto {
   id: string;
   url: string;
   timestamp: number;
+  comment?: string;
 }
 
 interface SessionComment {
@@ -45,6 +46,7 @@ const MainPage: React.FC = () => {
   const [showMessaging, setShowMessaging] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [suggestedActivities, setSuggestedActivities] = useState<string[]>([]);
+  const [addedActivities, setAddedActivities] = useState<string[]>([]);
 
   const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
@@ -78,7 +80,6 @@ const MainPage: React.FC = () => {
   }, [isSessionActive]);
 
   useEffect(() => {
-    // Request location permission on mount
     requestLocationPermission();
     
     return () => {
@@ -115,7 +116,6 @@ const MainPage: React.FC = () => {
       (error) => {
         console.error('Location permission error:', error);
         setLocationGranted(false);
-        // Show user-friendly message based on error
         if (error.code === error.PERMISSION_DENIED) {
           alert('📍 Location access was denied. Please enable location in your browser settings and refresh the page.');
         } else if (error.code === error.POSITION_UNAVAILABLE) {
@@ -170,7 +170,7 @@ const MainPage: React.FC = () => {
     if (isSessionActive) {
       setIsSessionActive(false);
       const sessionData = {
-        date: new Date().toDateString(),
+        date: new Date().toISOString(),
         distance: calculateDistance(),
         time: sessionTime,
         route: sessionRoute,
@@ -189,11 +189,11 @@ const MainPage: React.FC = () => {
         setShowSessionComplete(false);
         setSessionTime(0);
         setCompletedActivities([]);
-        setSessionRoute([]);
         setSessionPhotos([]);
         setSessionComments([]);
         setFeelingRating(0);
         setSuggestedActivities([]);
+        setAddedActivities([]);
       }, 15000);
     } else {
       setIsSessionActive(true);
@@ -210,10 +210,10 @@ const MainPage: React.FC = () => {
   };
 
   const handleTryActivity = (activityName: string) => {
-    if (!suggestedActivities.includes(activityName)) {
+    if (!addedActivities.includes(activityName)) {
+      setAddedActivities([...addedActivities, activityName]);
       setSuggestedActivities([...suggestedActivities, activityName]);
     }
-    alert(`✅ ${activityName} added to your session suggestions! Start your session to track this activity.`);
   };
 
   const calculateTotalCoins = () => {
@@ -254,15 +254,61 @@ const MainPage: React.FC = () => {
     return distance;
   };
 
-  const handleTakePhoto = () => {
-    // Simulate taking a photo
-    const newPhoto: SessionPhoto = {
-      id: Date.now().toString(),
-      url: `📸 Photo taken at ${formatTime(sessionTime)}`,
-      timestamp: Date.now()
-    };
-    setSessionPhotos([...sessionPhotos, newPhoto]);
-    alert('📸 Photo captured! ✨');
+  const handleTakePhoto = async () => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        
+        video.addEventListener('loadedmetadata', () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(video, 0, 0);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              const newPhoto: SessionPhoto = {
+                id: Date.now().toString(),
+                url: url,
+                timestamp: Date.now(),
+                comment: newComment
+              };
+              setSessionPhotos([...sessionPhotos, newPhoto]);
+              setNewComment('');
+              alert('📸 Photo captured! ✨');
+            }
+          });
+          
+          stream.getTracks().forEach(track => track.stop());
+        });
+      } else {
+        const newPhoto: SessionPhoto = {
+          id: Date.now().toString(),
+          url: `📸 Photo taken at ${formatTime(sessionTime)}`,
+          timestamp: Date.now(),
+          comment: newComment
+        };
+        setSessionPhotos([...sessionPhotos, newPhoto]);
+        setNewComment('');
+        alert('📸 Photo captured! ✨');
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      const newPhoto: SessionPhoto = {
+        id: Date.now().toString(),
+        url: `📸 Photo taken at ${formatTime(sessionTime)}`,
+        timestamp: Date.now(),
+        comment: newComment
+      };
+      setSessionPhotos([...sessionPhotos, newPhoto]);
+      setNewComment('');
+      alert('📸 Photo captured! ✨');
+    }
   };
 
   const handleAddComment = () => {
@@ -355,15 +401,7 @@ const MainPage: React.FC = () => {
           
           <div className="space-y-6">
             <Button
-              onClick={() => {
-                const newPhoto: SessionPhoto = {
-                  id: Date.now().toString(),
-                  url: `📸 Photo taken at ${formatTime(sessionTime)}`,
-                  timestamp: Date.now()
-                };
-                setSessionPhotos([...sessionPhotos, newPhoto]);
-                alert('📸 Photo captured! ✨');
-              }}
+              onClick={handleTakePhoto}
               className="w-full bg-yellow-accent text-bright-green font-black py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all"
             >
               <Camera className="w-6 h-6 mr-3" />
@@ -380,18 +418,7 @@ const MainPage: React.FC = () => {
                 rows={3}
               />
               <Button
-                onClick={() => {
-                  if (newComment.trim()) {
-                    const comment: SessionComment = {
-                      id: Date.now().toString(),
-                      text: newComment,
-                      timestamp: Date.now()
-                    };
-                    setSessionComments([...sessionComments, comment]);
-                    setNewComment('');
-                    alert('💬 Comment added! ✨');
-                  }
-                }}
+                onClick={handleAddComment}
                 className="mt-2 bg-forest-green text-white font-black py-2 rounded-2xl hover:bg-bright-green transition-all"
               >
                 ✅ Add Comment
@@ -535,10 +562,10 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Header with bigger title and improved date/time */}
+      {/* Header with improved layout */}
       <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-6 shadow-xl">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
@@ -546,11 +573,11 @@ const MainPage: React.FC = () => {
                 className="w-12 h-12"
               />
               <div>
-                <h1 className="text-3xl font-nunito font-black text-white">NatureCapture</h1>
+                <h1 className="text-4xl font-nunito font-black text-white mb-2">NatureCapture</h1>
                 <p className="text-light-green font-bold text-sm">🌟 Ready for your next adventure? 🌟</p>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white">
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white mt-4">
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
                   <span className="text-yellow-500 text-sm font-black">🪙</span>
@@ -560,14 +587,13 @@ const MainPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Date, Time and Location as a single line */}
-          <div className="flex items-center justify-center space-x-4 text-white">
+          {/* Date, Time and Location as a single line without frames */}
+          <div className="flex items-center justify-center space-x-6 text-white">
             <DateTimeDisplay />
             {currentPosition && (
-              <div className="flex items-center space-x-2 bg-white/20 rounded-xl px-3 py-2 backdrop-blur-sm">
-                <MapPin className="w-4 h-4" />
+              <div className="flex items-center space-x-2">
                 <span className="font-bold text-sm">
-                  📍 {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
+                  {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
                 </span>
               </div>
             )}
@@ -590,7 +616,7 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Environmental Conditions - Aligned properly */}
+      {/* Environmental Conditions - Made equal frames */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-light-green">
           <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
@@ -599,13 +625,13 @@ const MainPage: React.FC = () => {
           </h2>
           
           <div className="grid grid-cols-3 gap-3">
-            {/* AQI */}
+            {/* AQI - Made equal size */}
             <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-3 text-white text-center">
               <Eye className="w-5 h-5 mx-auto mb-1" />
               <AirQualityMonitor position={currentPosition} />
             </div>
 
-            {/* Weather Conditions */}
+            {/* Weather Conditions - Equal frames */}
             <WeatherMonitor position={currentPosition} />
           </div>
         </div>
@@ -657,7 +683,7 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Start/Stop Button */}
+      {/* Main Start/Stop Button - Fixed */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-forest-green relative overflow-hidden">
           <div className="absolute inset-0 opacity-5">
@@ -757,7 +783,7 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Suggested Activities */}
+      {/* Suggested Activities - Updated with added state */}
       {!isSessionActive && (
         <div className="px-4 mb-6">
           <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
@@ -775,9 +801,13 @@ const MainPage: React.FC = () => {
                     </div>
                     <Button 
                       onClick={() => handleTryActivity(activity.name)}
-                      className="bg-forest-green text-white font-black rounded-full px-4 py-2 text-xs hover:bg-bright-green transition-all transform hover:scale-105"
+                      className={`font-black rounded-full px-4 py-2 text-xs transition-all transform hover:scale-105 ${
+                        addedActivities.includes(activity.name)
+                          ? 'bg-green-500 text-white'
+                          : 'bg-forest-green text-white hover:bg-bright-green'
+                      }`}
                     >
-                      Try
+                      {addedActivities.includes(activity.name) ? 'Added ✅' : 'Try'}
                     </Button>
                   </div>
                 </div>

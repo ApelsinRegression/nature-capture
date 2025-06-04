@@ -30,11 +30,11 @@ const DateTimeDisplay: React.FC = () => {
 
   return (
     <div className="flex items-center space-x-4">
-      <div className="flex items-center space-x-2 bg-white/20 rounded-xl px-3 py-2 backdrop-blur-sm">
+      <div className="flex items-center space-x-2">
         <Calendar className="w-4 h-4" />
         <span className="font-bold text-sm">{formatDate(currentTime)}</span>
       </div>
-      <div className="flex items-center space-x-2 bg-white/20 rounded-xl px-3 py-2 backdrop-blur-sm">
+      <div className="flex items-center space-x-2">
         <Clock className="w-4 h-4" />
         <span className="font-bold text-sm">{formatTime(currentTime)}</span>
       </div>
