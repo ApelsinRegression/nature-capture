@@ -146,10 +146,8 @@ const MainPage: React.FC = () => {
   }, [isSessionActive]);
 
   useEffect(() => {
-    // Check location permission on load
-    if (locationGranted && !currentPosition) {
-      getCurrentLocation();
-    } else if (locationGranted) {
+    // Check location permission on load and start tracking if already granted
+    if (locationGranted) {
       startLocationTracking();
     }
     
@@ -158,7 +156,7 @@ const MainPage: React.FC = () => {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, []);
+  }, [locationGranted]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -172,6 +170,7 @@ const MainPage: React.FC = () => {
       return;
     }
 
+    setLocationError(null);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newPos = {
@@ -213,14 +212,32 @@ const MainPage: React.FC = () => {
 
   const requestLocationPermission = () => {
     console.log('Requesting location permission...');
-    setLocationError(null);
     getCurrentLocation();
   };
 
   const refreshLocation = () => {
     console.log('Refreshing location...');
     setLocationError(null);
+    
+    // Stop existing watch
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+    
+    // Get fresh location
     getCurrentLocation();
+  };
+
+  const centerOnMyLocation = () => {
+    if (!currentPosition) {
+      refreshLocation();
+      return;
+    }
+    
+    // Force map to center on current position
+    setCurrentPosition({...currentPosition});
+    console.log('Centering map on:', currentPosition);
   };
 
   const startLocationTracking = () => {
@@ -364,57 +381,52 @@ const MainPage: React.FC = () => {
 
   const handleTakePhoto = async () => {
     try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          } 
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        } 
+      });
+      
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.autoplay = true;
+      video.playsInline = true;
+      
+      video.addEventListener('loadedmetadata', () => {
+        video.play().then(() => {
+          setTimeout(() => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(video, 0, 0);
+            
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const url = URL.createObjectURL(blob);
+                const newPhoto: SessionPhoto = {
+                  id: Date.now().toString(),
+                  url: url,
+                  timestamp: Date.now(),
+                  comment: newComment
+                };
+                setSessionPhotos(prev => [...prev, newPhoto]);
+                setNewComment('');
+                alert('📸 Photo captured successfully! ✨');
+              }
+            }, 'image/jpeg', 0.8);
+            
+            // Stop all tracks
+            stream.getTracks().forEach(track => track.stop());
+          }, 1000);
         });
-        
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.play();
-        
-        video.addEventListener('loadedmetadata', () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(video, 0, 0);
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              const newPhoto: SessionPhoto = {
-                id: Date.now().toString(),
-                url: url,
-                timestamp: Date.now(),
-                comment: newComment
-              };
-              setSessionPhotos([...sessionPhotos, newPhoto]);
-              setNewComment('');
-              alert('📸 Photo captured! ✨');
-            }
-          }, 'image/jpeg', 0.8);
-          
-          stream.getTracks().forEach(track => track.stop());
-        });
-      } else {
-        // Fallback for devices without camera
-        const newPhoto: SessionPhoto = {
-          id: Date.now().toString(),
-          url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23e5e7eb"/><text x="200" y="150" text-anchor="middle" fill="%23374151" font-size="16">📸 Photo taken at ${formatTime(sessionTime)}</text></svg>`,
-          timestamp: Date.now(),
-          comment: newComment
-        };
-        setSessionPhotos([...sessionPhotos, newPhoto]);
-        setNewComment('');
-        alert('📸 Photo captured! ✨');
-      }
+      });
     } catch (error) {
       console.error('Error taking photo:', error);
+      alert('Camera access denied or not available. Using placeholder photo.');
+      
       // Fallback photo
       const newPhoto: SessionPhoto = {
         id: Date.now().toString(),
@@ -422,9 +434,8 @@ const MainPage: React.FC = () => {
         timestamp: Date.now(),
         comment: newComment
       };
-      setSessionPhotos([...sessionPhotos, newPhoto]);
+      setSessionPhotos(prev => [...prev, newPhoto]);
       setNewComment('');
-      alert('📸 Photo captured! ✨');
     }
   };
 
@@ -435,10 +446,33 @@ const MainPage: React.FC = () => {
         text: newComment,
         timestamp: Date.now()
       };
-      setSessionComments([...sessionComments, comment]);
+      setSessionComments(prev => [...prev, comment]);
       setNewComment('');
-      alert('💬 Comment added! ✨');
+      alert('💬 Comment added successfully! ✨');
     }
+  };
+
+  const handleMessagingClick = () => {
+    navigate('/profile', { state: { openMessaging: true } });
+  };
+
+  const handleBackToHome = () => {
+    setShowSessionComplete(false);
+    setSessionTime(0);
+    setCompletedActivities([]);
+    setSessionPhotos([]);
+    setSessionComments([]);
+    setFeelingRating(0);
+    setSuggestedActivities([]);
+    setAddedActivities([]);
+    localStorage.removeItem('sessionCompletedActivities');
+    localStorage.removeItem('sessionPhotos');
+    localStorage.removeItem('sessionComments');
+    localStorage.removeItem('sessionFeeling');
+    localStorage.removeItem('suggestedActivities');
+    localStorage.removeItem('addedActivities');
+    localStorage.setItem('sessionTime', '0');
+    localStorage.setItem('sessionActive', 'false');
   };
 
   // Messaging Component
@@ -484,6 +518,18 @@ const MainPage: React.FC = () => {
               <Button
                 onClick={() => {
                   if (selectedFriend && messageText.trim()) {
+                    // Save message to localStorage
+                    const newMessage = {
+                      id: Date.now().toString(),
+                      to: selectedFriend,
+                      text: messageText,
+                      timestamp: Date.now(),
+                      from: 'You'
+                    };
+                    const existingMessages = JSON.parse(localStorage.getItem('messages') || '[]');
+                    existingMessages.push(newMessage);
+                    localStorage.setItem('messages', JSON.stringify(existingMessages));
+                    
                     alert(`✅ Message sent to ${selectedFriend}: "${messageText}"`);
                     setShowMessaging(false);
                     setMessageText('');
@@ -662,7 +708,7 @@ const MainPage: React.FC = () => {
             <p className="font-bold">Spending just 20 minutes in nature can significantly reduce stress hormones and boost your mood! 🧠✨</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-3 text-sm mb-6">
             <div className="bg-light-green rounded-xl p-3">
               <p className="font-black text-bright-green">⏰ Time Outside</p>
               <p className="font-bold text-text-dark">{formatTime(sessionTime)}</p>
@@ -672,6 +718,13 @@ const MainPage: React.FC = () => {
               <p className="font-bold text-text-dark">{Math.floor(sessionTime / 2)} cal</p>
             </div>
           </div>
+
+          <Button
+            onClick={handleBackToHome}
+            className="w-full bg-forest-green text-white font-black py-4 rounded-2xl hover:bg-bright-green transition-all"
+          >
+            🏠 Back to Home
+          </Button>
         </div>
       </div>
     );
@@ -690,42 +743,45 @@ const MainPage: React.FC = () => {
                 className="w-12 h-12"
               />
               <div>
-                <h1 className="text-4xl font-nunito font-black text-white mb-2">NatureCapture</h1>
-                <p className="text-light-green font-bold text-sm">Ready for your next adventure? 🌟</p>
+                <h1 className="text-2xl font-nunito font-black text-white mb-1">NatureCapture</h1>
+                <p className="text-light-green font-bold text-xs">Ready for your next adventure? 🌟</p>
               </div>
             </div>
-            <Button
-              onClick={refreshLocation}
-              className="bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-all"
-              title="Refresh location"
-            >
-              <RefreshCw className="w-5 h-5" />
-            </Button>
+            
+            <div className="flex items-center space-x-2">
+              {/* Coins display */}
+              <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-2 py-1 shadow-lg border border-white">
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-yellow-500 text-xs font-black">🪙</span>
+                  </div>
+                  <span className="font-black text-white text-xs">247</span>
+                </div>
+              </div>
+              
+              {/* Refresh button */}
+              <Button
+                onClick={refreshLocation}
+                className="bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-all"
+                title="Refresh location"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           
           {/* Date, Time and Location */}
-          <div className="flex items-center justify-center space-x-6 text-white mb-4">
+          <div className="flex items-center justify-center space-x-6 text-white mb-2">
             <DateTimeDisplay />
-            {currentPosition && (
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-sm">
-                  {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
-                </span>
-              </div>
-            )}
           </div>
-
-          {/* Coins - positioned below other elements */}
-          <div className="flex justify-center">
-            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-2 shadow-lg border-2 border-white">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-yellow-500 text-xs font-black">🪙</span>
-                </div>
-                <span className="font-black text-white text-sm">247</span>
+          
+          {currentPosition && (
+            <div className="flex justify-center">
+              <div className="text-white text-xs font-bold">
+                📍 {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -737,18 +793,13 @@ const MainPage: React.FC = () => {
               <MapPin className="w-5 h-5 mr-2" />
               🗺️ Live Map 🗺️
             </h2>
-            {currentPosition && (
-              <Button
-                onClick={() => {
-                  // Center map on current location - this will be handled by the map component
-                  console.log('Center on location:', currentPosition);
-                }}
-                className="bg-forest-green text-white rounded-full p-2 text-xs hover:bg-bright-green transition-all"
-                title="Show my location"
-              >
-                <Locate className="w-4 h-4" />
-              </Button>
-            )}
+            <Button
+              onClick={centerOnMyLocation}
+              className="bg-forest-green text-white rounded-full p-2 text-xs hover:bg-bright-green transition-all"
+              title="Show my location"
+            >
+              <Locate className="w-4 h-4" />
+            </Button>
           </div>
           <RealTimeMap 
             isActive={isSessionActive}
@@ -991,7 +1042,7 @@ const MainPage: React.FC = () => {
         </div>
         
         <Button 
-          onClick={() => setShowMessaging(true)}
+          onClick={handleMessagingClick}
           className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-black py-3 rounded-2xl hover:scale-105 transition-transform"
         >
           <MessageSquare className="w-5 h-5 mr-2" />

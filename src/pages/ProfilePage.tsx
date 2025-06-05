@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileEditForm from '../components/profile/ProfileEditForm';
 import GroupActivities from '../components/profile/GroupActivities';
@@ -13,6 +14,7 @@ import MessagingSystem from '../components/messaging/MessagingSystem';
 import FriendsManager from '../components/friends/FriendsManager';
 import EventCreator from '../components/events/EventCreator';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft, UserPlus, MessageSquare } from 'lucide-react';
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -36,13 +38,28 @@ interface Friend {
   lastSeen: string;
 }
 
+interface Message {
+  id: string;
+  to: string;
+  from: string;
+  text: string;
+  timestamp: number;
+}
+
 const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
-  const [userName, setUserName] = useState(localStorage.getItem('userName') || 'amirdayirov09');
-  const [userCity, setUserCity] = useState(localStorage.getItem('userCity') || 'New York');
-  const [selectedEmoji, setSelectedEmoji] = useState('🌱');
+  const location = useLocation();
+  const { viewingUser, isPublicView, openMessaging } = location.state || {};
+  
+  const [userName, setUserName] = useState(
+    viewingUser?.name || localStorage.getItem('userName') || 'amirdayirov09'
+  );
+  const [userCity, setUserCity] = useState(
+    viewingUser?.city || localStorage.getItem('userCity') || 'New York'
+  );
+  const [selectedEmoji, setSelectedEmoji] = useState(viewingUser?.avatar || '🌱');
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showMessaging, setShowMessaging] = useState(false);
+  const [showMessaging, setShowMessaging] = useState(openMessaging || false);
   const [showFriendsManager, setShowFriendsManager] = useState(false);
   const [showEventCreator, setShowEventCreator] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
@@ -51,6 +68,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [selectedSession, setSelectedSession] = useState<WalkingSession | null>(null);
   const [tempUserName, setTempUserName] = useState(userName);
   const [tempUserCity, setTempUserCity] = useState(userCity);
+  const [messages, setMessages] = useState<Message[]>([]);
   
   const userStats = {
     totalSessions: 23,
@@ -60,7 +78,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     level: 'Nature Seeker',
     nextLevel: 'Forest Friend',
     coins: 247,
-    rank: 4
+    rank: viewingUser?.rank || 4
   };
 
   const natureEmojis = ['🌱', '🌿', '🌳', '🍃', '🌺', '🌻', '🌷', '🌸', '🌼', '🌹', '🦋', '🐝', '🐞', '🦅', '🐿️', '🍄', '⭐', '🌙', '☀️', '🌈'];
@@ -107,11 +125,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   ];
 
   useEffect(() => {
-    const activities = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
-    const sessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
-    setJoinedActivities(activities);
-    setWalkingSessions(sessions);
-  }, []);
+    if (!isPublicView) {
+      const activities = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
+      const sessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
+      const savedMessages = JSON.parse(localStorage.getItem('messages') || '[]');
+      setJoinedActivities(activities);
+      setWalkingSessions(sessions);
+      setMessages(savedMessages);
+    }
+  }, [isPublicView]);
 
   const handleSaveProfile = () => {
     setUserName(tempUserName);
@@ -132,6 +154,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     setShowMessaging(false);
   };
 
+  const handleSendFriendRequest = () => {
+    if (viewingUser) {
+      alert(`Friend request sent to ${viewingUser.name}! 👥✨`);
+    }
+  };
+
+  const handleBackToLeaderboard = () => {
+    window.history.back();
+  };
+
   if (selectedSession) {
     return (
       <SessionDetails 
@@ -141,7 +173,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     );
   }
 
-  if (showCalendar) {
+  if (showCalendar && !isPublicView) {
     return (
       <CalendarView 
         calendarData={calendarData}
@@ -151,7 +183,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     );
   }
 
-  if (showMessaging) {
+  if (showMessaging && !isPublicView) {
     return (
       <MessagingSystem 
         onBack={() => setShowMessaging(false)}
@@ -159,7 +191,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     );
   }
 
-  if (showFriendsManager) {
+  if (showFriendsManager && !isPublicView) {
     return (
       <FriendsManager 
         onBack={() => setShowFriendsManager(false)}
@@ -167,7 +199,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     );
   }
 
-  if (showEventCreator) {
+  if (showEventCreator && !isPublicView) {
     return (
       <EventCreator 
         onBack={() => setShowEventCreator(false)}
@@ -177,16 +209,28 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green pb-6">
+      {/* Back button for public profiles */}
+      {isPublicView && (
+        <div className="p-4">
+          <Button
+            onClick={handleBackToLeaderboard}
+            className="bg-forest-green text-white rounded-full p-2 hover:bg-bright-green transition-all"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        </div>
+      )}
+
       <ProfileHeader
         userName={userName}
         userCity={userCity}
         selectedEmoji={selectedEmoji}
         userStats={userStats}
-        isEditing={isEditing}
-        onEditClick={() => setIsEditing(!isEditing)}
+        isEditing={isEditing && !isPublicView}
+        onEditClick={!isPublicView ? () => setIsEditing(!isEditing) : undefined}
       />
 
-      {isEditing && (
+      {isEditing && !isPublicView && (
         <div className="px-6 mb-8">
           <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-3xl">
             <div className="space-y-4">
@@ -252,25 +296,86 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
         </div>
       )}
 
-      <GroupActivities joinedActivities={joinedActivities} />
-      
-      <FriendsSection 
-        friends={friends} 
-        onMessageClick={handleSelectFriend}
-      />
+      {/* Public profile actions */}
+      {isPublicView && (
+        <div className="px-6 mb-8">
+          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-bright-green">
+            <h2 className="text-lg font-nunito font-bold text-bright-green mb-4 text-center">
+              🤝 Connect with {userName}
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={handleSendFriendRequest}
+                className="bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
+              >
+                <UserPlus className="w-5 h-5 mr-2" />
+                👥 Add Friend
+              </Button>
+              <Button
+                onClick={() => alert('Send a friend request to message!')}
+                className="bg-blue-500 text-white font-black py-3 rounded-2xl hover:bg-blue-600 transition-all"
+              >
+                <MessageSquare className="w-5 h-5 mr-2" />
+                💬 Message
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isPublicView && (
+        <>
+          <GroupActivities joinedActivities={joinedActivities} />
+          <FriendsSection 
+            friends={friends} 
+            onMessageClick={handleSelectFriend}
+          />
+        </>
+      )}
       
       <ProfileStats userStats={userStats} />
-      
       <ProfileBadges badges={badges} />
+
+      {/* Show message history for own profile */}
+      {!isPublicView && messages.length > 0 && (
+        <div className="px-6 mb-8">
+          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-blue-500">
+            <h2 className="text-lg font-nunito font-bold text-bright-green mb-4 text-center">
+              💬 Recent Messages 💬
+            </h2>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {messages.slice(-5).reverse().map((message) => (
+                <div key={message.id} className="bg-light-green rounded-2xl p-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="font-bold text-bright-green text-sm">To: {message.to}</p>
+                    <p className="text-xs text-gray-600">
+                      {new Date(message.timestamp).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold text-text-dark">{message.text}</p>
+                </div>
+              ))}
+            </div>
+            <Button
+              onClick={() => setShowMessaging(true)}
+              className="w-full mt-4 bg-blue-500 text-white font-black py-2 rounded-2xl hover:bg-blue-600 transition-all"
+            >
+              📱 View All Messages
+            </Button>
+          </div>
+        </div>
+      )}
       
-      <ProfileActions 
-        onCalendarClick={() => setShowCalendar(true)}
-        onMessageHistoryClick={() => setShowMessaging(true)}
-        onMessageFriendsClick={() => setShowMessaging(true)}
-        onCreateEventClick={() => setShowEventCreator(true)}
-        onFriendsManagerClick={() => setShowFriendsManager(true)}
-        onLogout={onLogout}
-      />
+      {!isPublicView && (
+        <ProfileActions 
+          onCalendarClick={() => setShowCalendar(true)}
+          onMessageHistoryClick={() => setShowMessaging(true)}
+          onMessageFriendsClick={() => setShowMessaging(true)}
+          onCreateEventClick={() => setShowEventCreator(true)}
+          onFriendsManagerClick={() => setShowFriendsManager(true)}
+          onLogout={onLogout}
+        />
+      )}
     </div>
   );
 };

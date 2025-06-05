@@ -17,7 +17,7 @@ interface ProfileHeaderProps {
     rank: number;
   };
   isEditing: boolean;
-  onEditClick: () => void;
+  onEditClick?: () => void;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -41,7 +41,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {userCity && (
                 <div className="flex items-center space-x-2 text-light-green mb-2">
                   <MapPin className="w-4 h-4" />
-                  <span className="font-bold">{userCity}</span>
+                  <span className="font-bold">🏙️ {userCity}</span>
                 </div>
               )}
               <div className="bg-white/20 rounded-full px-3 py-1">
@@ -50,16 +50,18 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
           </div>
           
-          <button
-            onClick={onEditClick}
-            className={`p-3 rounded-full transition-all ${
-              isEditing 
-                ? 'bg-red-500 text-white' 
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-          >
-            <Edit className="w-5 h-5" />
-          </button>
+          {onEditClick && (
+            <button
+              onClick={onEditClick}
+              className={`p-3 rounded-full transition-all ${
+                isEditing 
+                  ? 'bg-red-500 text-white' 
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+            >
+              <Edit className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Stats Grid */}
