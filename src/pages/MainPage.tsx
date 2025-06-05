@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -72,6 +71,7 @@ const MainPage: React.FC = () => {
   const [addedActivities, setAddedActivities] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('addedActivities') || '[]');
   });
+  const [mapKey, setMapKey] = useState(0); // Force map re-render
 
   const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
@@ -170,6 +170,7 @@ const MainPage: React.FC = () => {
       return;
     }
 
+    console.log('Getting current location...');
     setLocationError(null);
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -230,14 +231,16 @@ const MainPage: React.FC = () => {
   };
 
   const centerOnMyLocation = () => {
+    console.log('Centering on location...');
     if (!currentPosition) {
-      refreshLocation();
+      console.log('No current position, getting location...');
+      getCurrentLocation();
       return;
     }
     
-    // Force map to center on current position
-    setCurrentPosition({...currentPosition});
-    console.log('Centering map on:', currentPosition);
+    // Force map to re-render and center on current position
+    setMapKey(prev => prev + 1);
+    console.log('Forcing map center on:', currentPosition);
   };
 
   const startLocationTracking = () => {
@@ -272,12 +275,16 @@ const MainPage: React.FC = () => {
   };
 
   const handleStartStop = () => {
+    console.log('Handle start/stop clicked. LocationGranted:', locationGranted, 'IsActive:', isSessionActive);
+    
     if (!locationGranted && !isSessionActive) {
+      console.log('No location permission, requesting...');
       requestLocationPermission();
       return;
     }
     
     if (isSessionActive) {
+      console.log('Stopping session...');
       setIsSessionActive(false);
       const sessionData = {
         id: Date.now().toString(),
@@ -294,31 +301,20 @@ const MainPage: React.FC = () => {
       const existingSessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
       existingSessions.push(sessionData);
       localStorage.setItem('walkingSessions', JSON.stringify(existingSessions));
+      console.log('Session saved:', sessionData);
       
       setShowSessionComplete(true);
       setTimeout(() => {
-        setShowSessionComplete(false);
-        setSessionTime(0);
-        setCompletedActivities([]);
-        setSessionPhotos([]);
-        setSessionComments([]);
-        setFeelingRating(0);
-        setSuggestedActivities([]);
-        setAddedActivities([]);
-        // Clear localStorage for session data
-        localStorage.removeItem('sessionCompletedActivities');
-        localStorage.removeItem('sessionPhotos');
-        localStorage.removeItem('sessionComments');
-        localStorage.removeItem('sessionFeeling');
-        localStorage.removeItem('suggestedActivities');
-        localStorage.removeItem('addedActivities');
-        localStorage.setItem('sessionTime', '0');
-        localStorage.setItem('sessionActive', 'false');
+        handleBackToHome();
       }, 15000);
     } else {
+      console.log('Starting session...');
       setIsSessionActive(true);
       if (currentPosition) {
         setSessionRoute([currentPosition]);
+        console.log('Session started with position:', currentPosition);
+      } else {
+        console.log('No current position for session start');
       }
     }
   };
@@ -326,6 +322,7 @@ const MainPage: React.FC = () => {
   const handleActivityComplete = (activityName: string) => {
     if (!completedActivities.includes(activityName)) {
       setCompletedActivities([...completedActivities, activityName]);
+      console.log('Activity completed:', activityName);
     }
   };
 
@@ -334,10 +331,12 @@ const MainPage: React.FC = () => {
       // Remove from added activities (unclick)
       setAddedActivities(addedActivities.filter(activity => activity !== activityName));
       setSuggestedActivities(suggestedActivities.filter(activity => activity !== activityName));
+      console.log('Activity removed:', activityName);
     } else {
       // Add to added activities
       setAddedActivities([...addedActivities, activityName]);
       setSuggestedActivities([...suggestedActivities, activityName]);
+      console.log('Activity added:', activityName);
     }
   };
 
@@ -355,6 +354,7 @@ const MainPage: React.FC = () => {
   };
 
   const handlePositionUpdate = (position: Position) => {
+    console.log('Position update received:', position);
     setCurrentPosition(position);
     if (isSessionActive) {
       setSessionRoute(prev => [...prev, position]);
@@ -381,6 +381,7 @@ const MainPage: React.FC = () => {
 
   const handleTakePhoto = async () => {
     try {
+      console.log('Taking photo...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
@@ -414,6 +415,7 @@ const MainPage: React.FC = () => {
                 };
                 setSessionPhotos(prev => [...prev, newPhoto]);
                 setNewComment('');
+                console.log('Photo captured:', newPhoto);
                 alert('📸 Photo captured successfully! ✨');
               }
             }, 'image/jpeg', 0.8);
@@ -436,6 +438,7 @@ const MainPage: React.FC = () => {
       };
       setSessionPhotos(prev => [...prev, newPhoto]);
       setNewComment('');
+      console.log('Fallback photo created:', newPhoto);
     }
   };
 
@@ -448,6 +451,7 @@ const MainPage: React.FC = () => {
       };
       setSessionComments(prev => [...prev, comment]);
       setNewComment('');
+      console.log('Comment added:', comment);
       alert('💬 Comment added successfully! ✨');
     }
   };
@@ -457,6 +461,7 @@ const MainPage: React.FC = () => {
   };
 
   const handleBackToHome = () => {
+    console.log('Going back to home...');
     setShowSessionComplete(false);
     setSessionTime(0);
     setCompletedActivities([]);
@@ -518,7 +523,6 @@ const MainPage: React.FC = () => {
               <Button
                 onClick={() => {
                   if (selectedFriend && messageText.trim()) {
-                    // Save message to localStorage
                     const newMessage = {
                       id: Date.now().toString(),
                       to: selectedFriend,
@@ -530,6 +534,7 @@ const MainPage: React.FC = () => {
                     existingMessages.push(newMessage);
                     localStorage.setItem('messages', JSON.stringify(existingMessages));
                     
+                    console.log('Message sent:', newMessage);
                     alert(`✅ Message sent to ${selectedFriend}: "${messageText}"`);
                     setShowMessaging(false);
                     setMessageText('');
@@ -740,15 +745,24 @@ const MainPage: React.FC = () => {
               <img 
                 src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
                 alt="Leaf" 
-                className="w-12 h-12"
+                className="w-10 h-10"
               />
               <div>
-                <h1 className="text-2xl font-nunito font-black text-white mb-1">NatureCapture</h1>
+                <h1 className="text-lg font-nunito font-black text-white mb-1">NatureCapture</h1>
                 <p className="text-light-green font-bold text-xs">Ready for your next adventure? 🌟</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-2">
+              {/* Refresh button */}
+              <Button
+                onClick={refreshLocation}
+                className="bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-all"
+                title="Refresh location"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+              
               {/* Coins display */}
               <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-2 py-1 shadow-lg border border-white">
                 <div className="flex items-center space-x-1">
@@ -758,15 +772,6 @@ const MainPage: React.FC = () => {
                   <span className="font-black text-white text-xs">247</span>
                 </div>
               </div>
-              
-              {/* Refresh button */}
-              <Button
-                onClick={refreshLocation}
-                className="bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-all"
-                title="Refresh location"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </Button>
             </div>
           </div>
           
@@ -802,6 +807,7 @@ const MainPage: React.FC = () => {
             </Button>
           </div>
           <RealTimeMap 
+            key={mapKey}
             isActive={isSessionActive}
             onPositionUpdate={handlePositionUpdate}
             route={sessionRoute}

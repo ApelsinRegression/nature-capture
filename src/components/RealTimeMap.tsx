@@ -33,6 +33,7 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
   useEffect(() => {
     if (!mapRef.current) return;
 
+    console.log('Initializing map...');
     mapInstanceRef.current = L.map(mapRef.current).setView([51.505, -0.09], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -47,6 +48,8 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
+          
+          console.log('Map got user location:', userLocation);
           
           if (mapInstanceRef.current) {
             mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], 15);
@@ -71,6 +74,7 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
     }
 
     return () => {
+      console.log('Cleaning up map...');
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -80,7 +84,7 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
         watchIdRef.current = null;
       }
     };
-  }, []);
+  }, [onPositionUpdate]);
 
   // Start/stop location tracking based on isActive
   useEffect(() => {
@@ -123,6 +127,7 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
     if (!mapInstanceRef.current || route.length === 0) return;
 
     const currentPosition = route[route.length - 1];
+    console.log('Updating map marker to:', currentPosition);
 
     // Remove existing marker
     if (currentMarkerRef.current) {
@@ -142,6 +147,8 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
   // Update route polyline
   useEffect(() => {
     if (!mapInstanceRef.current || route.length < 2) return;
+
+    console.log('Updating route with', route.length, 'points');
 
     // Remove existing route
     if (routePolylineRef.current) {
