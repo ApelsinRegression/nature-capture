@@ -72,6 +72,7 @@ const MainPage: React.FC = () => {
     return JSON.parse(localStorage.getItem('addedActivities') || '[]');
   });
   const [mapKey, setMapKey] = useState(0); // Force map re-render
+  const [shouldCenterMap, setShouldCenterMap] = useState(false);
 
   const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
@@ -87,6 +88,23 @@ const MainPage: React.FC = () => {
     { name: 'Leo Sunshine', avatar: '☀️' },
     { name: 'Luna Star', avatar: '⭐' },
   ];
+
+  // Load persisted data on component mount
+  useEffect(() => {
+    // Load walking sessions history
+    const savedSessions = localStorage.getItem('walkingSessions');
+    if (savedSessions) {
+      console.log('Loaded walking history:', JSON.parse(savedSessions));
+    }
+
+    // Load messages history
+    const savedMessages = localStorage.getItem('messages');
+    if (savedMessages) {
+      console.log('Loaded messages history:', JSON.parse(savedMessages));
+    }
+
+    console.log('Component mounted, data loaded from localStorage');
+  }, []);
 
   // Save state to localStorage
   useEffect(() => {
@@ -182,6 +200,10 @@ const MainPage: React.FC = () => {
         setCurrentPosition(newPos);
         setLocationGranted(true);
         setLocationError(null);
+        
+        // Update route with current position
+        setSessionRoute([newPos]);
+        
         startLocationTracking();
       },
       (error) => {
@@ -231,16 +253,21 @@ const MainPage: React.FC = () => {
   };
 
   const centerOnMyLocation = () => {
-    console.log('Centering on location...');
+    console.log('Centering on my location...');
+    
     if (!currentPosition) {
       console.log('No current position, getting location...');
       getCurrentLocation();
       return;
     }
     
-    // Force map to re-render and center on current position
-    setMapKey(prev => prev + 1);
-    console.log('Forcing map center on:', currentPosition);
+    // Trigger map centering
+    setShouldCenterMap(true);
+    console.log('Requesting map to center on:', currentPosition);
+  };
+
+  const handleCenteringComplete = () => {
+    setShouldCenterMap(false);
   };
 
   const startLocationTracking = () => {
@@ -256,9 +283,8 @@ const MainPage: React.FC = () => {
         console.log('Location updated:', newPos);
         setCurrentPosition(newPos);
         
-        if (isSessionActive) {
-          setSessionRoute(prev => [...prev, newPos]);
-        }
+        // Update route with latest position only
+        setSessionRoute([newPos]);
       },
       (error) => {
         console.error('Location tracking error:', error);
@@ -286,16 +312,18 @@ const MainPage: React.FC = () => {
     if (isSessionActive) {
       console.log('Stopping session...');
       setIsSessionActive(false);
+      
       const sessionData = {
         id: Date.now().toString(),
         date: new Date().toISOString(),
-        distance: calculateDistance(),
+        distance: 0, // Remove distance calculation since we're not tracking route
         time: sessionTime,
-        route: sessionRoute,
+        route: [], // Empty route since we're not tracking
         photos: sessionPhotos,
         comments: sessionComments,
         feeling: feelingRating,
-        activities: completedActivities
+        activities: completedActivities,
+        location: currentPosition
       };
       
       const existingSessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
@@ -356,89 +384,107 @@ const MainPage: React.FC = () => {
   const handlePositionUpdate = (position: Position) => {
     console.log('Position update received:', position);
     setCurrentPosition(position);
-    if (isSessionActive) {
-      setSessionRoute(prev => [...prev, position]);
-    }
+    // Only update route with current position, no tracking of path
+    setSessionRoute([position]);
   };
 
   const calculateDistance = () => {
-    if (sessionRoute.length < 2) return 0;
-    let distance = 0;
-    for (let i = 1; i < sessionRoute.length; i++) {
-      const prev = sessionRoute[i - 1];
-      const curr = sessionRoute[i];
-      const R = 6371;
-      const dLat = (curr.lat - prev.lat) * Math.PI / 180;
-      const dLon = (curr.lng - prev.lng) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(prev.lat * Math.PI / 180) * Math.cos(curr.lat * Math.PI / 180) *
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      distance += R * c;
-    }
-    return distance;
+    // Return 0 since we're not tracking route anymore
+    return 0;
   };
 
   const handleTakePhoto = async () => {
     try {
-      console.log('Taking photo...');
+      console.log('Requesting camera access...');
+      
+      // Request camera permissions
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         } 
       });
       
+      console.log('Camera access granted, creating video element...');
+      
+      // Create video element
       const video = document.createElement('video');
       video.srcObject = stream;
       video.autoplay = true;
       video.playsInline = true;
+      video.muted = true;
       
-      video.addEventListener('loadedmetadata', () => {
-        video.play().then(() => {
-          setTimeout(() => {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(video, 0, 0);
-            
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const url = URL.createObjectURL(blob);
-                const newPhoto: SessionPhoto = {
-                  id: Date.now().toString(),
-                  url: url,
-                  timestamp: Date.now(),
-                  comment: newComment
-                };
-                setSessionPhotos(prev => [...prev, newPhoto]);
-                setNewComment('');
-                console.log('Photo captured:', newPhoto);
-                alert('📸 Photo captured successfully! ✨');
-              }
-            }, 'image/jpeg', 0.8);
-            
-            // Stop all tracks
-            stream.getTracks().forEach(track => track.stop());
-          }, 1000);
-        });
+      // Wait for video to be ready
+      await new Promise((resolve) => {
+        video.addEventListener('loadedmetadata', resolve);
       });
-    } catch (error) {
-      console.error('Error taking photo:', error);
-      alert('Camera access denied or not available. Using placeholder photo.');
       
-      // Fallback photo
+      await video.play();
+      
+      console.log('Video playing, capturing photo...');
+      
+      // Wait a moment for the camera to adjust
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create canvas and capture frame
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        
+        // Convert to blob
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const newPhoto: SessionPhoto = {
+              id: Date.now().toString(),
+              url: url,
+              timestamp: Date.now(),
+              comment: newComment
+            };
+            
+            setSessionPhotos(prev => {
+              const updated = [...prev, newPhoto];
+              localStorage.setItem('sessionPhotos', JSON.stringify(updated));
+              return updated;
+            });
+            
+            setNewComment('');
+            console.log('Photo captured successfully:', newPhoto);
+            alert('📸 Photo captured successfully! ✨');
+          }
+        }, 'image/jpeg', 0.9);
+      }
+      
+      // Stop camera stream
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Camera track stopped');
+      });
+      
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      
+      // Enhanced fallback with better placeholder
       const newPhoto: SessionPhoto = {
         id: Date.now().toString(),
-        url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23e5e7eb"/><text x="200" y="150" text-anchor="middle" fill="%23374151" font-size="16">📸 Photo taken at ${formatTime(sessionTime)}</text></svg>`,
+        url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%234ade80"/><text x="200" y="140" text-anchor="middle" fill="white" font-size="18" font-weight="bold">📸 Photo Placeholder</text><text x="200" y="170" text-anchor="middle" fill="white" font-size="14">Taken at ${formatTime(sessionTime)}</text></svg>`,
         timestamp: Date.now(),
         comment: newComment
       };
-      setSessionPhotos(prev => [...prev, newPhoto]);
+      
+      setSessionPhotos(prev => {
+        const updated = [...prev, newPhoto];
+        localStorage.setItem('sessionPhotos', JSON.stringify(updated));
+        return updated;
+      });
+      
       setNewComment('');
-      console.log('Fallback photo created:', newPhoto);
+      alert('📸 Camera not available, but photo placeholder created! ✨');
     }
   };
 
@@ -449,9 +495,15 @@ const MainPage: React.FC = () => {
         text: newComment,
         timestamp: Date.now()
       };
-      setSessionComments(prev => [...prev, comment]);
+      
+      setSessionComments(prev => {
+        const updated = [...prev, comment];
+        localStorage.setItem('sessionComments', JSON.stringify(updated));
+        return updated;
+      });
+      
       setNewComment('');
-      console.log('Comment added:', comment);
+      console.log('Comment added and saved:', comment);
       alert('💬 Comment added successfully! ✨');
     }
   };
@@ -745,11 +797,11 @@ const MainPage: React.FC = () => {
               <img 
                 src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
                 alt="Leaf" 
-                className="w-10 h-10"
+                className="w-8 h-8"
               />
               <div>
-                <h1 className="text-lg font-nunito font-black text-white mb-1">NatureCapture</h1>
-                <p className="text-light-green font-bold text-xs">Ready for your next adventure? 🌟</p>
+                <h1 className="text-sm font-nunito font-black text-white mb-1">NatureCapture</h1>
+                <p className="text-light-green font-bold text-xs">Ready for your next adventure? ⭐</p>
               </div>
             </div>
             
@@ -764,7 +816,7 @@ const MainPage: React.FC = () => {
               </Button>
               
               {/* Coins display */}
-              <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-2 py-1 shadow-lg border border-white">
+              <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-1 shadow-lg border border-white">
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
                     <span className="text-yellow-500 text-xs font-black">🪙</span>
@@ -811,6 +863,8 @@ const MainPage: React.FC = () => {
             isActive={isSessionActive}
             onPositionUpdate={handlePositionUpdate}
             route={sessionRoute}
+            shouldCenterOnUser={shouldCenterMap}
+            onCenteringComplete={handleCenteringComplete}
           />
         </div>
       </div>
@@ -907,8 +961,8 @@ const MainPage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-yellow-accent rounded-2xl p-3">
-                    <p className="text-bright-green font-black text-sm">📍 Distance</p>
-                    <p className="text-xl font-black">{calculateDistance().toFixed(1)} km</p>
+                    <p className="text-bright-green font-black text-sm">⏰ Time</p>
+                    <p className="text-xl font-black">{formatTime(sessionTime)}</p>
                   </div>
                   <div className="bg-orange-accent rounded-2xl p-3 text-white">
                     <p className="font-black text-sm">🔥 Calories</p>

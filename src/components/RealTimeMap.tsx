@@ -12,6 +12,8 @@ interface RealTimeMapProps {
   isActive: boolean;
   onPositionUpdate: (position: Position) => void;
   route: Position[];
+  shouldCenterOnUser?: boolean;
+  onCenteringComplete?: () => void;
 }
 
 // Fix for default markers
@@ -22,12 +24,18 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, route }) => {
+const RealTimeMap: React.FC<RealTimeMapProps> = ({ 
+  isActive, 
+  onPositionUpdate, 
+  route, 
+  shouldCenterOnUser = false,
+  onCenteringComplete 
+}) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
-  const routePolylineRef = useRef<L.Polyline | null>(null);
   const watchIdRef = useRef<number | null>(null);
+  const userInteractedRef = useRef<boolean>(false);
 
   // Initialize map
   useEffect(() => {
@@ -39,6 +47,15 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapInstanceRef.current);
+
+    // Track user interactions with map
+    mapInstanceRef.current.on('dragstart', () => {
+      userInteractedRef.current = true;
+    });
+
+    mapInstanceRef.current.on('zoomstart', () => {
+      userInteractedRef.current = true;
+    });
 
     // Try to get user's current location and center map there
     if (navigator.geolocation) {
@@ -85,6 +102,21 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
       }
     };
   }, [onPositionUpdate]);
+
+  // Handle centering on user location
+  useEffect(() => {
+    if (shouldCenterOnUser && route.length > 0 && mapInstanceRef.current) {
+      const currentPosition = route[route.length - 1];
+      console.log('Centering map on user location:', currentPosition);
+      
+      mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 16);
+      userInteractedRef.current = false; // Reset user interaction flag
+      
+      if (onCenteringComplete) {
+        onCenteringComplete();
+      }
+    }
+  }, [shouldCenterOnUser, route, onCenteringComplete]);
 
   // Start/stop location tracking based on isActive
   useEffect(() => {
@@ -140,33 +172,11 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
       .bindPopup('📍 You are here!')
       .openPopup();
 
-    // Center map on current position
-    mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 16);
-  }, [route]);
-
-  // Update route polyline
-  useEffect(() => {
-    if (!mapInstanceRef.current || route.length < 2) return;
-
-    console.log('Updating route with', route.length, 'points');
-
-    // Remove existing route
-    if (routePolylineRef.current) {
-      mapInstanceRef.current.removeLayer(routePolylineRef.current);
+    // Only auto-center if user hasn't interacted with the map
+    if (!userInteractedRef.current || shouldCenterOnUser) {
+      mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 16);
     }
-
-    // Add new route
-    const latLngs: L.LatLngExpression[] = route.map(pos => [pos.lat, pos.lng]);
-    routePolylineRef.current = L.polyline(latLngs, { 
-      color: '#22c55e', 
-      weight: 4,
-      opacity: 0.8 
-    }).addTo(mapInstanceRef.current);
-
-    // Fit map to show entire route with some padding
-    const bounds = routePolylineRef.current.getBounds();
-    mapInstanceRef.current.fitBounds(bounds, { padding: [20, 20] });
-  }, [route]);
+  }, [route, shouldCenterOnUser]);
 
   return (
     <div className="relative">
@@ -175,11 +185,6 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
         style={{ height: '300px', width: '100%' }}
         className="rounded-xl overflow-hidden border-2 border-forest-green"
       />
-      {route.length > 1 && (
-        <div className="absolute top-3 left-3 bg-white/90 rounded-lg p-2 text-xs font-bold text-forest-green shadow-lg">
-          🛤️ Route Points: {route.length}
-        </div>
-      )}
       {isActive && (
         <div className="absolute top-3 right-3 bg-green-500 text-white rounded-lg p-2 text-xs font-bold shadow-lg animate-pulse">
           📍 Live Tracking
