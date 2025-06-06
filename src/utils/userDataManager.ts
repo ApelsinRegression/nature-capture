@@ -56,8 +56,8 @@ export class UserDataManager {
   private currentUserId: string | null = null;
 
   private constructor() {
-    // FORCE CLEAR ALL DATA ON STARTUP - no accounts should exist
-    this.forceCompleteWipe();
+    // COMPLETE WIPE - absolutely no data should exist
+    this.completeWipe();
   }
 
   static getInstance(): UserDataManager {
@@ -67,22 +67,22 @@ export class UserDataManager {
     return UserDataManager.instance;
   }
 
-  // Complete wipe of everything - no users should exist
-  forceCompleteWipe(): void {
-    console.log('FORCE WIPING ALL DATA - NO USERS SHOULD EXIST');
+  // Complete wipe - no users, no data, nothing
+  completeWipe(): void {
+    console.log('COMPLETE WIPE - removing ALL data from the app');
     
-    // Clear ALL localStorage
+    // Clear everything
     localStorage.clear();
+    sessionStorage.clear();
     
     this.currentUserId = null;
-    console.log('Complete wipe finished - app is completely fresh');
+    console.log('App is now completely empty - no users exist');
   }
 
-  // Initialize or get current user
+  // Initialize first user (signup)
   initializeUser(username: string, city: string, avatar: string): User {
-    console.log('Initializing user:', username);
+    console.log('Creating first user account:', username);
     
-    // Create new user with 0 everything
     const user: User = {
       id: this.generateId(),
       username,
@@ -100,9 +100,9 @@ export class UserDataManager {
       lastActiveAt: Date.now()
     };
     
+    // Save as the only user
     const users = [user];
     this.saveUsers(users);
-    console.log('Created new user:', user);
     
     this.currentUserId = user.id;
     localStorage.setItem('currentUserId', user.id);
@@ -110,6 +110,7 @@ export class UserDataManager {
     localStorage.setItem('userCity', city);
     localStorage.setItem('userAvatar', avatar);
     
+    console.log('First user created successfully:', user);
     return user;
   }
 
@@ -141,9 +142,37 @@ export class UserDataManager {
     if (userIndex !== -1) {
       users[userIndex].coins += amount;
       users[userIndex].lastActiveAt = Date.now();
+      
+      // Update level based on coins
+      const newLevel = this.calculateLevel(users[userIndex].coins);
+      users[userIndex].level = newLevel.current;
+      users[userIndex].nextLevel = newLevel.next;
+      
       this.saveUsers(users);
-      console.log(`Added ${amount} coins to user. New balance:`, users[userIndex].coins);
+      console.log(`Added ${amount} coins. New balance:`, users[userIndex].coins, 'Level:', newLevel.current);
     }
+  }
+
+  private calculateLevel(coins: number): { current: string; next: string } {
+    const levels = [
+      { name: 'Nature Seeker', minCoins: 0, nextLevel: 'Forest Friend' },
+      { name: 'Forest Friend', minCoins: 100, nextLevel: 'Tree Hugger' },
+      { name: 'Tree Hugger', minCoins: 250, nextLevel: 'Nature Guardian' },
+      { name: 'Nature Guardian', minCoins: 500, nextLevel: 'Eco Master' },
+      { name: 'Eco Master', minCoins: 1000, nextLevel: 'Planet Protector' },
+      { name: 'Planet Protector', minCoins: 2000, nextLevel: 'Max Level' },
+    ];
+    
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (coins >= levels[i].minCoins) {
+        return {
+          current: levels[i].name,
+          next: levels[i].nextLevel
+        };
+      }
+    }
+    
+    return { current: 'Nature Seeker', next: 'Forest Friend' };
   }
 
   // Walking sessions management
@@ -210,11 +239,6 @@ export class UserDataManager {
     return allMessages.filter(m => m.fromUserId === this.currentUserId || m.toUserId === this.currentUserId);
   }
 
-  // Clear all data (reset app)
-  clearAllData(): void {
-    this.forceCompleteWipe();
-  }
-
   // Logout current user
   logout(): void {
     this.currentUserId = null;
@@ -229,7 +253,7 @@ export class UserDataManager {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  // Get leaderboard data - should be empty initially
+  // Empty leaderboard
   getLeaderboardData(): User[] {
     const users = this.getAllUsers();
     return users.sort((a, b) => b.coins - a.coins).map((user, index) => ({
@@ -238,7 +262,7 @@ export class UserDataManager {
     }));
   }
 
-  // No friends initially
+  // No friends
   getDefaultFriends(): Friend[] {
     return [];
   }
