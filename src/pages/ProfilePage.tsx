@@ -68,15 +68,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [tempUserCity, setTempUserCity] = useState(userCity);
   const [messages, setMessages] = useState<Message[]>([]);
   
+  // Fresh user starts with 0 everything
   const userStats = {
-    totalSessions: 23,
-    totalHours: 12.5,
-    currentStreak: 7,
-    badges: 8,
+    totalSessions: 0,
+    totalHours: 0,
+    currentStreak: 0,
+    badges: 0,
     level: 'Nature Seeker',
     nextLevel: 'Forest Friend',
-    coins: 247,
-    rank: viewingUser?.rank || 4
+    coins: 0,
+    rank: 1
   };
 
   const natureEmojis = ['🌱', '🌿', '🌳', '🍃', '🌺', '🌻', '🌷', '🌸', '🌼', '🌹', '🦋', '🐝', '🐞', '🦅', '🐿️', '🍄', '⭐', '🌙', '☀️', '🌈'];
@@ -88,27 +89,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   ];
 
   const calendarData = Array.from({ length: 30 }, (_, i) => {
-    const session = walkingSessions.find(s => {
-      const sessionDate = new Date(s.date);
-      const calendarDate = new Date();
-      calendarDate.setDate(calendarDate.getDate() - (29 - i));
-      return sessionDate.toDateString() === calendarDate.toDateString();
-    });
-    
     return {
       day: i + 1,
-      distance: session?.distance || 0,
-      hasActivity: !!session,
-      session: session || null
+      distance: 0,
+      hasActivity: false,
+      session: null
     };
   });
 
+  // Fresh user starts with no badges unlocked
   const badges = [
-    { name: 'First Steps', emoji: '👣', unlocked: true },
-    { name: 'Early Bird', emoji: '🌅', unlocked: true },
-    { name: 'Tree Hugger', emoji: '🌳', unlocked: true },
-    { name: 'Rain Walker', emoji: '🌧️', unlocked: true },
-    { name: 'Sunset Chaser', emoji: '🌅', unlocked: true },
+    { name: 'First Steps', emoji: '👣', unlocked: false },
+    { name: 'Early Bird', emoji: '🌅', unlocked: false },
+    { name: 'Tree Hugger', emoji: '🌳', unlocked: false },
+    { name: 'Rain Walker', emoji: '🌧️', unlocked: false },
+    { name: 'Sunset Chaser', emoji: '🌅', unlocked: false },
     { name: 'Mountain Climber', emoji: '⛰️', unlocked: false },
     { name: 'Ocean Explorer', emoji: '🌊', unlocked: false },
     { name: 'Star Gazer', emoji: '⭐', unlocked: false },
@@ -116,12 +111,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
 
   useEffect(() => {
     if (!isPublicView) {
-      const activities = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
-      const sessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
-      const savedMessages = JSON.parse(localStorage.getItem('messages') || '[]');
-      setJoinedActivities(activities);
-      setWalkingSessions(sessions);
-      setMessages(savedMessages);
+      // Start fresh - no activities, sessions, or messages
+      setJoinedActivities([]);
+      setWalkingSessions([]);
+      setMessages([]);
     }
   }, [isPublicView]);
 

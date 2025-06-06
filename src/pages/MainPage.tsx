@@ -789,20 +789,31 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Header with improved layout */}
+      {/* Redesigned Header with bigger branding */}
       <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-6 shadow-xl">
-        <div className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center space-x-4">
+        <div className="p-8">
+          {/* Main Branding - Made Much Bigger */}
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center space-x-4 mb-4">
               <img 
                 src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
                 alt="Leaf" 
-                className="w-8 h-8"
+                className="w-16 h-16"
               />
-              <div>
-                <h1 className="text-sm font-nunito font-black text-white mb-1">NatureCapture</h1>
-                <p className="text-light-green font-bold text-xs">Ready for your next adventure? ⭐</p>
-              </div>
+              <h1 className="text-6xl font-nunito font-black text-white tracking-tight drop-shadow-lg">
+                NatureCapture
+              </h1>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-full px-8 py-4 inline-block shadow-lg border border-white/30">
+              <p className="text-2xl font-bold text-light-green">
+                🌟 Ready for your next adventure? ⭐
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-lg text-light-green font-semibold">Connecting Mind, Body & Community</p>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -821,14 +832,14 @@ const MainPage: React.FC = () => {
                   <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
                     <span className="text-yellow-500 text-xs font-black">🪙</span>
                   </div>
-                  <span className="font-black text-white text-xs">247</span>
+                  <span className="font-black text-white text-xs">0</span>
                 </div>
               </div>
             </div>
           </div>
           
           {/* Date, Time and Location */}
-          <div className="flex items-center justify-center space-x-6 text-white mb-2">
+          <div className="flex items-center justify-center space-x-6 text-white mb-2 mt-4">
             <DateTimeDisplay />
           </div>
           
@@ -1078,7 +1089,7 @@ const MainPage: React.FC = () => {
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-white rounded-2xl p-3 border-2 border-light-green text-center">
             <div className="w-10 h-10 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-white font-black text-sm">23</span>
+              <span className="text-white font-black text-sm">0</span>
             </div>
             <p className="font-black text-text-dark text-sm">📊 Sessions</p>
           </div>
@@ -1087,7 +1098,7 @@ const MainPage: React.FC = () => {
             onClick={handleStreakClick}
           >
             <div className="w-10 h-10 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-bright-green font-black text-sm">7</span>
+              <span className="text-bright-green font-black text-sm">0</span>
             </div>
             <p className="font-black text-text-dark text-sm">🔥 Streak</p>
           </div>

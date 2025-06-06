@@ -64,42 +64,34 @@ export class UserDataManager {
     return UserDataManager.instance;
   }
 
-  // Initialize or get current user
+  // Initialize or get current user - ALWAYS START FRESH
   initializeUser(username: string, city: string, avatar: string): User {
-    console.log('Initializing user:', username);
+    console.log('Initializing user - clearing all existing data first');
     
-    // Check if user already exists
-    const users = this.getAllUsers();
-    let user = users.find(u => u.username === username);
+    // FORCE clear all data first
+    this.forceResetApp();
     
-    if (!user) {
-      // Create new user with 0 everything
-      user = {
-        id: this.generateId(),
-        username,
-        city,
-        avatar,
-        coins: 0,
-        totalSessions: 0,
-        totalHours: 0,
-        currentStreak: 0,
-        badges: 0,
-        level: 'Nature Seeker',
-        nextLevel: 'Forest Friend',
-        rank: users.length + 1,
-        createdAt: Date.now(),
-        lastActiveAt: Date.now()
-      };
-      
-      users.push(user);
-      this.saveUsers(users);
-      console.log('Created new user:', user);
-    } else {
-      // Update last active time
-      user.lastActiveAt = Date.now();
-      this.saveUsers(users);
-      console.log('User already exists:', user);
-    }
+    // Create completely new user with 0 everything
+    const user: User = {
+      id: this.generateId(),
+      username,
+      city,
+      avatar,
+      coins: 0,
+      totalSessions: 0,
+      totalHours: 0,
+      currentStreak: 0,
+      badges: 0,
+      level: 'Nature Seeker',
+      nextLevel: 'Forest Friend',
+      rank: 1,
+      createdAt: Date.now(),
+      lastActiveAt: Date.now()
+    };
+    
+    // Save as the only user
+    this.saveUsers([user]);
+    console.log('Created fresh new user:', user);
     
     this.currentUserId = user.id;
     localStorage.setItem('currentUserId', user.id);
@@ -108,6 +100,43 @@ export class UserDataManager {
     localStorage.setItem('userAvatar', avatar);
     
     return user;
+  }
+
+  // Force reset everything - complete wipe
+  forceResetApp(): void {
+    console.log('FORCE RESETTING ALL APP DATA');
+    
+    // Clear all localStorage keys
+    const keysToRemove = [
+      'allUsers',
+      'walkingSessions', 
+      'messages',
+      'currentUserId',
+      'userName',
+      'userCity', 
+      'userAvatar',
+      'friends',
+      'joinedActivities',
+      'sessionActive',
+      'sessionTime',
+      'locationGranted',
+      'sessionCompletedActivities',
+      'sessionRoute',
+      'currentPosition',
+      'sessionPhotos',
+      'sessionComments',
+      'sessionFeeling',
+      'suggestedActivities',
+      'addedActivities'
+    ];
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`Removed localStorage key: ${key}`);
+    });
+    
+    this.currentUserId = null;
+    console.log('Complete app reset finished');
   }
 
   getCurrentUser(): User | null {
@@ -164,7 +193,7 @@ export class UserDataManager {
     if (userIndex !== -1) {
       users[userIndex].totalSessions += 1;
       users[userIndex].totalHours += session.time;
-      users[userIndex].coins += Math.floor(session.distance * 10) + Math.floor(session.time * 5); // 10 coins per km + 5 coins per hour
+      users[userIndex].coins += Math.floor(session.distance * 10) + Math.floor(session.time * 5);
       this.saveUsers(users);
     }
     
@@ -209,17 +238,7 @@ export class UserDataManager {
 
   // Clear all data (reset app)
   clearAllData(): void {
-    localStorage.removeItem('allUsers');
-    localStorage.removeItem('walkingSessions');
-    localStorage.removeItem('messages');
-    localStorage.removeItem('currentUserId');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userCity');
-    localStorage.removeItem('userAvatar');
-    localStorage.removeItem('friends');
-    localStorage.removeItem('joinedActivities');
-    this.currentUserId = null;
-    console.log('Cleared all user data');
+    this.forceResetApp();
   }
 
   // Logout current user
@@ -245,15 +264,9 @@ export class UserDataManager {
     }));
   }
 
-  // Default friends for new users
+  // No default friends - start completely empty
   getDefaultFriends(): Friend[] {
-    return [
-      { id: '1', name: 'Alex Green', avatar: '🌿', status: 'online', lastSeen: 'Active now' },
-      { id: '2', name: 'Maya Forest', avatar: '🌳', status: 'offline', lastSeen: '2 hours ago' },
-      { id: '3', name: 'Leo Sunshine', avatar: '☀️', status: 'online', lastSeen: 'Active now' },
-      { id: '4', name: 'Luna Star', avatar: '⭐', status: 'offline', lastSeen: '1 day ago' },
-      { id: '5', name: 'River Blue', avatar: '🌊', status: 'online', lastSeen: 'Active now' },
-    ];
+    return [];
   }
 }
 
