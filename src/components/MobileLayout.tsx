@@ -27,8 +27,8 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children, onLogout }) => {
         {children}
       </div>
 
-      {/* Bottom Navigation - Overlay Style */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-gradient-to-r from-white to-light-green border-t-4 border-forest-green shadow-2xl z-50">
+      {/* Bottom Navigation - Higher z-index to overlay map */}
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-gradient-to-r from-white to-light-green border-t-4 border-forest-green shadow-2xl z-[9999]">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;

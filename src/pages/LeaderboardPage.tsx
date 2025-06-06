@@ -105,7 +105,7 @@ const LeaderboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tab Navigation */}
+          {/* Tab Navigation - removed emojis from text */}
           <div className="grid grid-cols-3 gap-2 bg-white/20 rounded-2xl p-2">
             {(['local', 'global', 'friends'] as const).map((tab) => (
               <Button
@@ -119,8 +119,8 @@ const LeaderboardPage: React.FC = () => {
               >
                 {getTabIcon(tab)}
                 <span className="capitalize">
-                  {tab === 'local' ? `🏙️ ${currentUserCity}` : 
-                   tab === 'global' ? '🌍 Global' : '👥 Friends'}
+                  {tab === 'local' ? currentUserCity : 
+                   tab === 'global' ? 'Global' : 'Friends'}
                 </span>
               </Button>
             ))}

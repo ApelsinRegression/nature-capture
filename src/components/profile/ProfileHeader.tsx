@@ -36,6 +36,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       { name: 'Tree Hugger', minCoins: 250, nextLevel: 'Nature Guardian', nextCoins: 500 },
       { name: 'Nature Guardian', minCoins: 500, nextLevel: 'Eco Master', nextCoins: 1000 },
       { name: 'Eco Master', minCoins: 1000, nextLevel: 'Planet Protector', nextCoins: 2000 },
+      { name: 'Planet Protector', minCoins: 2000, nextLevel: 'Max Level', nextCoins: 2000 },
     ];
     
     const currentLevel = levels.find(level => currentCoins >= level.minCoins && currentCoins < level.nextCoins);
@@ -51,16 +52,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   return (
     <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-8 shadow-xl">
       <div className="p-6">
-        {/* Smaller header */}
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <Leaf className="w-8 h-8 text-yellow-accent" />
-            <h1 className="text-3xl font-nunito font-black text-white tracking-tight">
-              NatureCapture
-            </h1>
-          </div>
-        </div>
-
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-4">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl shadow-lg">
