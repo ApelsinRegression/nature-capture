@@ -1,4 +1,3 @@
-
 interface User {
   id: string;
   username: string;
@@ -55,7 +54,10 @@ export class UserDataManager {
   private static instance: UserDataManager;
   private currentUserId: string | null = null;
 
-  private constructor() {}
+  private constructor() {
+    // Force clear everything on startup
+    this.forceResetApp();
+  }
 
   static getInstance(): UserDataManager {
     if (!UserDataManager.instance) {
@@ -64,12 +66,46 @@ export class UserDataManager {
     return UserDataManager.instance;
   }
 
-  // Initialize or get current user - ALWAYS START FRESH
+  // Coin-based level system
+  private getLevelInfo(coins: number) {
+    const levels = [
+      { name: 'Nature Seeker', minCoins: 0, nextLevel: 'Forest Friend', nextCoins: 100 },
+      { name: 'Forest Friend', minCoins: 100, nextLevel: 'Tree Hugger', nextCoins: 250 },
+      { name: 'Tree Hugger', minCoins: 250, nextLevel: 'Nature Guardian', nextCoins: 500 },
+      { name: 'Nature Guardian', minCoins: 500, nextLevel: 'Eco Master', nextCoins: 1000 },
+      { name: 'Eco Master', minCoins: 1000, nextLevel: 'Planet Protector', nextCoins: 2000 },
+      { name: 'Planet Protector', minCoins: 2000, nextLevel: 'Max Level', nextCoins: 2000 },
+    ];
+    
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (coins >= levels[i].minCoins) {
+        return levels[i];
+      }
+    }
+    return levels[0];
+  }
+
+  // Badge system based on coins
+  private getBadgeCount(coins: number): number {
+    if (coins >= 2000) return 8;
+    if (coins >= 1000) return 7;
+    if (coins >= 500) return 6;
+    if (coins >= 250) return 5;
+    if (coins >= 100) return 4;
+    if (coins >= 50) return 3;
+    if (coins >= 25) return 2;
+    if (coins >= 10) return 1;
+    return 0;
+  }
+
+  // Initialize or get current user
   initializeUser(username: string, city: string, avatar: string): User {
     console.log('Initializing user - clearing all existing data first');
     
     // FORCE clear all data first
     this.forceResetApp();
+    
+    const levelInfo = this.getLevelInfo(0);
     
     // Create completely new user with 0 everything
     const user: User = {
@@ -82,8 +118,8 @@ export class UserDataManager {
       totalHours: 0,
       currentStreak: 0,
       badges: 0,
-      level: 'Nature Seeker',
-      nextLevel: 'Forest Friend',
+      level: levelInfo.name,
+      nextLevel: levelInfo.nextLevel,
       rank: 1,
       createdAt: Date.now(),
       lastActiveAt: Date.now()
@@ -165,10 +201,17 @@ export class UserDataManager {
     const userIndex = users.findIndex(u => u.id === this.currentUserId);
     
     if (userIndex !== -1) {
-      users[userIndex].coins += amount;
+      const newCoins = users[userIndex].coins + amount;
+      const levelInfo = this.getLevelInfo(newCoins);
+      
+      users[userIndex].coins = newCoins;
+      users[userIndex].badges = this.getBadgeCount(newCoins);
+      users[userIndex].level = levelInfo.name;
+      users[userIndex].nextLevel = levelInfo.nextLevel;
       users[userIndex].lastActiveAt = Date.now();
+      
       this.saveUsers(users);
-      console.log(`Added ${amount} coins to user. New balance:`, users[userIndex].coins);
+      console.log(`Added ${amount} coins to user. New balance:`, newCoins);
     }
   }
 
@@ -193,7 +236,17 @@ export class UserDataManager {
     if (userIndex !== -1) {
       users[userIndex].totalSessions += 1;
       users[userIndex].totalHours += session.time;
-      users[userIndex].coins += Math.floor(session.distance * 10) + Math.floor(session.time * 5);
+      
+      // Add coins and update level
+      const coinsEarned = Math.floor(session.distance * 10) + Math.floor(session.time * 5);
+      const newCoins = users[userIndex].coins + coinsEarned;
+      const levelInfo = this.getLevelInfo(newCoins);
+      
+      users[userIndex].coins = newCoins;
+      users[userIndex].badges = this.getBadgeCount(newCoins);
+      users[userIndex].level = levelInfo.name;
+      users[userIndex].nextLevel = levelInfo.nextLevel;
+      
       this.saveUsers(users);
     }
     

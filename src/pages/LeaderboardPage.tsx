@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Crown, Medal, Trophy, MapPin, Users, Globe } from 'lucide-react';
+import UserDataManager from '../utils/userDataManager';
 
 interface LeaderboardEntry {
   id: string;
@@ -12,64 +13,43 @@ interface LeaderboardEntry {
   city: string;
   isFriend: boolean;
   rank: number;
+  coins: number;
 }
 
 const LeaderboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'local' | 'global' | 'friends'>('local');
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
 
   const currentUserCity = localStorage.getItem('userCity') || 'New York';
+  const userDataManager = UserDataManager.getInstance();
 
-  const generateLeaderboardData = (type: 'local' | 'global' | 'friends'): LeaderboardEntry[] => {
-    const baseData = [
-      { name: 'Alex Green', avatar: '🌿', city: 'New York', isFriend: true },
-      { name: 'Maya Forest', avatar: '🌳', city: 'New York', isFriend: true },
-      { name: 'Leo Sunshine', avatar: '☀️', city: 'San Francisco', isFriend: true },
-      { name: 'Luna Star', avatar: '⭐', city: 'New York', isFriend: true },
-      { name: 'River Blue', avatar: '🌊', city: 'Boston', isFriend: false },
-      { name: 'Ocean Breeze', avatar: '🌊', city: 'Miami', isFriend: false },
-      { name: 'Mountain Peak', avatar: '⛰️', city: 'Denver', isFriend: false },
-      { name: 'Forest Walker', avatar: '🌲', city: 'Seattle', isFriend: false },
-      { name: 'Sky Runner', avatar: '☁️', city: 'Portland', isFriend: false },
-      { name: 'Earth Keeper', avatar: '🌍', city: 'Austin', isFriend: false },
-      { name: 'Nature Lover', avatar: '🍃', city: 'Chicago', isFriend: false },
-      { name: 'Sunset Chaser', avatar: '🌅', city: 'Los Angeles', isFriend: false },
-      { name: 'Morning Dew', avatar: '💧', city: 'Atlanta', isFriend: false },
-      { name: 'Wind Dancer', avatar: '💨', city: 'Phoenix', isFriend: false },
-      { name: 'Rain Walker', avatar: '🌧️', city: 'Seattle', isFriend: false },
-      { name: 'Sun Beam', avatar: '☀️', city: 'Miami', isFriend: false },
-      { name: 'Moon Light', avatar: '🌙', city: 'Las Vegas', isFriend: false },
-      { name: 'Star Gazer', avatar: '✨', city: 'Denver', isFriend: false },
-      { name: 'Cloud Surfer', avatar: '☁️', city: 'San Francisco', isFriend: false },
-      { name: 'Wave Rider', avatar: '🌊', city: 'San Diego', isFriend: false },
-    ];
-
-    let filteredData = [...baseData];
-
-    if (type === 'local') {
-      filteredData = baseData.filter(user => user.city === currentUserCity);
-    } else if (type === 'friends') {
-      filteredData = baseData.filter(user => user.isFriend);
-    }
-
-    // Generate random distances and sort
-    const withDistances = filteredData.map((user, index) => ({
-      ...user,
-      id: `user-${index}`,
-      distance: Math.random() * 50 + 10, // 10-60 km
-      rank: 0
+  useEffect(() => {
+    // Get real users from UserDataManager
+    const users = userDataManager.getLeaderboardData();
+    
+    // Convert to leaderboard format
+    const formattedData: LeaderboardEntry[] = users.map(user => ({
+      id: user.id,
+      name: user.username,
+      avatar: user.avatar,
+      distance: user.totalHours * 2.5, // Estimate distance from hours
+      city: user.city,
+      isFriend: false, // No friends initially
+      rank: user.rank,
+      coins: user.coins
     }));
 
-    // Sort by distance and assign ranks
-    withDistances.sort((a, b) => b.distance - a.distance);
-    withDistances.forEach((user, index) => {
-      user.rank = index + 1;
-    });
+    // Filter based on active tab
+    let filteredData = formattedData;
+    if (activeTab === 'local') {
+      filteredData = formattedData.filter(user => user.city === currentUserCity);
+    } else if (activeTab === 'friends') {
+      filteredData = []; // No friends initially
+    }
 
-    return withDistances.slice(0, 20); // Return top 20
-  };
-
-  const leaderboardData = generateLeaderboardData(activeTab);
+    setLeaderboardData(filteredData);
+  }, [activeTab, currentUserCity]);
 
   const handleUserClick = (user: LeaderboardEntry) => {
     // Navigate to user profile with limited access
@@ -120,7 +100,7 @@ const LeaderboardPage: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-nunito font-black text-white">🏆 Leaderboard 🏆</h1>
+              <h1 className="text-3xl font-nunito font-black text-white">🏆 Leaderboard</h1>
               <p className="text-light-green font-bold text-sm">See who's leading the nature adventure!</p>
             </div>
           </div>
@@ -152,52 +132,52 @@ const LeaderboardPage: React.FC = () => {
       <div className="px-4">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-bright-green">
           <div className="space-y-3">
-            {leaderboardData.map((user, index) => (
-              <div
-                key={user.id}
-                onClick={() => handleUserClick(user)}
-                className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all hover:scale-105 ${
-                  index < 3
-                    ? 'bg-gradient-to-r from-yellow-accent to-orange-accent text-white'
-                    : 'bg-light-green hover:bg-bright-green hover:text-white'
-                }`}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center justify-center w-10 h-10">
-                    {getRankIcon(user.rank)}
-                  </div>
-                  <div className="text-3xl">{user.avatar}</div>
-                  <div>
-                    <p className="font-black text-lg">{user.name}</p>
-                    <div className="flex items-center space-x-2 text-sm font-bold opacity-80">
-                      <MapPin className="w-3 h-3" />
-                      <span>{user.city}</span>
-                      {user.isFriend && <span className="text-green-600">👥 Friend</span>}
+            {leaderboardData.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🏆</div>
+                <p className="text-bright-green font-bold text-lg">No data available</p>
+                <p className="text-text-dark font-bold">
+                  {activeTab === 'local' 
+                    ? `No users found in ${currentUserCity}` 
+                    : activeTab === 'friends' 
+                      ? 'Add some friends to see their progress!' 
+                      : 'Start your journey to appear on the leaderboard!'}
+                </p>
+              </div>
+            ) : (
+              leaderboardData.map((user, index) => (
+                <div
+                  key={user.id}
+                  onClick={() => handleUserClick(user)}
+                  className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all hover:scale-105 ${
+                    index < 3
+                      ? 'bg-gradient-to-r from-yellow-accent to-orange-accent text-white'
+                      : 'bg-light-green hover:bg-bright-green hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center justify-center w-10 h-10">
+                      {getRankIcon(user.rank)}
+                    </div>
+                    <div className="text-3xl">{user.avatar}</div>
+                    <div>
+                      <p className="font-black text-lg">{user.name}</p>
+                      <div className="flex items-center space-x-2 text-sm font-bold opacity-80">
+                        <MapPin className="w-3 h-3" />
+                        <span>{user.city}</span>
+                        {user.isFriend && <span className="text-green-600">👥 Friend</span>}
+                      </div>
                     </div>
                   </div>
+                  
+                  <div className="text-right">
+                    <p className="font-black text-lg">🪙 {user.coins}</p>
+                    <p className="text-xs font-bold opacity-80">coins</p>
+                  </div>
                 </div>
-                
-                <div className="text-right">
-                  <p className="font-black text-lg">{user.distance.toFixed(1)}</p>
-                  <p className="text-xs font-bold opacity-80">km walked</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-
-          {leaderboardData.length === 0 && (
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">🏆</div>
-              <p className="text-bright-green font-bold text-lg">No data available</p>
-              <p className="text-text-dark font-bold">
-                {activeTab === 'local' 
-                  ? `No users found in ${currentUserCity}` 
-                  : activeTab === 'friends' 
-                    ? 'Add some friends to see their progress!' 
-                    : 'Loading global leaderboard...'}
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

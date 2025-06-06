@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Edit, MapPin } from 'lucide-react';
+import { Edit, MapPin, Leaf } from 'lucide-react';
 
 interface ProfileHeaderProps {
   userName: string;
@@ -28,16 +28,46 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isEditing,
   onEditClick
 }) => {
+  // Calculate coins needed for next level
+  const getCoinsForNextLevel = (currentCoins: number) => {
+    const levels = [
+      { name: 'Nature Seeker', minCoins: 0, nextLevel: 'Forest Friend', nextCoins: 100 },
+      { name: 'Forest Friend', minCoins: 100, nextLevel: 'Tree Hugger', nextCoins: 250 },
+      { name: 'Tree Hugger', minCoins: 250, nextLevel: 'Nature Guardian', nextCoins: 500 },
+      { name: 'Nature Guardian', minCoins: 500, nextLevel: 'Eco Master', nextCoins: 1000 },
+      { name: 'Eco Master', minCoins: 1000, nextLevel: 'Planet Protector', nextCoins: 2000 },
+    ];
+    
+    const currentLevel = levels.find(level => currentCoins >= level.minCoins && currentCoins < level.nextCoins);
+    if (currentLevel) {
+      return currentLevel.nextCoins - currentCoins;
+    }
+    return 0;
+  };
+
+  const coinsNeeded = getCoinsForNextLevel(userStats.coins);
+  const progressPercent = userStats.coins === 0 ? 0 : Math.min((userStats.coins / (userStats.coins + coinsNeeded)) * 100, 100);
+
   return (
     <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-8 shadow-xl">
       <div className="p-6">
+        {/* Smaller header */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <Leaf className="w-8 h-8 text-yellow-accent" />
+            <h1 className="text-3xl font-nunito font-black text-white tracking-tight">
+              NatureCapture
+            </h1>
+          </div>
+        </div>
+
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-4">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl shadow-lg">
               {selectedEmoji}
             </div>
             <div>
-              <h1 className="text-3xl font-nunito font-black text-white mb-2">{userName}</h1>
+              <h2 className="text-3xl font-nunito font-black text-white mb-2">{userName}</h2>
               {userCity && (
                 <div className="flex items-center space-x-2 text-light-green mb-2">
                   <MapPin className="w-4 h-4" />
@@ -89,11 +119,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <div className="bg-white/30 rounded-full h-2">
             <div 
               className="bg-yellow-accent rounded-full h-2 transition-all duration-500"
-              style={{ width: '65%' }}
+              style={{ width: `${progressPercent}%` }}
             ></div>
           </div>
           <p className="text-white text-xs font-bold mt-2 text-center">
-            🌟 650 more coins to reach {userStats.nextLevel}! 🌟
+            {coinsNeeded > 0 ? `${coinsNeeded} more coins to reach ${userStats.nextLevel}!` : `You've reached ${userStats.level}!`}
           </p>
         </div>
       </div>
