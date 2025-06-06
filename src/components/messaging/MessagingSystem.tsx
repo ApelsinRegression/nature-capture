@@ -1,7 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, ArrowLeft, MessageSquare, User, Clock, MapPin } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Clock, MapPin } from 'lucide-react';
+import UserDataManager from '../../utils/userDataManager';
 
 interface Friend {
   id: string;
@@ -13,8 +13,10 @@ interface Friend {
 
 interface Message {
   id: string;
-  senderId: string;
-  recipientId: string;
+  fromUserId: string;
+  toUserId: string;
+  fromUsername: string;
+  toUsername: string;
   text: string;
   timestamp: number;
   type: 'invitation' | 'regular';
@@ -33,14 +35,11 @@ const MessagingSystem: React.FC<MessagingSystemProps> = ({ onBack }) => {
   const [showQuickMessages, setShowQuickMessages] = useState(false);
   const [invitationPlace, setInvitationPlace] = useState('');
   const [invitationTime, setInvitationTime] = useState('');
+  
+  const userManager = UserDataManager.getInstance();
+  const currentUser = userManager.getCurrentUser();
 
-  const friends: Friend[] = [
-    { id: '1', name: 'Alex Green', avatar: '🌿', status: 'online', lastSeen: 'Active now' },
-    { id: '2', name: 'Maya Forest', avatar: '🌳', status: 'offline', lastSeen: '2 hours ago' },
-    { id: '3', name: 'Leo Sunshine', avatar: '☀️', status: 'online', lastSeen: 'Active now' },
-    { id: '4', name: 'Luna Star', avatar: '⭐', status: 'offline', lastSeen: '1 day ago' },
-    { id: '5', name: 'River Blue', avatar: '🌊', status: 'online', lastSeen: 'Active now' },
-  ];
+  const friends: Friend[] = userManager.getDefaultFriends();
 
   const quickMessageTemplates = [
     { text: "Hey! Want to go for a nature walk?", type: 'regular' },
@@ -50,13 +49,19 @@ const MessagingSystem: React.FC<MessagingSystemProps> = ({ onBack }) => {
     { text: "I found a beautiful trail! Want to explore?", type: 'regular' }
   ];
 
-  const sendMessage = (text: string, type: 'regular' | 'invitation' = 'regular') => {
-    if (!selectedFriend) return;
+  useEffect(() => {
+    // Load all user messages
+    const userMessages = userManager.getUserMessages();
+    setMessages(userMessages);
+  }, [userManager]);
 
-    const message: Message = {
-      id: Date.now().toString(),
-      senderId: 'me',
-      recipientId: selectedFriend.id,
+  const sendMessage = (text: string, type: 'regular' | 'invitation' = 'regular') => {
+    if (!selectedFriend || !currentUser) return;
+
+    const messageData = {
+      toUserId: selectedFriend.id,
+      fromUsername: currentUser.username,
+      toUsername: selectedFriend.name,
       text: text,
       timestamp: Date.now(),
       type: type,
@@ -64,15 +69,15 @@ const MessagingSystem: React.FC<MessagingSystemProps> = ({ onBack }) => {
       time: type === 'invitation' ? invitationTime : undefined
     };
 
-    setMessages([...messages, message]);
+    userManager.saveMessage(messageData);
+    
+    // Update local state
+    const userMessages = userManager.getUserMessages();
+    setMessages(userMessages);
+    
     setMessageText('');
     setInvitationPlace('');
     setInvitationTime('');
-    
-    // Save to localStorage
-    const existingMessages = JSON.parse(localStorage.getItem('messages') || '[]');
-    existingMessages.push(message);
-    localStorage.setItem('messages', JSON.stringify(existingMessages));
   };
 
   const sendInvitation = () => {
@@ -88,7 +93,8 @@ const MessagingSystem: React.FC<MessagingSystemProps> = ({ onBack }) => {
 
   if (selectedFriend) {
     const friendMessages = messages.filter(
-      msg => msg.recipientId === selectedFriend.id || msg.senderId === selectedFriend.id
+      msg => (msg.toUserId === selectedFriend.id && msg.fromUserId === currentUser?.id) ||
+             (msg.fromUserId === selectedFriend.id && msg.toUserId === currentUser?.id)
     );
 
     return (
@@ -124,7 +130,14 @@ const MessagingSystem: React.FC<MessagingSystemProps> = ({ onBack }) => {
                 </div>
               ) : (
                 friendMessages.map((message) => (
-                  <div key={message.id} className="bg-forest-green text-white rounded-2xl p-3 ml-8">
+                  <div 
+                    key={message.id} 
+                    className={`rounded-2xl p-3 ${
+                      message.fromUserId === currentUser?.id 
+                        ? 'bg-forest-green text-white ml-8' 
+                        : 'bg-light-green text-bright-green mr-8'
+                    }`}
+                  >
                     <p className="font-bold">{message.text}</p>
                     <p className="text-xs opacity-70 mt-1">
                       {new Date(message.timestamp).toLocaleTimeString()}
@@ -235,7 +248,30 @@ const MessagingSystem: React.FC<MessagingSystemProps> = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="px-4">
+      <div className="px-4 space-y-6">
+        {/* Message History */}
+        {messages.length > 0 && (
+          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-blue-500">
+            <h3 className="text-lg font-black text-bright-green mb-4">📝 Message History</h3>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {messages.slice(-10).reverse().map((message) => (
+                <div key={message.id} className="bg-light-green rounded-2xl p-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="font-bold text-bright-green text-sm">
+                      {message.fromUserId === currentUser?.id ? `To: ${message.toUsername}` : `From: ${message.fromUsername}`}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {new Date(message.timestamp).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold text-text-dark">{message.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Friends List */}
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-light-green">
           <h3 className="text-lg font-black text-bright-green mb-4">👥 Your Friends</h3>
           <div className="space-y-3">

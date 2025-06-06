@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileEditForm from '../components/profile/ProfileEditForm';
 import GroupActivities from '../components/profile/GroupActivities';
-import FriendsSection from '../components/profile/FriendsSection';
 import ProfileStats from '../components/profile/ProfileStats';
 import ProfileBadges from '../components/profile/ProfileBadges';
 import ProfileActions from '../components/profile/ProfileActions';
@@ -87,14 +85,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     'New York', 'San Francisco', 'Los Angeles', 'Chicago', 'Miami', 'Seattle', 'Boston', 
     'Washington DC', 'Denver', 'Portland', 'Austin', 'Atlanta', 'Phoenix', 'Las Vegas',
     'London', 'Paris', 'Tokyo', 'Sydney', 'Toronto', 'Berlin', 'Barcelona', 'Amsterdam'
-  ];
-
-  const friends = [
-    { name: 'Alex Green', emoji: '🌿', status: 'online', lastSeen: 'Active now 🟢' },
-    { name: 'Maya Forest', emoji: '🌳', status: 'offline', lastSeen: '2 hours ago 🟡' },
-    { name: 'Leo Sunshine', emoji: '☀️', status: 'online', lastSeen: 'Active now 🟢' },
-    { name: 'Luna Star', emoji: '⭐', status: 'offline', lastSeen: '1 day ago 🔴' },
-    { name: 'River Blue', emoji: '🌊', status: 'online', lastSeen: 'Active now 🟢' },
   ];
 
   const calendarData = Array.from({ length: 30 }, (_, i) => {
@@ -324,13 +314,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
       )}
 
       {!isPublicView && (
-        <>
-          <GroupActivities joinedActivities={joinedActivities} />
-          <FriendsSection 
-            friends={friends} 
-            onMessageClick={handleSelectFriend}
-          />
-        </>
+        <GroupActivities joinedActivities={joinedActivities} />
       )}
       
       <ProfileStats userStats={userStats} />

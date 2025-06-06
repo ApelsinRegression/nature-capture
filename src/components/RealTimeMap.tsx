@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -35,7 +34,8 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
   const watchIdRef = useRef<number | null>(null);
-  const userInteractedRef = useRef<boolean>(false);
+  const [followUser, setFollowUser] = useState<boolean>(false);
+  const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -48,13 +48,15 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapInstanceRef.current);
 
-    // Track user interactions with map
+    // Track user interactions with map - disable following when user manually moves
     mapInstanceRef.current.on('dragstart', () => {
-      userInteractedRef.current = true;
+      console.log('User dragged map, disabling follow mode');
+      setFollowUser(false);
     });
 
     mapInstanceRef.current.on('zoomstart', () => {
-      userInteractedRef.current = true;
+      console.log('User zoomed map, disabling follow mode');
+      setFollowUser(false);
     });
 
     // Try to get user's current location and center map there
@@ -66,7 +68,8 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
             lng: position.coords.longitude
           };
           
-          console.log('Map got user location:', userLocation);
+          console.log('Map got initial user location:', userLocation);
+          setCurrentPosition(userLocation);
           
           if (mapInstanceRef.current) {
             mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], 15);
@@ -103,20 +106,18 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
     };
   }, [onPositionUpdate]);
 
-  // Handle centering on user location
+  // Handle persistent centering on user location
   useEffect(() => {
-    if (shouldCenterOnUser && route.length > 0 && mapInstanceRef.current) {
-      const currentPosition = route[route.length - 1];
-      console.log('Centering map on user location:', currentPosition);
-      
+    if (shouldCenterOnUser && currentPosition && mapInstanceRef.current) {
+      console.log('Enabling persistent follow mode for user location:', currentPosition);
+      setFollowUser(true);
       mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 16);
-      userInteractedRef.current = false; // Reset user interaction flag
       
       if (onCenteringComplete) {
         onCenteringComplete();
       }
     }
-  }, [shouldCenterOnUser, route, onCenteringComplete]);
+  }, [shouldCenterOnUser, currentPosition, onCenteringComplete]);
 
   // Start/stop location tracking based on isActive
   useEffect(() => {
@@ -124,12 +125,19 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
       console.log('Starting map location tracking...');
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
-          const currentPosition = {
+          const newPosition = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
-          console.log('Map location updated:', currentPosition);
-          onPositionUpdate(currentPosition);
+          console.log('Map location updated:', newPosition);
+          setCurrentPosition(newPosition);
+          onPositionUpdate(newPosition);
+
+          // If follow mode is enabled, keep centering on user
+          if (followUser && mapInstanceRef.current) {
+            console.log('Following user to new position:', newPosition);
+            mapInstanceRef.current.setView([newPosition.lat, newPosition.lng], 16);
+          }
         },
         (error) => {
           console.error('Map location tracking error:', error);
@@ -152,13 +160,12 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
         watchIdRef.current = null;
       }
     };
-  }, [isActive, onPositionUpdate]);
+  }, [isActive, onPositionUpdate, followUser]);
 
   // Update current position marker
   useEffect(() => {
-    if (!mapInstanceRef.current || route.length === 0) return;
+    if (!mapInstanceRef.current || !currentPosition) return;
 
-    const currentPosition = route[route.length - 1];
     console.log('Updating map marker to:', currentPosition);
 
     // Remove existing marker
@@ -171,12 +178,7 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
       .addTo(mapInstanceRef.current)
       .bindPopup('📍 You are here!')
       .openPopup();
-
-    // Only auto-center if user hasn't interacted with the map
-    if (!userInteractedRef.current || shouldCenterOnUser) {
-      mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 16);
-    }
-  }, [route, shouldCenterOnUser]);
+  }, [currentPosition]);
 
   return (
     <div className="relative">
@@ -188,6 +190,11 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
       {isActive && (
         <div className="absolute top-3 right-3 bg-green-500 text-white rounded-lg p-2 text-xs font-bold shadow-lg animate-pulse">
           📍 Live Tracking
+        </div>
+      )}
+      {followUser && (
+        <div className="absolute top-3 left-3 bg-blue-500 text-white rounded-lg p-2 text-xs font-bold shadow-lg">
+          🎯 Following You
         </div>
       )}
     </div>
