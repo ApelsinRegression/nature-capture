@@ -12,6 +12,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import ArticlePage from "./pages/ArticlePage";
 import ProfilePage from "./pages/ProfilePage";
 import MusicPage from "./pages/MusicPage";
+import UserDataManager from "./utils/userDataManager";
 
 const queryClient = new QueryClient();
 
@@ -20,22 +21,36 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (simulate checking localStorage)
+    // Initialize UserDataManager (this will wipe all data)
+    UserDataManager.getInstance();
+    
+    // Check if user is logged in
     const token = localStorage.getItem('userToken');
-    setIsAuthenticated(!!token);
+    const currentUserId = localStorage.getItem('currentUserId');
+    
+    // Only set as authenticated if both token and user exist
+    setIsAuthenticated(!!token && !!currentUserId);
     setIsLoading(false);
   }, []);
 
   const handleLogin = (email: string, password: string) => {
-    // Simulate login
+    // Simulate login - this should create a new user account
     localStorage.setItem('userToken', 'fake-token');
-    localStorage.setItem('userName', email.split('@')[0]);
+    
+    // Extract username from email and create user
+    const username = email.split('@')[0];
+    const userDataManager = UserDataManager.getInstance();
+    
+    // Create the first user account
+    userDataManager.initializeUser(username, 'Unknown City', '🌱');
+    
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
+    const userDataManager = UserDataManager.getInstance();
+    userDataManager.logout();
     localStorage.removeItem('userToken');
-    localStorage.removeItem('userName');
     setIsAuthenticated(false);
   };
 

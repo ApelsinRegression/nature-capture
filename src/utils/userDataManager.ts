@@ -71,12 +71,14 @@ export class UserDataManager {
   completeWipe(): void {
     console.log('COMPLETE WIPE - removing ALL data from the app');
     
-    // Clear everything
+    // Clear everything from localStorage and sessionStorage
     localStorage.clear();
     sessionStorage.clear();
     
+    // Reset internal state
     this.currentUserId = null;
-    console.log('App is now completely empty - no users exist');
+    
+    console.log('App is now completely empty - no users, no data exists');
   }
 
   // Initialize first user (signup)
@@ -253,7 +255,7 @@ export class UserDataManager {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  // Empty leaderboard
+  // Empty leaderboard - only return real users
   getLeaderboardData(): User[] {
     const users = this.getAllUsers();
     return users.sort((a, b) => b.coins - a.coins).map((user, index) => ({
@@ -262,7 +264,7 @@ export class UserDataManager {
     }));
   }
 
-  // No friends
+  // No default friends
   getDefaultFriends(): Friend[] {
     return [];
   }

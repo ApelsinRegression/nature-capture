@@ -1,15 +1,12 @@
 
 import React from 'react';
 import { Trophy, Medal, Award } from 'lucide-react';
+import UserDataManager from '../utils/userDataManager';
 
 const Leaderboard: React.FC = () => {
-  const leaderboardData = [
-    { rank: 1, name: 'Alex Green', coins: 2847, avatar: '🌿', badge: 'Forest Guardian' },
-    { rank: 2, name: 'Sam Rivers', coins: 2340, avatar: '🏔️', badge: 'Mountain Explorer' },
-    { rank: 3, name: 'Jordan Sky', coins: 1892, avatar: '🌊', badge: 'Ocean Walker' },
-    { rank: 4, name: 'You', coins: 247, avatar: '🌱', badge: 'Nature Seeker', isUser: true },
-    { rank: 5, name: 'Riley Stone', coins: 156, avatar: '🦋', badge: 'Butterfly Friend' }
-  ];
+  const userDataManager = UserDataManager.getInstance();
+  const leaderboardData = userDataManager.getLeaderboardData();
+  const currentUser = userDataManager.getCurrentUser();
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -27,46 +24,56 @@ const Leaderboard: React.FC = () => {
       </h2>
       
       <div className="space-y-3">
-        {leaderboardData.map((user) => (
-          <div 
-            key={user.rank}
-            className={`flex items-center justify-between p-4 rounded-2xl relative ${
-              user.isUser 
-                ? 'bg-gradient-to-r from-yellow-accent to-orange-accent border-4 border-forest-green' 
-                : 'bg-light-green'
-            }`}
-          >
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center">
-                {getRankIcon(user.rank)}
-              </div>
-              
-              <div className="relative">
-                <div className="text-3xl relative z-10">{user.avatar}</div>
-              </div>
-              
-              <div>
-                <p className={`font-bold text-lg ${user.isUser ? 'text-white' : 'text-bright-green'}`}>
-                  {user.name}
-                </p>
-                <p className={`text-sm ${user.isUser ? 'text-white' : 'text-text-dark'}`}>
-                  {user.badge}
-                </p>
-              </div>
-            </div>
-            
-            <div className={`font-bold text-lg ${user.isUser ? 'text-white' : 'text-forest-green'}`}>
-              🪙 {user.coins}
-            </div>
+        {leaderboardData.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-6xl mb-4">🏆</div>
+            <p className="text-bright-green font-bold text-lg">No champions yet!</p>
+            <p className="text-text-dark font-bold">Start your nature journey to appear on the leaderboard!</p>
           </div>
-        ))}
+        ) : (
+          leaderboardData.map((user) => (
+            <div 
+              key={user.id}
+              className={`flex items-center justify-between p-4 rounded-2xl relative ${
+                user.id === currentUser?.id
+                  ? 'bg-gradient-to-r from-yellow-accent to-orange-accent border-4 border-forest-green' 
+                  : 'bg-light-green'
+              }`}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center">
+                  {getRankIcon(user.rank)}
+                </div>
+                
+                <div className="relative">
+                  <div className="text-3xl relative z-10">{user.avatar}</div>
+                </div>
+                
+                <div>
+                  <p className={`font-bold text-lg ${user.id === currentUser?.id ? 'text-white' : 'text-bright-green'}`}>
+                    {user.username}
+                  </p>
+                  <p className={`text-sm ${user.id === currentUser?.id ? 'text-white' : 'text-text-dark'}`}>
+                    {user.level}
+                  </p>
+                </div>
+              </div>
+              
+              <div className={`font-bold text-lg ${user.id === currentUser?.id ? 'text-white' : 'text-forest-green'}`}>
+                🪙 {user.coins}
+              </div>
+            </div>
+          ))
+        )}
       </div>
       
-      <div className="mt-4 text-center">
-        <p className="text-sm text-text-dark">
-          🎯 <span className="font-bold">2,600 coins</span> to next rank!
-        </p>
-      </div>
+      {currentUser && (
+        <div className="mt-4 text-center">
+          <p className="text-sm text-text-dark">
+            🎯 Keep exploring to earn more coins!
+          </p>
+        </div>
+      )}
     </div>
   );
 };
