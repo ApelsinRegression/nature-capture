@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send } from 'lucide-react';
+import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send, RefreshCw, Locate } from 'lucide-react';
 import RealTimeMap from '../components/RealTimeMap';
 import AirQualityMonitor from '../components/AirQualityMonitor';
 import WeatherMonitor from '../components/WeatherMonitor';
@@ -28,26 +29,49 @@ interface SessionComment {
 
 const MainPage: React.FC = () => {
   const navigate = useNavigate();
-  const [isSessionActive, setIsSessionActive] = useState(false);
-  const [sessionTime, setSessionTime] = useState(0);
-  const [locationGranted, setLocationGranted] = useState(false);
+  const [isSessionActive, setIsSessionActive] = useState(() => {
+    return localStorage.getItem('sessionActive') === 'true';
+  });
+  const [sessionTime, setSessionTime] = useState(() => {
+    return parseInt(localStorage.getItem('sessionTime') || '0');
+  });
+  const [locationGranted, setLocationGranted] = useState(() => {
+    return localStorage.getItem('locationGranted') === 'true';
+  });
   const [locationError, setLocationError] = useState<string | null>(null);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
-  const [completedActivities, setCompletedActivities] = useState<string[]>([]);
-  const [sessionRoute, setSessionRoute] = useState<Position[]>([]);
-  const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
+  const [completedActivities, setCompletedActivities] = useState<string[]>(() => {
+    return JSON.parse(localStorage.getItem('sessionCompletedActivities') || '[]');
+  });
+  const [sessionRoute, setSessionRoute] = useState<Position[]>(() => {
+    return JSON.parse(localStorage.getItem('sessionRoute') || '[]');
+  });
+  const [currentPosition, setCurrentPosition] = useState<Position | null>(() => {
+    const saved = localStorage.getItem('currentPosition');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [showFriendMessage, setShowFriendMessage] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState('');
   const [messageText, setMessageText] = useState('');
-  const [sessionPhotos, setSessionPhotos] = useState<SessionPhoto[]>([]);
-  const [sessionComments, setSessionComments] = useState<SessionComment[]>([]);
+  const [sessionPhotos, setSessionPhotos] = useState<SessionPhoto[]>(() => {
+    return JSON.parse(localStorage.getItem('sessionPhotos') || '[]');
+  });
+  const [sessionComments, setSessionComments] = useState<SessionComment[]>(() => {
+    return JSON.parse(localStorage.getItem('sessionComments') || '[]');
+  });
   const [newComment, setNewComment] = useState('');
-  const [feelingRating, setFeelingRating] = useState<number>(0);
+  const [feelingRating, setFeelingRating] = useState<number>(() => {
+    return parseInt(localStorage.getItem('sessionFeeling') || '0');
+  });
   const [showPhotoComment, setShowPhotoComment] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
-  const [suggestedActivities, setSuggestedActivities] = useState<string[]>([]);
-  const [addedActivities, setAddedActivities] = useState<string[]>([]);
+  const [suggestedActivities, setSuggestedActivities] = useState<string[]>(() => {
+    return JSON.parse(localStorage.getItem('suggestedActivities') || '[]');
+  });
+  const [addedActivities, setAddedActivities] = useState<string[]>(() => {
+    return JSON.parse(localStorage.getItem('addedActivities') || '[]');
+  });
 
   const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
@@ -64,6 +88,53 @@ const MainPage: React.FC = () => {
     { name: 'Luna Star', avatar: '⭐' },
   ];
 
+  // Save state to localStorage
+  useEffect(() => {
+    localStorage.setItem('sessionActive', isSessionActive.toString());
+  }, [isSessionActive]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionTime', sessionTime.toString());
+  }, [sessionTime]);
+
+  useEffect(() => {
+    localStorage.setItem('locationGranted', locationGranted.toString());
+  }, [locationGranted]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionCompletedActivities', JSON.stringify(completedActivities));
+  }, [completedActivities]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionRoute', JSON.stringify(sessionRoute));
+  }, [sessionRoute]);
+
+  useEffect(() => {
+    if (currentPosition) {
+      localStorage.setItem('currentPosition', JSON.stringify(currentPosition));
+    }
+  }, [currentPosition]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionPhotos', JSON.stringify(sessionPhotos));
+  }, [sessionPhotos]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionComments', JSON.stringify(sessionComments));
+  }, [sessionComments]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionFeeling', feelingRating.toString());
+  }, [feelingRating]);
+
+  useEffect(() => {
+    localStorage.setItem('suggestedActivities', JSON.stringify(suggestedActivities));
+  }, [suggestedActivities]);
+
+  useEffect(() => {
+    localStorage.setItem('addedActivities', JSON.stringify(addedActivities));
+  }, [addedActivities]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isSessionActive) {
@@ -76,7 +147,11 @@ const MainPage: React.FC = () => {
 
   useEffect(() => {
     // Check location permission on load
-    checkLocationPermission();
+    if (locationGranted && !currentPosition) {
+      getCurrentLocation();
+    } else if (locationGranted) {
+      startLocationTracking();
+    }
     
     return () => {
       if (watchId !== null) {
@@ -91,32 +166,12 @@ const MainPage: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const checkLocationPermission = async () => {
+  const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by this browser');
       return;
     }
 
-    try {
-      // Check if permission is already granted
-      if ('permissions' in navigator) {
-        const permission = await navigator.permissions.query({ name: 'geolocation' });
-        if (permission.state === 'granted') {
-          getCurrentLocation();
-        } else {
-          setLocationGranted(false);
-        }
-      } else {
-        // Fallback for browsers without permissions API
-        getCurrentLocation();
-      }
-    } catch (error) {
-      console.error('Error checking location permission:', error);
-      setLocationGranted(false);
-    }
-  };
-
-  const getCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newPos = {
@@ -158,6 +213,12 @@ const MainPage: React.FC = () => {
 
   const requestLocationPermission = () => {
     console.log('Requesting location permission...');
+    setLocationError(null);
+    getCurrentLocation();
+  };
+
+  const refreshLocation = () => {
+    console.log('Refreshing location...');
     setLocationError(null);
     getCurrentLocation();
   };
@@ -227,7 +288,15 @@ const MainPage: React.FC = () => {
         setFeelingRating(0);
         setSuggestedActivities([]);
         setAddedActivities([]);
-        // Don't reset the route here - keep it displayed
+        // Clear localStorage for session data
+        localStorage.removeItem('sessionCompletedActivities');
+        localStorage.removeItem('sessionPhotos');
+        localStorage.removeItem('sessionComments');
+        localStorage.removeItem('sessionFeeling');
+        localStorage.removeItem('suggestedActivities');
+        localStorage.removeItem('addedActivities');
+        localStorage.setItem('sessionTime', '0');
+        localStorage.setItem('sessionActive', 'false');
       }, 15000);
     } else {
       setIsSessionActive(true);
@@ -244,7 +313,12 @@ const MainPage: React.FC = () => {
   };
 
   const handleTryActivity = (activityName: string) => {
-    if (!addedActivities.includes(activityName)) {
+    if (addedActivities.includes(activityName)) {
+      // Remove from added activities (unclick)
+      setAddedActivities(addedActivities.filter(activity => activity !== activityName));
+      setSuggestedActivities(suggestedActivities.filter(activity => activity !== activityName));
+    } else {
+      // Add to added activities
       setAddedActivities([...addedActivities, activityName]);
       setSuggestedActivities([...suggestedActivities, activityName]);
     }
@@ -617,21 +691,20 @@ const MainPage: React.FC = () => {
               />
               <div>
                 <h1 className="text-4xl font-nunito font-black text-white mb-2">NatureCapture</h1>
-                <p className="text-light-green font-bold text-sm">🌟 Ready for your next adventure? 🌟</p>
+                <p className="text-light-green font-bold text-sm">Ready for your next adventure? 🌟</p>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-4 py-3 shadow-lg border-2 border-white mt-6">
-              <div className="flex items-center space-x-2">
-                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-yellow-500 text-sm font-black">🪙</span>
-                </div>
-                <span className="font-black text-white text-lg">247</span>
-              </div>
-            </div>
+            <Button
+              onClick={refreshLocation}
+              className="bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-all"
+              title="Refresh location"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </Button>
           </div>
           
-          {/* Date, Time and Location as a single line without frames */}
-          <div className="flex items-center justify-center space-x-6 text-white">
+          {/* Date, Time and Location */}
+          <div className="flex items-center justify-center space-x-6 text-white mb-4">
             <DateTimeDisplay />
             {currentPosition && (
               <div className="flex items-center space-x-2">
@@ -641,16 +714,42 @@ const MainPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Coins - positioned below other elements */}
+          <div className="flex justify-center">
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-2 shadow-lg border-2 border-white">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-yellow-500 text-xs font-black">🪙</span>
+                </div>
+                <span className="font-black text-white text-sm">247</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Real-time Map */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-forest-green">
-          <h2 className="text-lg font-black text-bright-green mb-3 flex items-center">
-            <MapPin className="w-5 h-5 mr-2" />
-            🗺️ Live Map 🗺️
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-black text-bright-green flex items-center">
+              <MapPin className="w-5 h-5 mr-2" />
+              🗺️ Live Map 🗺️
+            </h2>
+            {currentPosition && (
+              <Button
+                onClick={() => {
+                  // Center map on current location - this will be handled by the map component
+                  console.log('Center on location:', currentPosition);
+                }}
+                className="bg-forest-green text-white rounded-full p-2 text-xs hover:bg-bright-green transition-all"
+                title="Show my location"
+              >
+                <Locate className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
           <RealTimeMap 
             isActive={isSessionActive}
             onPositionUpdate={handlePositionUpdate}
@@ -668,13 +767,13 @@ const MainPage: React.FC = () => {
           </h2>
           
           <div className="grid grid-cols-3 gap-3">
-            {/* AQI - Made equal size */}
+            {/* AQI */}
             <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-3 text-white text-center">
               <Eye className="w-5 h-5 mx-auto mb-1" />
               <AirQualityMonitor position={currentPosition} />
             </div>
 
-            {/* Weather Conditions - Equal frames */}
+            {/* Weather Conditions */}
             <WeatherMonitor position={currentPosition} />
           </div>
         </div>
@@ -782,7 +881,7 @@ const MainPage: React.FC = () => {
                   />
                 </div>
                 <h2 className="text-2xl font-nunito font-black text-bright-green">
-                  🌈 Ready for Nature Time? 🌈
+                  🌈 Ready for Nature Time?
                 </h2>
                 <p className="text-text-dark font-bold mb-4">
                   Start your outdoor adventure and earn NatureCoins! 🪙✨
@@ -829,7 +928,7 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Suggested Activities - Updated with added state */}
+      {/* Suggested Activities - Updated with toggle functionality */}
       {!isSessionActive && (
         <div className="px-4 mb-6">
           <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">

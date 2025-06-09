@@ -38,6 +38,7 @@ interface Friend {
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [userName, setUserName] = useState(localStorage.getItem('userName') || 'amirdayirov09');
+  const [userCity, setUserCity] = useState(localStorage.getItem('userCity') || 'New York');
   const [selectedEmoji, setSelectedEmoji] = useState('🌱');
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -49,6 +50,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [walkingSessions, setWalkingSessions] = useState<WalkingSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<WalkingSession | null>(null);
   const [tempUserName, setTempUserName] = useState(userName);
+  const [tempUserCity, setTempUserCity] = useState(userCity);
   
   const userStats = {
     totalSessions: 23,
@@ -62,6 +64,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   };
 
   const natureEmojis = ['🌱', '🌿', '🌳', '🍃', '🌺', '🌻', '🌷', '🌸', '🌼', '🌹', '🦋', '🐝', '🐞', '🦅', '🐿️', '🍄', '⭐', '🌙', '☀️', '🌈'];
+
+  const cities = [
+    'New York', 'San Francisco', 'Los Angeles', 'Chicago', 'Miami', 'Seattle', 'Boston', 
+    'Washington DC', 'Denver', 'Portland', 'Austin', 'Atlanta', 'Phoenix', 'Las Vegas',
+    'London', 'Paris', 'Tokyo', 'Sydney', 'Toronto', 'Berlin', 'Barcelona', 'Amsterdam'
+  ];
 
   const friends = [
     { name: 'Alex Green', emoji: '🌿', status: 'online', lastSeen: 'Active now 🟢' },
@@ -107,12 +115,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
 
   const handleSaveProfile = () => {
     setUserName(tempUserName);
+    setUserCity(tempUserCity);
     localStorage.setItem('userName', tempUserName);
+    localStorage.setItem('userCity', tempUserCity);
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setTempUserName(userName);
+    setTempUserCity(userCity);
     setIsEditing(false);
   };
 
@@ -168,6 +179,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green pb-6">
       <ProfileHeader
         userName={userName}
+        userCity={userCity}
         selectedEmoji={selectedEmoji}
         userStats={userStats}
         isEditing={isEditing}
@@ -177,15 +189,65 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
       {isEditing && (
         <div className="px-6 mb-8">
           <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-3xl">
-            <ProfileEditForm
-              tempUserName={tempUserName}
-              selectedEmoji={selectedEmoji}
-              natureEmojis={natureEmojis}
-              onNameChange={setTempUserName}
-              onEmojiSelect={setSelectedEmoji}
-              onSave={handleSaveProfile}
-              onCancel={handleCancelEdit}
-            />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white font-bold mb-2">👤 Username</label>
+                <input
+                  type="text"
+                  value={tempUserName}
+                  onChange={(e) => setTempUserName(e.target.value)}
+                  className="w-full p-3 rounded-2xl font-bold text-bright-green"
+                  placeholder="Enter your username"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white font-bold mb-2">🏙️ City</label>
+                <select
+                  value={tempUserCity}
+                  onChange={(e) => setTempUserCity(e.target.value)}
+                  className="w-full p-3 rounded-2xl font-bold text-bright-green"
+                >
+                  {cities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-white font-bold mb-2">😊 Choose Your Avatar</label>
+                <div className="grid grid-cols-5 gap-2 max-h-32 overflow-y-auto">
+                  {natureEmojis.map((emoji, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedEmoji(emoji)}
+                      className={`p-3 rounded-xl text-2xl transition-all hover:scale-110 ${
+                        selectedEmoji === emoji
+                          ? 'bg-white text-bright-green shadow-lg'
+                          : 'bg-white/20 text-white hover:bg-white/30'
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mt-6">
+                <Button
+                  onClick={handleSaveProfile}
+                  className="bg-white text-bright-green font-black py-3 rounded-2xl hover:bg-light-green transition-all"
+                >
+                  ✅ Save Changes
+                </Button>
+                <Button
+                  onClick={handleCancelEdit}
+                  className="bg-red-500 text-white font-black py-3 rounded-2xl hover:bg-red-600 transition-all"
+                >
+                  ❌ Cancel
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
