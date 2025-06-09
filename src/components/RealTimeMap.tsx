@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -11,8 +12,6 @@ interface RealTimeMapProps {
   isActive: boolean;
   onPositionUpdate: (position: Position) => void;
   route: Position[];
-  shouldCenterOnUser?: boolean;
-  onCenteringComplete?: () => void;
 }
 
 // Fix for default markers
@@ -23,41 +22,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const RealTimeMap: React.FC<RealTimeMapProps> = ({ 
-  isActive, 
-  onPositionUpdate, 
-  route, 
-  shouldCenterOnUser = false,
-  onCenteringComplete 
-}) => {
+const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, route }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
+  const routePolylineRef = useRef<L.Polyline | null>(null);
   const watchIdRef = useRef<number | null>(null);
-  const [followUser, setFollowUser] = useState<boolean>(false);
-  const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
 
   // Initialize map
   useEffect(() => {
     if (!mapRef.current) return;
 
-    console.log('Initializing map...');
     mapInstanceRef.current = L.map(mapRef.current).setView([51.505, -0.09], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapInstanceRef.current);
-
-    // Track user interactions with map - disable following when user manually moves
-    mapInstanceRef.current.on('dragstart', () => {
-      console.log('User dragged map, disabling follow mode');
-      setFollowUser(false);
-    });
-
-    mapInstanceRef.current.on('zoomstart', () => {
-      console.log('User zoomed map, disabling follow mode');
-      setFollowUser(false);
-    });
 
     // Try to get user's current location and center map there
     if (navigator.geolocation) {
@@ -67,9 +47,6 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
-          
-          console.log('Map got initial user location:', userLocation);
-          setCurrentPosition(userLocation);
           
           if (mapInstanceRef.current) {
             mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], 15);
@@ -94,7 +71,6 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
     }
 
     return () => {
-      console.log('Cleaning up map...');
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -104,20 +80,7 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
         watchIdRef.current = null;
       }
     };
-  }, [onPositionUpdate]);
-
-  // Handle persistent centering on user location
-  useEffect(() => {
-    if (shouldCenterOnUser && currentPosition && mapInstanceRef.current) {
-      console.log('Enabling persistent follow mode for user location:', currentPosition);
-      setFollowUser(true);
-      mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 16);
-      
-      if (onCenteringComplete) {
-        onCenteringComplete();
-      }
-    }
-  }, [shouldCenterOnUser, currentPosition, onCenteringComplete]);
+  }, []);
 
   // Start/stop location tracking based on isActive
   useEffect(() => {
@@ -125,19 +88,12 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
       console.log('Starting map location tracking...');
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
-          const newPosition = {
+          const currentPosition = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
-          console.log('Map location updated:', newPosition);
-          setCurrentPosition(newPosition);
-          onPositionUpdate(newPosition);
-
-          // If follow mode is enabled, keep centering on user
-          if (followUser && mapInstanceRef.current) {
-            console.log('Following user to new position:', newPosition);
-            mapInstanceRef.current.setView([newPosition.lat, newPosition.lng], 16);
-          }
+          console.log('Map location updated:', currentPosition);
+          onPositionUpdate(currentPosition);
         },
         (error) => {
           console.error('Map location tracking error:', error);
@@ -160,13 +116,13 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
         watchIdRef.current = null;
       }
     };
-  }, [isActive, onPositionUpdate, followUser]);
+  }, [isActive, onPositionUpdate]);
 
   // Update current position marker
   useEffect(() => {
-    if (!mapInstanceRef.current || !currentPosition) return;
+    if (!mapInstanceRef.current || route.length === 0) return;
 
-    console.log('Updating map marker to:', currentPosition);
+    const currentPosition = route[route.length - 1];
 
     // Remove existing marker
     if (currentMarkerRef.current) {
@@ -178,7 +134,32 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
       .addTo(mapInstanceRef.current)
       .bindPopup('📍 You are here!')
       .openPopup();
-  }, [currentPosition]);
+
+    // Center map on current position
+    mapInstanceRef.current.setView([currentPosition.lat, currentPosition.lng], 16);
+  }, [route]);
+
+  // Update route polyline
+  useEffect(() => {
+    if (!mapInstanceRef.current || route.length < 2) return;
+
+    // Remove existing route
+    if (routePolylineRef.current) {
+      mapInstanceRef.current.removeLayer(routePolylineRef.current);
+    }
+
+    // Add new route
+    const latLngs: L.LatLngExpression[] = route.map(pos => [pos.lat, pos.lng]);
+    routePolylineRef.current = L.polyline(latLngs, { 
+      color: '#22c55e', 
+      weight: 4,
+      opacity: 0.8 
+    }).addTo(mapInstanceRef.current);
+
+    // Fit map to show entire route with some padding
+    const bounds = routePolylineRef.current.getBounds();
+    mapInstanceRef.current.fitBounds(bounds, { padding: [20, 20] });
+  }, [route]);
 
   return (
     <div className="relative">
@@ -187,14 +168,14 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({
         style={{ height: '300px', width: '100%' }}
         className="rounded-xl overflow-hidden border-2 border-forest-green"
       />
+      {route.length > 1 && (
+        <div className="absolute top-3 left-3 bg-white/90 rounded-lg p-2 text-xs font-bold text-forest-green shadow-lg">
+          🛤️ Route Points: {route.length}
+        </div>
+      )}
       {isActive && (
         <div className="absolute top-3 right-3 bg-green-500 text-white rounded-lg p-2 text-xs font-bold shadow-lg animate-pulse">
           📍 Live Tracking
-        </div>
-      )}
-      {followUser && (
-        <div className="absolute top-3 left-3 bg-blue-500 text-white rounded-lg p-2 text-xs font-bold shadow-lg">
-          🎯 Following You
         </div>
       )}
     </div>

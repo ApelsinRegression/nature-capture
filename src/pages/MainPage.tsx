@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -71,8 +72,6 @@ const MainPage: React.FC = () => {
   const [addedActivities, setAddedActivities] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('addedActivities') || '[]');
   });
-  const [mapKey, setMapKey] = useState(0); // Force map re-render
-  const [shouldCenterMap, setShouldCenterMap] = useState(false);
 
   const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
@@ -88,23 +87,6 @@ const MainPage: React.FC = () => {
     { name: 'Leo Sunshine', avatar: '☀️' },
     { name: 'Luna Star', avatar: '⭐' },
   ];
-
-  // Load persisted data on component mount
-  useEffect(() => {
-    // Load walking sessions history
-    const savedSessions = localStorage.getItem('walkingSessions');
-    if (savedSessions) {
-      console.log('Loaded walking history:', JSON.parse(savedSessions));
-    }
-
-    // Load messages history
-    const savedMessages = localStorage.getItem('messages');
-    if (savedMessages) {
-      console.log('Loaded messages history:', JSON.parse(savedMessages));
-    }
-
-    console.log('Component mounted, data loaded from localStorage');
-  }, []);
 
   // Save state to localStorage
   useEffect(() => {
@@ -164,8 +146,10 @@ const MainPage: React.FC = () => {
   }, [isSessionActive]);
 
   useEffect(() => {
-    // Check location permission on load and start tracking if already granted
-    if (locationGranted) {
+    // Check location permission on load
+    if (locationGranted && !currentPosition) {
+      getCurrentLocation();
+    } else if (locationGranted) {
       startLocationTracking();
     }
     
@@ -174,7 +158,7 @@ const MainPage: React.FC = () => {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [locationGranted]);
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -188,8 +172,6 @@ const MainPage: React.FC = () => {
       return;
     }
 
-    console.log('Getting current location...');
-    setLocationError(null);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newPos = {
@@ -200,10 +182,6 @@ const MainPage: React.FC = () => {
         setCurrentPosition(newPos);
         setLocationGranted(true);
         setLocationError(null);
-        
-        // Update route with current position
-        setSessionRoute([newPos]);
-        
         startLocationTracking();
       },
       (error) => {
@@ -235,39 +213,14 @@ const MainPage: React.FC = () => {
 
   const requestLocationPermission = () => {
     console.log('Requesting location permission...');
+    setLocationError(null);
     getCurrentLocation();
   };
 
   const refreshLocation = () => {
     console.log('Refreshing location...');
     setLocationError(null);
-    
-    // Stop existing watch
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      setWatchId(null);
-    }
-    
-    // Get fresh location
     getCurrentLocation();
-  };
-
-  const centerOnMyLocation = () => {
-    console.log('Centering on my location...');
-    
-    if (!currentPosition) {
-      console.log('No current position, getting location...');
-      getCurrentLocation();
-      return;
-    }
-    
-    // Trigger map centering
-    setShouldCenterMap(true);
-    console.log('Requesting map to center on:', currentPosition);
-  };
-
-  const handleCenteringComplete = () => {
-    setShouldCenterMap(false);
   };
 
   const startLocationTracking = () => {
@@ -283,8 +236,9 @@ const MainPage: React.FC = () => {
         console.log('Location updated:', newPos);
         setCurrentPosition(newPos);
         
-        // Update route with latest position only
-        setSessionRoute([newPos]);
+        if (isSessionActive) {
+          setSessionRoute(prev => [...prev, newPos]);
+        }
       },
       (error) => {
         console.error('Location tracking error:', error);
@@ -301,48 +255,53 @@ const MainPage: React.FC = () => {
   };
 
   const handleStartStop = () => {
-    console.log('Handle start/stop clicked. LocationGranted:', locationGranted, 'IsActive:', isSessionActive);
-    
     if (!locationGranted && !isSessionActive) {
-      console.log('No location permission, requesting...');
       requestLocationPermission();
       return;
     }
     
     if (isSessionActive) {
-      console.log('Stopping session...');
       setIsSessionActive(false);
-      
       const sessionData = {
         id: Date.now().toString(),
         date: new Date().toISOString(),
-        distance: 0, // Remove distance calculation since we're not tracking route
+        distance: calculateDistance(),
         time: sessionTime,
-        route: [], // Empty route since we're not tracking
+        route: sessionRoute,
         photos: sessionPhotos,
         comments: sessionComments,
         feeling: feelingRating,
-        activities: completedActivities,
-        location: currentPosition
+        activities: completedActivities
       };
       
       const existingSessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
       existingSessions.push(sessionData);
       localStorage.setItem('walkingSessions', JSON.stringify(existingSessions));
-      console.log('Session saved:', sessionData);
       
       setShowSessionComplete(true);
       setTimeout(() => {
-        handleBackToHome();
+        setShowSessionComplete(false);
+        setSessionTime(0);
+        setCompletedActivities([]);
+        setSessionPhotos([]);
+        setSessionComments([]);
+        setFeelingRating(0);
+        setSuggestedActivities([]);
+        setAddedActivities([]);
+        // Clear localStorage for session data
+        localStorage.removeItem('sessionCompletedActivities');
+        localStorage.removeItem('sessionPhotos');
+        localStorage.removeItem('sessionComments');
+        localStorage.removeItem('sessionFeeling');
+        localStorage.removeItem('suggestedActivities');
+        localStorage.removeItem('addedActivities');
+        localStorage.setItem('sessionTime', '0');
+        localStorage.setItem('sessionActive', 'false');
       }, 15000);
     } else {
-      console.log('Starting session...');
       setIsSessionActive(true);
       if (currentPosition) {
         setSessionRoute([currentPosition]);
-        console.log('Session started with position:', currentPosition);
-      } else {
-        console.log('No current position for session start');
       }
     }
   };
@@ -350,7 +309,6 @@ const MainPage: React.FC = () => {
   const handleActivityComplete = (activityName: string) => {
     if (!completedActivities.includes(activityName)) {
       setCompletedActivities([...completedActivities, activityName]);
-      console.log('Activity completed:', activityName);
     }
   };
 
@@ -359,12 +317,10 @@ const MainPage: React.FC = () => {
       // Remove from added activities (unclick)
       setAddedActivities(addedActivities.filter(activity => activity !== activityName));
       setSuggestedActivities(suggestedActivities.filter(activity => activity !== activityName));
-      console.log('Activity removed:', activityName);
     } else {
       // Add to added activities
       setAddedActivities([...addedActivities, activityName]);
       setSuggestedActivities([...suggestedActivities, activityName]);
-      console.log('Activity added:', activityName);
     }
   };
 
@@ -382,109 +338,93 @@ const MainPage: React.FC = () => {
   };
 
   const handlePositionUpdate = (position: Position) => {
-    console.log('Position update received:', position);
     setCurrentPosition(position);
-    // Only update route with current position, no tracking of path
-    setSessionRoute([position]);
+    if (isSessionActive) {
+      setSessionRoute(prev => [...prev, position]);
+    }
   };
 
   const calculateDistance = () => {
-    // Return 0 since we're not tracking route anymore
-    return 0;
+    if (sessionRoute.length < 2) return 0;
+    let distance = 0;
+    for (let i = 1; i < sessionRoute.length; i++) {
+      const prev = sessionRoute[i - 1];
+      const curr = sessionRoute[i];
+      const R = 6371;
+      const dLat = (curr.lat - prev.lat) * Math.PI / 180;
+      const dLon = (curr.lng - prev.lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(prev.lat * Math.PI / 180) * Math.cos(curr.lat * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      distance += R * c;
+    }
+    return distance;
   };
 
   const handleTakePhoto = async () => {
     try {
-      console.log('Requesting camera access...');
-      
-      // Request camera permissions
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
-      
-      console.log('Camera access granted, creating video element...');
-      
-      // Create video element
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.muted = true;
-      
-      // Wait for video to be ready
-      await new Promise((resolve) => {
-        video.addEventListener('loadedmetadata', resolve);
-      });
-      
-      await video.play();
-      
-      console.log('Video playing, capturing photo...');
-      
-      // Wait a moment for the camera to adjust
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Create canvas and capture frame
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      
-      if (ctx) {
-        ctx.drawImage(video, 0, 0);
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          } 
+        });
         
-        // Convert to blob
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const newPhoto: SessionPhoto = {
-              id: Date.now().toString(),
-              url: url,
-              timestamp: Date.now(),
-              comment: newComment
-            };
-            
-            setSessionPhotos(prev => {
-              const updated = [...prev, newPhoto];
-              localStorage.setItem('sessionPhotos', JSON.stringify(updated));
-              return updated;
-            });
-            
-            setNewComment('');
-            console.log('Photo captured successfully:', newPhoto);
-            alert('📸 Photo captured successfully! ✨');
-          }
-        }, 'image/jpeg', 0.9);
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        
+        video.addEventListener('loadedmetadata', () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(video, 0, 0);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              const newPhoto: SessionPhoto = {
+                id: Date.now().toString(),
+                url: url,
+                timestamp: Date.now(),
+                comment: newComment
+              };
+              setSessionPhotos([...sessionPhotos, newPhoto]);
+              setNewComment('');
+              alert('📸 Photo captured! ✨');
+            }
+          }, 'image/jpeg', 0.8);
+          
+          stream.getTracks().forEach(track => track.stop());
+        });
+      } else {
+        // Fallback for devices without camera
+        const newPhoto: SessionPhoto = {
+          id: Date.now().toString(),
+          url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23e5e7eb"/><text x="200" y="150" text-anchor="middle" fill="%23374151" font-size="16">📸 Photo taken at ${formatTime(sessionTime)}</text></svg>`,
+          timestamp: Date.now(),
+          comment: newComment
+        };
+        setSessionPhotos([...sessionPhotos, newPhoto]);
+        setNewComment('');
+        alert('📸 Photo captured! ✨');
       }
-      
-      // Stop camera stream
-      stream.getTracks().forEach(track => {
-        track.stop();
-        console.log('Camera track stopped');
-      });
-      
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      
-      // Enhanced fallback with better placeholder
+      console.error('Error taking photo:', error);
+      // Fallback photo
       const newPhoto: SessionPhoto = {
         id: Date.now().toString(),
-        url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%234ade80"/><text x="200" y="140" text-anchor="middle" fill="white" font-size="18" font-weight="bold">📸 Photo Placeholder</text><text x="200" y="170" text-anchor="middle" fill="white" font-size="14">Taken at ${formatTime(sessionTime)}</text></svg>`,
+        url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23e5e7eb"/><text x="200" y="150" text-anchor="middle" fill="%23374151" font-size="16">📸 Photo taken at ${formatTime(sessionTime)}</text></svg>`,
         timestamp: Date.now(),
         comment: newComment
       };
-      
-      setSessionPhotos(prev => {
-        const updated = [...prev, newPhoto];
-        localStorage.setItem('sessionPhotos', JSON.stringify(updated));
-        return updated;
-      });
-      
+      setSessionPhotos([...sessionPhotos, newPhoto]);
       setNewComment('');
-      alert('📸 Camera not available, but photo placeholder created! ✨');
+      alert('📸 Photo captured! ✨');
     }
   };
 
@@ -495,41 +435,10 @@ const MainPage: React.FC = () => {
         text: newComment,
         timestamp: Date.now()
       };
-      
-      setSessionComments(prev => {
-        const updated = [...prev, comment];
-        localStorage.setItem('sessionComments', JSON.stringify(updated));
-        return updated;
-      });
-      
+      setSessionComments([...sessionComments, comment]);
       setNewComment('');
-      console.log('Comment added and saved:', comment);
-      alert('💬 Comment added successfully! ✨');
+      alert('💬 Comment added! ✨');
     }
-  };
-
-  const handleMessagingClick = () => {
-    navigate('/profile', { state: { openMessaging: true } });
-  };
-
-  const handleBackToHome = () => {
-    console.log('Going back to home...');
-    setShowSessionComplete(false);
-    setSessionTime(0);
-    setCompletedActivities([]);
-    setSessionPhotos([]);
-    setSessionComments([]);
-    setFeelingRating(0);
-    setSuggestedActivities([]);
-    setAddedActivities([]);
-    localStorage.removeItem('sessionCompletedActivities');
-    localStorage.removeItem('sessionPhotos');
-    localStorage.removeItem('sessionComments');
-    localStorage.removeItem('sessionFeeling');
-    localStorage.removeItem('suggestedActivities');
-    localStorage.removeItem('addedActivities');
-    localStorage.setItem('sessionTime', '0');
-    localStorage.setItem('sessionActive', 'false');
   };
 
   // Messaging Component
@@ -575,18 +484,6 @@ const MainPage: React.FC = () => {
               <Button
                 onClick={() => {
                   if (selectedFriend && messageText.trim()) {
-                    const newMessage = {
-                      id: Date.now().toString(),
-                      to: selectedFriend,
-                      text: messageText,
-                      timestamp: Date.now(),
-                      from: 'You'
-                    };
-                    const existingMessages = JSON.parse(localStorage.getItem('messages') || '[]');
-                    existingMessages.push(newMessage);
-                    localStorage.setItem('messages', JSON.stringify(existingMessages));
-                    
-                    console.log('Message sent:', newMessage);
                     alert(`✅ Message sent to ${selectedFriend}: "${messageText}"`);
                     setShowMessaging(false);
                     setMessageText('');
@@ -765,7 +662,7 @@ const MainPage: React.FC = () => {
             <p className="font-bold">Spending just 20 minutes in nature can significantly reduce stress hormones and boost your mood! 🧠✨</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm mb-6">
+          <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-light-green rounded-xl p-3">
               <p className="font-black text-bright-green">⏰ Time Outside</p>
               <p className="font-bold text-text-dark">{formatTime(sessionTime)}</p>
@@ -775,13 +672,6 @@ const MainPage: React.FC = () => {
               <p className="font-bold text-text-dark">{Math.floor(sessionTime / 2)} cal</p>
             </div>
           </div>
-
-          <Button
-            onClick={handleBackToHome}
-            className="w-full bg-forest-green text-white font-black py-4 rounded-2xl hover:bg-bright-green transition-all"
-          >
-            🏠 Back to Home
-          </Button>
         </div>
       </div>
     );
@@ -789,67 +679,53 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-      {/* Redesigned Header with bigger branding */}
+      {/* Header with improved layout */}
       <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-6 shadow-xl">
-        <div className="p-8">
-          {/* Main Branding - Made Much Bigger */}
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center space-x-4 mb-4">
+        <div className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png" 
                 alt="Leaf" 
-                className="w-16 h-16"
+                className="w-12 h-12"
               />
-              <h1 className="text-6xl font-nunito font-black text-white tracking-tight drop-shadow-lg">
-                NatureCapture
-              </h1>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-full px-8 py-4 inline-block shadow-lg border border-white/30">
-              <p className="text-2xl font-bold text-light-green">
-                🌟 Ready for your next adventure? ⭐
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg text-light-green font-semibold">Connecting Mind, Body & Community</p>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {/* Refresh button */}
-              <Button
-                onClick={refreshLocation}
-                className="bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-all"
-                title="Refresh location"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </Button>
-              
-              {/* Coins display */}
-              <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-1 shadow-lg border border-white">
-                <div className="flex items-center space-x-1">
-                  <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
-                    <span className="text-yellow-500 text-xs font-black">🪙</span>
-                  </div>
-                  <span className="font-black text-white text-xs">0</span>
-                </div>
+              <div>
+                <h1 className="text-4xl font-nunito font-black text-white mb-2">NatureCapture</h1>
+                <p className="text-light-green font-bold text-sm">Ready for your next adventure? 🌟</p>
               </div>
             </div>
+            <Button
+              onClick={refreshLocation}
+              className="bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-all"
+              title="Refresh location"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </Button>
           </div>
           
           {/* Date, Time and Location */}
-          <div className="flex items-center justify-center space-x-6 text-white mb-2 mt-4">
+          <div className="flex items-center justify-center space-x-6 text-white mb-4">
             <DateTimeDisplay />
+            {currentPosition && (
+              <div className="flex items-center space-x-2">
+                <span className="font-bold text-sm">
+                  {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
+                </span>
+              </div>
+            )}
           </div>
-          
-          {currentPosition && (
-            <div className="flex justify-center">
-              <div className="text-white text-xs font-bold">
-                📍 {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
+
+          {/* Coins - positioned below other elements */}
+          <div className="flex justify-center">
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-3 py-2 shadow-lg border-2 border-white">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-yellow-500 text-xs font-black">🪙</span>
+                </div>
+                <span className="font-black text-white text-sm">247</span>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -861,21 +737,23 @@ const MainPage: React.FC = () => {
               <MapPin className="w-5 h-5 mr-2" />
               🗺️ Live Map 🗺️
             </h2>
-            <Button
-              onClick={centerOnMyLocation}
-              className="bg-forest-green text-white rounded-full p-2 text-xs hover:bg-bright-green transition-all"
-              title="Show my location"
-            >
-              <Locate className="w-4 h-4" />
-            </Button>
+            {currentPosition && (
+              <Button
+                onClick={() => {
+                  // Center map on current location - this will be handled by the map component
+                  console.log('Center on location:', currentPosition);
+                }}
+                className="bg-forest-green text-white rounded-full p-2 text-xs hover:bg-bright-green transition-all"
+                title="Show my location"
+              >
+                <Locate className="w-4 h-4" />
+              </Button>
+            )}
           </div>
           <RealTimeMap 
-            key={mapKey}
             isActive={isSessionActive}
             onPositionUpdate={handlePositionUpdate}
             route={sessionRoute}
-            shouldCenterOnUser={shouldCenterMap}
-            onCenteringComplete={handleCenteringComplete}
           />
         </div>
       </div>
@@ -972,8 +850,8 @@ const MainPage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-yellow-accent rounded-2xl p-3">
-                    <p className="text-bright-green font-black text-sm">⏰ Time</p>
-                    <p className="text-xl font-black">{formatTime(sessionTime)}</p>
+                    <p className="text-bright-green font-black text-sm">📍 Distance</p>
+                    <p className="text-xl font-black">{calculateDistance().toFixed(1)} km</p>
                   </div>
                   <div className="bg-orange-accent rounded-2xl p-3 text-white">
                     <p className="font-black text-sm">🔥 Calories</p>
@@ -1089,7 +967,7 @@ const MainPage: React.FC = () => {
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-white rounded-2xl p-3 border-2 border-light-green text-center">
             <div className="w-10 h-10 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-white font-black text-sm">0</span>
+              <span className="text-white font-black text-sm">23</span>
             </div>
             <p className="font-black text-text-dark text-sm">📊 Sessions</p>
           </div>
@@ -1098,7 +976,7 @@ const MainPage: React.FC = () => {
             onClick={handleStreakClick}
           >
             <div className="w-10 h-10 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-bright-green font-black text-sm">0</span>
+              <span className="text-bright-green font-black text-sm">7</span>
             </div>
             <p className="font-black text-text-dark text-sm">🔥 Streak</p>
           </div>
@@ -1113,7 +991,7 @@ const MainPage: React.FC = () => {
         </div>
         
         <Button 
-          onClick={handleMessagingClick}
+          onClick={() => setShowMessaging(true)}
           className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-black py-3 rounded-2xl hover:scale-105 transition-transform"
         >
           <MessageSquare className="w-5 h-5 mr-2" />
