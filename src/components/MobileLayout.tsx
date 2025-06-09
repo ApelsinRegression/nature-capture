@@ -23,12 +23,12 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children, onLogout }) => {
   return (
     <div className="min-h-screen bg-off-white flex flex-col max-w-md mx-auto relative">
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 pb-20 overflow-y-auto">
         {children}
       </div>
 
-      {/* Bottom Navigation - Higher z-index to overlay map */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-gradient-to-r from-white to-light-green border-t-4 border-forest-green shadow-2xl z-[9999]">
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-gradient-to-r from-white to-light-green border-t-4 border-forest-green shadow-2xl z-50">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;

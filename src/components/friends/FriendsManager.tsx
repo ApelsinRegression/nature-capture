@@ -21,13 +21,29 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddFriends, setShowAddFriends] = useState(false);
 
-  // No default users - completely empty
-  const allUsers: Friend[] = [];
+  const allUsers: Friend[] = [
+    { id: '1', name: 'Alex Green', avatar: '🌿', status: 'online', lastSeen: 'Active now', isFriend: true },
+    { id: '2', name: 'Maya Forest', avatar: '🌳', status: 'offline', lastSeen: '2 hours ago', isFriend: true },
+    { id: '3', name: 'Leo Sunshine', avatar: '☀️', status: 'online', lastSeen: 'Active now', isFriend: true },
+    { id: '4', name: 'Luna Star', avatar: '⭐', status: 'offline', lastSeen: '1 day ago', isFriend: true },
+    { id: '5', name: 'River Blue', avatar: '🌊', status: 'online', lastSeen: 'Active now', isFriend: true },
+    { id: '6', name: 'Ocean Wave', avatar: '🌊', status: 'online', lastSeen: 'Active now', isFriend: false },
+    { id: '7', name: 'Mountain Peak', avatar: '⛰️', status: 'offline', lastSeen: '3 hours ago', isFriend: false },
+    { id: '8', name: 'Sky Walker', avatar: '☁️', status: 'online', lastSeen: 'Active now', isFriend: false },
+    { id: '9', name: 'Earth Guardian', avatar: '🌍', status: 'offline', lastSeen: '5 minutes ago', isFriend: false },
+    { id: '10', name: 'Wind Dancer', avatar: '💨', status: 'online', lastSeen: 'Active now', isFriend: false },
+  ];
 
   useEffect(() => {
-    // Start with no friends
-    setFriends([]);
-    localStorage.removeItem('friends');
+    const savedFriends = JSON.parse(localStorage.getItem('friends') || '[]');
+    if (savedFriends.length === 0) {
+      // Initialize with default friends
+      const defaultFriends = allUsers.filter(user => user.isFriend);
+      setFriends(defaultFriends);
+      localStorage.setItem('friends', JSON.stringify(defaultFriends));
+    } else {
+      setFriends(savedFriends);
+    }
   }, []);
 
   const addFriend = (user: Friend) => {
@@ -81,10 +97,38 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ onBack }) => {
             </Button>
           </div>
           
-          <div className="text-center py-8">
-            <div className="text-4xl mb-2">👥</div>
-            <p className="text-gray-500 font-bold">No friends yet! Start your journey and connect with other nature enthusiasts.</p>
-          </div>
+          {friends.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">👥</div>
+              <p className="text-gray-500 font-bold">No friends yet! Add some nature buddies.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {friends.map((friend) => (
+                <div
+                  key={friend.id}
+                  className="flex items-center justify-between p-3 bg-light-green rounded-2xl"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">{friend.avatar}</div>
+                    <div>
+                      <p className="font-bold text-bright-green text-sm">{friend.name}</p>
+                      <p className="text-xs text-forest-green flex items-center">
+                        <div className={`w-2 h-2 rounded-full mr-2 ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                        {friend.lastSeen}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => removeFriend(friend.id)}
+                    className="bg-red-500 text-white rounded-full px-3 py-1 text-xs"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Add Friends Section */}
@@ -105,10 +149,39 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ onBack }) => {
               </div>
             </div>
 
-            <div className="text-center py-4">
-              <p className="text-gray-500 font-bold">
-                No users available yet. As more people join NatureCapture, they'll appear here!
-              </p>
+            <div className="space-y-3">
+              {filteredUsers.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 font-bold">
+                    {searchTerm ? 'No users found with that name' : 'All available users are already your friends!'}
+                  </p>
+                </div>
+              ) : (
+                filteredUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-3 bg-light-green rounded-2xl"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="text-2xl">{user.avatar}</div>
+                      <div>
+                        <p className="font-bold text-bright-green text-sm">{user.name}</p>
+                        <p className="text-xs text-forest-green flex items-center">
+                          <div className={`w-2 h-2 rounded-full mr-2 ${user.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          {user.lastSeen}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => addFriend(user)}
+                      className="bg-forest-green text-white rounded-full px-3 py-1 text-xs hover:bg-bright-green transition-all"
+                    >
+                      <UserPlus className="w-4 h-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

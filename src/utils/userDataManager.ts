@@ -55,10 +55,7 @@ export class UserDataManager {
   private static instance: UserDataManager;
   private currentUserId: string | null = null;
 
-  private constructor() {
-    // COMPLETE WIPE - absolutely no data should exist
-    this.completeWipe();
-  }
+  private constructor() {}
 
   static getInstance(): UserDataManager {
     if (!UserDataManager.instance) {
@@ -67,24 +64,14 @@ export class UserDataManager {
     return UserDataManager.instance;
   }
 
-  // Complete wipe - no users, no data, nothing
-  completeWipe(): void {
-    console.log('COMPLETE WIPE - removing ALL data from the app');
-    
-    // Clear everything from localStorage and sessionStorage
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // Reset internal state
-    this.currentUserId = null;
-    
-    console.log('App is now completely empty - no users, no data exists');
-  }
-
-  // Initialize first user (signup)
+  // Initialize or get current user - ALWAYS START FRESH
   initializeUser(username: string, city: string, avatar: string): User {
-    console.log('Creating first user account:', username);
+    console.log('Initializing user - clearing all existing data first');
     
+    // FORCE clear all data first
+    this.forceResetApp();
+    
+    // Create completely new user with 0 everything
     const user: User = {
       id: this.generateId(),
       username,
@@ -103,8 +90,8 @@ export class UserDataManager {
     };
     
     // Save as the only user
-    const users = [user];
-    this.saveUsers(users);
+    this.saveUsers([user]);
+    console.log('Created fresh new user:', user);
     
     this.currentUserId = user.id;
     localStorage.setItem('currentUserId', user.id);
@@ -112,8 +99,44 @@ export class UserDataManager {
     localStorage.setItem('userCity', city);
     localStorage.setItem('userAvatar', avatar);
     
-    console.log('First user created successfully:', user);
     return user;
+  }
+
+  // Force reset everything - complete wipe
+  forceResetApp(): void {
+    console.log('FORCE RESETTING ALL APP DATA');
+    
+    // Clear all localStorage keys
+    const keysToRemove = [
+      'allUsers',
+      'walkingSessions', 
+      'messages',
+      'currentUserId',
+      'userName',
+      'userCity', 
+      'userAvatar',
+      'friends',
+      'joinedActivities',
+      'sessionActive',
+      'sessionTime',
+      'locationGranted',
+      'sessionCompletedActivities',
+      'sessionRoute',
+      'currentPosition',
+      'sessionPhotos',
+      'sessionComments',
+      'sessionFeeling',
+      'suggestedActivities',
+      'addedActivities'
+    ];
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`Removed localStorage key: ${key}`);
+    });
+    
+    this.currentUserId = null;
+    console.log('Complete app reset finished');
   }
 
   getCurrentUser(): User | null {
@@ -144,37 +167,9 @@ export class UserDataManager {
     if (userIndex !== -1) {
       users[userIndex].coins += amount;
       users[userIndex].lastActiveAt = Date.now();
-      
-      // Update level based on coins
-      const newLevel = this.calculateLevel(users[userIndex].coins);
-      users[userIndex].level = newLevel.current;
-      users[userIndex].nextLevel = newLevel.next;
-      
       this.saveUsers(users);
-      console.log(`Added ${amount} coins. New balance:`, users[userIndex].coins, 'Level:', newLevel.current);
+      console.log(`Added ${amount} coins to user. New balance:`, users[userIndex].coins);
     }
-  }
-
-  private calculateLevel(coins: number): { current: string; next: string } {
-    const levels = [
-      { name: 'Nature Seeker', minCoins: 0, nextLevel: 'Forest Friend' },
-      { name: 'Forest Friend', minCoins: 100, nextLevel: 'Tree Hugger' },
-      { name: 'Tree Hugger', minCoins: 250, nextLevel: 'Nature Guardian' },
-      { name: 'Nature Guardian', minCoins: 500, nextLevel: 'Eco Master' },
-      { name: 'Eco Master', minCoins: 1000, nextLevel: 'Planet Protector' },
-      { name: 'Planet Protector', minCoins: 2000, nextLevel: 'Max Level' },
-    ];
-    
-    for (let i = levels.length - 1; i >= 0; i--) {
-      if (coins >= levels[i].minCoins) {
-        return {
-          current: levels[i].name,
-          next: levels[i].nextLevel
-        };
-      }
-    }
-    
-    return { current: 'Nature Seeker', next: 'Forest Friend' };
   }
 
   // Walking sessions management
@@ -241,6 +236,11 @@ export class UserDataManager {
     return allMessages.filter(m => m.fromUserId === this.currentUserId || m.toUserId === this.currentUserId);
   }
 
+  // Clear all data (reset app)
+  clearAllData(): void {
+    this.forceResetApp();
+  }
+
   // Logout current user
   logout(): void {
     this.currentUserId = null;
@@ -255,7 +255,7 @@ export class UserDataManager {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  // Empty leaderboard - only return real users
+  // Get leaderboard data
   getLeaderboardData(): User[] {
     const users = this.getAllUsers();
     return users.sort((a, b) => b.coins - a.coins).map((user, index) => ({
@@ -264,7 +264,7 @@ export class UserDataManager {
     }));
   }
 
-  // No default friends
+  // No default friends - start completely empty
   getDefaultFriends(): Friend[] {
     return [];
   }
