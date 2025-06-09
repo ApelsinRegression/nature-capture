@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Trophy, BookOpen, User } from 'lucide-react';
+import { Home, Trophy, BookOpen, User, Music } from 'lucide-react';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -15,6 +15,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children, onLogout }) => {
   const navItems = [
     { path: '/', icon: Home, label: 'Main', emoji: '🏠' },
     { path: '/leaderboard', icon: Trophy, label: 'Leaderboard', emoji: '🏆' },
+    { path: '/music', icon: Music, label: 'Music', emoji: '🎵' },
     { path: '/article', icon: BookOpen, label: 'Article', emoji: '📚' },
     { path: '/profile', icon: User, label: 'Profile', emoji: '👤' },
   ];
@@ -35,13 +36,13 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children, onLogout }) => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center py-3 px-4 rounded-3xl transition-all duration-300 ${
+                className={`flex flex-col items-center py-2 px-2 rounded-3xl transition-all duration-300 ${
                   isActive
                     ? 'bg-gradient-to-br from-forest-green to-bright-green text-white shadow-2xl scale-110'
                     : 'text-forest-green hover:bg-light-green hover:scale-105'
                 }`}
               >
-                <span className="text-3xl mb-1">
+                <span className="text-2xl mb-1">
                   {item.emoji}
                 </span>
                 <span className="text-xs font-black">{item.label}</span>
