@@ -1,275 +1,200 @@
-
-import React, { useState } from 'react';
-import { Trophy, Crown, Medal, Star, MapPin, Camera, ArrowLeft, UserPlus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Trophy, Medal, Award, Crown, Users, MessageCircle, MapPin, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface LeaderboardUser {
-  rank: number;
-  name: string;
-  avatar: string;
-  coins: number;
-  streak: number;
-  sessions: number;
-  distance: number;
-  photos: number;
-  location: string;
-  city: string;
-  badges: string[];
-  isFriend: boolean;
-}
-
-interface UserProfile {
-  name: string;
-  avatar: string;
-  city: string;
-  coins: number;
-  streak: number;
-  sessions: number;
-  distance: number;
-  photos: number;
-  badges: string[];
-  isFriend: boolean;
-  joinDate: string;
-  level: string;
-}
-
 const LeaderboardPage: React.FC = () => {
-  const [selectedTab, setSelectedTab] = useState<'local' | 'global' | 'friends'>('global');
-  const [viewingProfile, setViewingProfile] = useState<UserProfile | null>(null);
-  const [friends, setFriends] = useState<string[]>(() => {
-    const savedFriends = JSON.parse(localStorage.getItem('friends') || '[]');
-    return savedFriends.map((f: any) => f.name);
-  });
+  const [activeFilter, setActiveFilter] = useState<'friends' | 'local' | 'global'>('global');
+  const [showProfile, setShowProfile] = useState<number | null>(null);
+  const [joinedActivities, setJoinedActivities] = useState<number[]>([]);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState('');
+  const [messageText, setMessageText] = useState('');
 
-  const currentUserCity = localStorage.getItem('userCity') || 'New York';
-  
-  // Extended leaderboard data with 20 users
-  const allUsers: LeaderboardUser[] = [
-    { rank: 1, name: 'Maya Forest', avatar: '🌳', coins: 1250, streak: 12, sessions: 34, distance: 127.5, photos: 89, location: 'Central Park, NY', city: 'New York', badges: ['🏆', '🌟', '📸', '🥇'], isFriend: true },
-    { rank: 2, name: 'Alex Green', avatar: '🌿', coins: 1180, streak: 8, sessions: 28, distance: 98.2, photos: 67, location: 'Golden Gate Park, SF', city: 'San Francisco', badges: ['🥈', '🌟', '📸'], isFriend: true },
-    { rank: 3, name: 'Leo Sunshine', avatar: '☀️', coins: 1050, streak: 15, sessions: 31, distance: 112.8, photos: 74, location: 'Hyde Park, London', city: 'London', badges: ['🥉', '🔥', '🌟'], isFriend: true },
-    { rank: 4, name: 'Luna Star', avatar: '⭐', coins: 890, streak: 6, sessions: 22, distance: 76.4, photos: 45, location: 'Parc Güell, Barcelona', city: 'Barcelona', badges: ['🌟', '📸'], isFriend: true },
-    { rank: 5, name: 'River Flow', avatar: '🌊', coins: 750, streak: 4, sessions: 18, distance: 54.7, photos: 32, location: 'Riverside Trail, Portland', city: 'Portland', badges: ['🌟'], isFriend: false },
-    { rank: 6, name: 'You', avatar: '🍃', coins: 247, streak: 7, sessions: 23, distance: 45.2, photos: 28, location: 'Local Park', city: currentUserCity, badges: ['🔥'], isFriend: false },
-    { rank: 7, name: 'Ocean Wave', avatar: '🌊', coins: 720, streak: 9, sessions: 25, distance: 89.3, photos: 56, location: 'Santa Monica Beach, CA', city: 'Los Angeles', badges: ['🌟', '📸'], isFriend: false },
-    { rank: 8, name: 'Mountain Peak', avatar: '⛰️', coins: 680, streak: 11, sessions: 19, distance: 95.1, photos: 42, location: 'Rocky Mountain Trail, CO', city: 'Denver', badges: ['🏔️', '🌟'], isFriend: false },
-    { rank: 9, name: 'Forest Walker', avatar: '🌲', coins: 650, streak: 5, sessions: 21, distance: 67.8, photos: 38, location: 'Redwood Forest, CA', city: 'San Francisco', badges: ['🌲'], isFriend: true },
-    { rank: 10, name: 'Sky Dancer', avatar: '☁️', coins: 620, streak: 8, sessions: 17, distance: 52.4, photos: 29, location: 'Empire State Building, NY', city: 'New York', badges: ['☁️'], isFriend: false },
-    { rank: 11, name: 'Earth Guardian', avatar: '🌍', coins: 590, streak: 12, sessions: 20, distance: 78.9, photos: 51, location: 'Central Park, NY', city: 'New York', badges: ['🌍', '🌟'], isFriend: false },
-    { rank: 12, name: 'Wind Dancer', avatar: '💨', coins: 560, streak: 6, sessions: 16, distance: 43.7, photos: 24, location: 'Brooklyn Bridge, NY', city: 'New York', badges: ['💨'], isFriend: false },
-    { rank: 13, name: 'Sun Chaser', avatar: '🌞', coins: 530, streak: 10, sessions: 18, distance: 61.2, photos: 35, location: 'Golden Gate Bridge, SF', city: 'San Francisco', badges: ['🌞'], isFriend: false },
-    { rank: 14, name: 'Moon Walker', avatar: '🌙', coins: 500, streak: 4, sessions: 15, distance: 38.6, photos: 21, location: 'Times Square, NY', city: 'New York', badges: ['🌙'], isFriend: false },
-    { rank: 15, name: 'Star Gazer', avatar: '✨', coins: 470, streak: 7, sessions: 14, distance: 45.3, photos: 27, location: 'Prospect Park, NY', city: 'New York', badges: ['✨'], isFriend: false },
-    { rank: 16, name: 'Cloud Surfer', avatar: '⛅', coins: 440, streak: 5, sessions: 12, distance: 34.8, photos: 18, location: 'High Line, NY', city: 'New York', badges: ['⛅'], isFriend: false },
-    { rank: 17, name: 'Rain Walker', avatar: '🌧️', coins: 410, streak: 8, sessions: 13, distance: 41.2, photos: 22, location: 'Battery Park, NY', city: 'New York', badges: ['🌧️'], isFriend: false },
-    { rank: 18, name: 'Snow Explorer', avatar: '❄️', coins: 380, streak: 3, sessions: 11, distance: 29.7, photos: 15, location: 'Madison Square Park, NY', city: 'New York', badges: ['❄️'], isFriend: false },
-    { rank: 19, name: 'Fire Spirit', avatar: '🔥', coins: 350, streak: 6, sessions: 10, distance: 32.4, photos: 17, location: 'Washington Square Park, NY', city: 'New York', badges: ['🔥'], isFriend: false },
-    { rank: 20, name: 'Ice Crystal', avatar: '💎', coins: 320, streak: 4, sessions: 9, distance: 26.1, photos: 12, location: 'Union Square, NY', city: 'New York', badges: ['💎'], isFriend: false },
+  const leaderboardData = [
+    { rank: 1, name: 'Alex Green', coins: 2847, avatar: '🌿', badge: 'Forest Guardian', isTop: true, location: '0.5km away', status: 'online' },
+    { rank: 2, name: 'Sam Rivers', coins: 2340, avatar: '🏔️', badge: 'Mountain Explorer', isTop: true, location: '1.2km away', status: 'online' },
+    { rank: 3, name: 'Jordan Sky', coins: 1892, avatar: '🌊', badge: 'Ocean Walker', isTop: true, location: '2.1km away', status: 'offline' },
+    { rank: 4, name: 'You', coins: 247, avatar: '🌱', badge: 'Nature Seeker', isUser: true, location: 'Current', status: 'online' },
+    { rank: 5, name: 'Riley Stone', coins: 156, avatar: '🦋', badge: 'Butterfly Friend', location: '0.8km away', status: 'walking' },
+    { rank: 6, name: 'Casey Dawn', coins: 98, avatar: '🌸', badge: 'Flower Finder', location: '3.5km away', status: 'online' },
   ];
 
-  const getFilteredUsers = () => {
-    let filtered = [...allUsers];
-    
-    switch (selectedTab) {
-      case 'local':
-        filtered = filtered.filter(user => user.city === currentUserCity);
-        break;
-      case 'friends':
-        filtered = filtered.filter(user => friends.includes(user.name) || user.name === 'You');
-        break;
-      case 'global':
-      default:
-        // Show all users
-        break;
-    }
-    
-    // Re-rank after filtering
-    return filtered.map((user, index) => ({ ...user, rank: index + 1 })).slice(0, 20);
+  const groupActivities = [
+    { id: 1, type: 'Hiking', title: 'Morning Mountain Trail', time: '8:00 AM', participants: 12, difficulty: 'Medium', location: 'Green Valley Park' },
+    { id: 2, type: 'Yoga', title: 'Sunrise Yoga in Park', time: '6:30 AM', participants: 8, difficulty: 'Easy', location: 'Central Park' },
+    { id: 3, type: 'Jogging', title: 'Evening River Run', time: '6:00 PM', participants: 15, difficulty: 'Hard', location: 'Riverside Trail' },
+  ];
+
+  // Load joined activities from localStorage on component mount
+  useEffect(() => {
+    const savedJoinedActivities = JSON.parse(localStorage.getItem('joinedActivityIds') || '[]');
+    setJoinedActivities(savedJoinedActivities);
+  }, []);
+
+  const filterLabels = {
+    friends: '👥 Friends',
+    local: '📍 Local',
+    global: '🌍 Global'
   };
 
-  const leaderboardData = getFilteredUsers();
+  const handleJoinActivity = (activityId: number) => {
+    let updatedJoinedActivities;
+    
+    if (joinedActivities.includes(activityId)) {
+      updatedJoinedActivities = joinedActivities.filter(id => id !== activityId);
+    } else {
+      updatedJoinedActivities = [...joinedActivities, activityId];
+      
+      // Store full activity details for profile page
+      const activity = groupActivities.find(a => a.id === activityId);
+      if (activity) {
+        const existing = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
+        if (!existing.find((a: any) => a.id === activityId)) {
+          existing.push(activity);
+          localStorage.setItem('joinedActivities', JSON.stringify(existing));
+        }
+      }
+    }
+    
+    setJoinedActivities(updatedJoinedActivities);
+    // Save just the IDs for quick lookup
+    localStorage.setItem('joinedActivityIds', JSON.stringify(updatedJoinedActivities));
+  };
+
+  const handleSendMessage = () => {
+    if (selectedUser && messageText.trim()) {
+      alert(`✅ Message sent to ${selectedUser}: "${messageText}"`);
+      setShowMessageModal(false);
+      setMessageText('');
+      setSelectedUser('');
+    } else {
+      alert('❌ Please write a message!');
+    }
+  };
+
+  const openMessageModal = (userName: string) => {
+    setSelectedUser(userName);
+    setShowMessageModal(true);
+  };
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
-      case 1:
-        return <Crown className="w-6 h-6 text-yellow-500" />;
-      case 2:
-        return <Medal className="w-6 h-6 text-gray-400" />;
-      case 3:
-        return <Medal className="w-6 h-6 text-amber-600" />;
-      default:
-        return <span className="w-6 h-6 flex items-center justify-center text-lg font-black text-bright-green">{rank}</span>;
+      case 1: return <Crown className="w-8 h-8 text-yellow-500" />;
+      case 2: return <Medal className="w-7 h-7 text-gray-400" />;
+      case 3: return <Award className="w-6 h-6 text-orange-400" />;
+      default: return (
+        <div className="w-8 h-8 rounded-full bg-forest-green text-white flex items-center justify-center text-sm font-bold">
+          {rank}
+        </div>
+      );
     }
   };
 
-  const getRankGradient = (rank: number, isCurrentUser: boolean = false) => {
-    if (isCurrentUser) {
-      return 'bg-gradient-to-r from-blue-400 to-purple-500';
-    }
-    
-    switch (rank) {
-      case 1:
-        return 'bg-gradient-to-r from-yellow-400 to-orange-500';
-      case 2:
-        return 'bg-gradient-to-r from-gray-300 to-gray-500';
-      case 3:
-        return 'bg-gradient-to-r from-amber-400 to-orange-600';
-      default:
-        return 'bg-gradient-to-r from-forest-green to-bright-green';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online': return 'bg-green-500';
+      case 'walking': return 'bg-yellow-500';
+      case 'offline': return 'bg-gray-400';
+      default: return 'bg-gray-400';
     }
   };
 
-  const handleUserClick = (user: LeaderboardUser) => {
-    if (user.name === 'You') return; // Don't show profile for current user
-    
-    const profile: UserProfile = {
-      name: user.name,
-      avatar: user.avatar,
-      city: user.city,
-      coins: user.coins,
-      streak: user.streak,
-      sessions: user.sessions,
-      distance: user.distance,
-      photos: user.photos,
-      badges: user.badges,
-      isFriend: user.isFriend,
-      joinDate: 'March 2024',
-      level: user.coins > 1000 ? 'Nature Master' : user.coins > 500 ? 'Forest Friend' : 'Nature Seeker'
-    };
-    
-    setViewingProfile(profile);
-  };
-
-  const sendFriendRequest = (userName: string) => {
-    alert(`🌟 Friend request sent to ${userName}! 🌟`);
-  };
-
-  const addFriend = (userName: string) => {
-    const updatedFriends = [...friends, userName];
-    setFriends(updatedFriends);
-    
-    // Update localStorage
-    const savedFriends = JSON.parse(localStorage.getItem('friends') || '[]');
-    const newFriend = allUsers.find(u => u.name === userName);
-    if (newFriend) {
-      savedFriends.push({
-        id: Date.now().toString(),
-        name: newFriend.name,
-        avatar: newFriend.avatar,
-        status: 'online',
-        lastSeen: 'Active now',
-        isFriend: true
-      });
-      localStorage.setItem('friends', JSON.stringify(savedFriends));
-    }
-    
-    alert(`🎉 ${userName} is now your friend! 🎉`);
-    setViewingProfile(null);
-  };
-
-  if (viewingProfile) {
+  if (showProfile) {
+    const user = leaderboardData.find(u => u.rank === showProfile);
     return (
       <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
-        <div className="bg-white rounded-b-3xl mx-4 mb-6 shadow-xl">
-          <div className="p-6">
-            <div className="flex items-center space-x-4 mb-4">
-              <Button 
-                onClick={() => setViewingProfile(null)}
-                className="bg-forest-green text-white rounded-full p-2"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h2 className="text-2xl font-black text-bright-green">{viewingProfile.name}'s Profile</h2>
-                <p className="text-sm text-gray-600">📍 {viewingProfile.city}</p>
+        <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-b-3xl mb-6">
+          <Button 
+            onClick={() => setShowProfile(null)}
+            className="mb-4 bg-white text-forest-green hover:bg-light-green font-bold rounded-full px-6 py-2"
+          >
+            ← Back
+          </Button>
+          <div className="text-center">
+            <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center border-4 border-yellow-accent relative">
+              <span className="text-4xl">{user?.avatar}</span>
+              <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-2 border-white ${getStatusColor(user?.status || '')}`}></div>
+            </div>
+            <h1 className="text-3xl font-nunito font-black text-white mb-2">
+              {user?.name}
+            </h1>
+            <p className="text-light-green text-lg font-bold">{user?.badge}</p>
+            <div className="flex justify-center space-x-4 mt-4">
+              <div className="bg-yellow-accent rounded-full px-4 py-2">
+                <span className="font-black text-bright-green">🪙 {user?.coins}</span>
+              </div>
+              <div className="bg-white rounded-full px-4 py-2">
+                <span className="font-black text-forest-green">#{user?.rank}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="px-4 space-y-6">
-          {/* Profile Header */}
-          <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-3xl p-6 text-white shadow-xl">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl">
-                {viewingProfile.avatar}
+        <div className="px-6 space-y-4">
+          <Button className="w-full bg-gradient-to-r from-yellow-accent to-orange-accent text-white font-black py-4 rounded-3xl text-xl shadow-xl transform transition-all hover:scale-105">
+            <Calendar className="w-6 h-6 mr-3" />
+            Invite for Nature Walk
+          </Button>
+          
+          <Button className="w-full bg-light-green text-bright-green font-black py-4 rounded-3xl text-xl hover:bg-bright-green hover:text-white transition-all">
+            <MessageCircle className="w-6 h-6 mr-3" />
+            Send Message
+          </Button>
+
+          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-light-green">
+            <h3 className="text-xl font-black text-bright-green mb-4">📊 Their Stats</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-3xl font-black text-forest-green">47</div>
+                <div className="text-sm font-bold text-text-dark">Sessions</div>
               </div>
-              <div>
-                <h3 className="text-2xl font-black">{viewingProfile.name}</h3>
-                <p className="font-bold opacity-90">{viewingProfile.level}</p>
-                <p className="text-sm opacity-75">Joined {viewingProfile.joinDate}</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/20 rounded-xl p-3 text-center">
-                <div className="text-2xl font-black">🪙 {viewingProfile.coins}</div>
-                <div className="text-sm font-bold">NatureCoins</div>
-              </div>
-              <div className="bg-white/20 rounded-xl p-3 text-center">
-                <div className="text-2xl font-black">📍 {viewingProfile.city}</div>
-                <div className="text-sm font-bold">Home City</div>
+              <div className="text-center">
+                <div className="text-3xl font-black text-forest-green">23.5h</div>
+                <div className="text-sm font-bold text-text-dark">Outside Time</div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          {/* Stats */}
-          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-light-green">
-            <h3 className="text-lg font-black text-bright-green mb-4">📊 Activity Stats</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-light-green rounded-xl p-3 text-center">
-                <div className="text-lg font-black text-bright-green">🔥 {viewingProfile.streak}</div>
-                <div className="text-xs font-bold text-gray-600">Day Streak</div>
-              </div>
-              <div className="bg-light-green rounded-xl p-3 text-center">
-                <div className="text-lg font-black text-bright-green">📊 {viewingProfile.sessions}</div>
-                <div className="text-xs font-bold text-gray-600">Sessions</div>
-              </div>
-              <div className="bg-light-green rounded-xl p-3 text-center">
-                <div className="text-lg font-black text-bright-green">📍 {viewingProfile.distance}km</div>
-                <div className="text-xs font-bold text-gray-600">Distance</div>
-              </div>
-              <div className="bg-light-green rounded-xl p-3 text-center">
-                <div className="text-lg font-black text-bright-green">📸 {viewingProfile.photos}</div>
-                <div className="text-xs font-bold text-gray-600">Photos</div>
-              </div>
+  if (showMessageModal) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-forest-green">
+          <h2 className="text-2xl font-black text-bright-green mb-6 text-center">💬 Send Message 💬</h2>
+          
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-lg font-bold text-bright-green">Sending to: {selectedUser} ✨</p>
             </div>
-          </div>
 
-          {/* Badges */}
-          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
-            <h3 className="text-lg font-black text-bright-green mb-4">🏆 Badges</h3>
-            <div className="flex flex-wrap gap-2">
-              {viewingProfile.badges.map((badge, index) => (
-                <div key={index} className="bg-light-green rounded-full px-3 py-2">
-                  <span className="text-2xl">{badge}</span>
-                </div>
-              ))}
+            <div>
+              <label className="block text-lg font-bold text-bright-green mb-2">✉️ Message:</label>
+              <textarea
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="Hey! Want to go for a nature walk together? 🌿"
+                className="w-full p-3 rounded-2xl border-2 border-light-green font-bold text-bright-green resize-none"
+                rows={4}
+              />
             </div>
-          </div>
 
-          {/* Friend Actions */}
-          <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-forest-green">
-            <h3 className="text-lg font-black text-bright-green mb-4">👥 Connect</h3>
-            {viewingProfile.isFriend ? (
-              <div className="text-center py-4">
-                <p className="text-bright-green font-bold mb-4">🎉 You are friends! 🎉</p>
-                <p className="text-gray-600 text-sm">You can view their full activity history and send messages.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-gray-600 text-sm text-center">
-                  Add {viewingProfile.name} as a friend to see their calendar, walking history, and photos!
-                </p>
-                <Button
-                  onClick={() => addFriend(viewingProfile.name)}
-                  className="w-full bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
-                >
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  Add Friend
-                </Button>
-              </div>
-            )}
+            <div className="flex space-x-3">
+              <Button
+                onClick={handleSendMessage}
+                className="flex-1 bg-forest-green text-white font-black py-3 rounded-2xl hover:bg-bright-green transition-all"
+              >
+                📤 Send Message
+              </Button>
+              <Button
+                onClick={() => setShowMessageModal(false)}
+                className="flex-1 bg-gray-500 text-white font-black py-3 rounded-2xl hover:bg-gray-600 transition-all"
+              >
+                ❌ Cancel
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -279,178 +204,198 @@ const LeaderboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
       {/* Header */}
-      <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-6 shadow-xl">
-        <div className="p-6 text-center">
-          <Trophy className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
-          <h1 className="text-4xl font-nunito font-black text-white mb-2">🏆 Leaderboard 🏆</h1>
-          <p className="text-light-green font-bold">🌟 See how you rank among nature explorers! 🌟</p>
+      <div className="bg-gradient-to-r from-forest-green to-bright-green p-6 rounded-b-3xl mb-6">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/lovable-uploads/f1457e39-8dd6-4e91-9962-d1b090e9bee1.png" 
+              alt="Trees" 
+              className="w-16 h-16"
+            />
+          </div>
+          <h1 className="text-4xl font-nunito font-black text-white mb-2">
+            🏆 Nature Champions
+          </h1>
+          <p className="text-light-green font-bold text-lg">Connect & Compete!</p>
         </div>
       </div>
 
-      {/* Tab Selection */}
-      <div className="px-4 mb-6">
-        <div className="bg-white rounded-3xl p-2 shadow-xl border-2 border-forest-green">
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { key: 'local', label: '🏘️ Local', emoji: '🏘️' },
-              { key: 'global', label: '🌍 Global', emoji: '🌍' },
-              { key: 'friends', label: '👥 Friends', emoji: '👥' }
-            ].map((tab) => (
-              <Button
-                key={tab.key}
-                onClick={() => setSelectedTab(tab.key as any)}
-                className={`font-black py-3 rounded-2xl transition-all transform hover:scale-105 ${
-                  selectedTab === tab.key
-                    ? 'bg-forest-green text-white shadow-lg'
-                    : 'bg-light-green text-bright-green hover:bg-bright-green hover:text-white'
+      {/* Filter Tabs */}
+      <div className="px-6 mb-6">
+        <div className="bg-white rounded-3xl p-2 shadow-xl border-4 border-light-green">
+          <div className="flex space-x-1">
+            {Object.entries(filterLabels).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setActiveFilter(key as any)}
+                className={`flex-1 py-3 px-4 rounded-2xl font-black text-lg transition-all transform ${
+                  activeFilter === key
+                    ? 'bg-gradient-to-r from-forest-green to-bright-green text-white shadow-lg scale-105'
+                    : 'text-forest-green hover:bg-light-green hover:scale-102'
                 }`}
               >
-                <span className="mr-1">{tab.emoji}</span>
-                {tab.label}
-              </Button>
+                {label}
+              </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Current User Highlight */}
-      {leaderboardData.find(user => user.name === 'You') && (
-        <div className="px-4 mb-6">
-          <div className={`${getRankGradient(6, true)} rounded-3xl p-4 shadow-xl border-4 border-white text-white`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-2xl">🍃</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-black">Your Rank: #{leaderboardData.find(user => user.name === 'You')?.rank}</h3>
-                  <p className="font-bold opacity-90">Keep exploring to climb higher! 🚀</p>
+      {/* Group Activities */}
+      <div className="px-6 mb-6">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
+          <h2 className="text-2xl font-black text-bright-green mb-4 flex items-center">
+            <Users className="w-6 h-6 mr-2" />
+            🚶 Group Activities 🚶
+          </h2>
+          <div className="space-y-3">
+            {groupActivities.map((activity) => (
+              <div key={activity.id} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-4 border-3 border-forest-green hover:scale-105 transition-transform">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="bg-forest-green text-white px-3 py-1 rounded-full text-sm font-black">
+                        {activity.type}
+                      </span>
+                      <span className="text-sm font-bold text-text-dark">{activity.difficulty}</span>
+                    </div>
+                    <h3 className="font-black text-bright-green text-lg">{activity.title}</h3>
+                    <p className="text-sm font-bold text-text-dark">📍 {activity.location}</p>
+                    <p className="text-sm font-bold text-forest-green">⏰ {activity.time} • 👥 {activity.participants} joined</p>
+                  </div>
+                  <Button 
+                    onClick={() => handleJoinActivity(activity.id)}
+                    className={`font-black rounded-full px-6 py-2 transition-all hover:scale-105 ${
+                      joinedActivities.includes(activity.id)
+                        ? 'bg-bright-green text-white'
+                        : 'bg-yellow-accent text-bright-green hover:bg-bright-green hover:text-white'
+                    }`}
+                  >
+                    {joinedActivities.includes(activity.id) ? '✅ Joined' : 'Join'}
+                  </Button>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-black">🪙 247</div>
-                <div className="text-sm font-bold opacity-90">NatureCoins</div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Top 3 Podium */}
+      <div className="px-6 mb-8">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
+          <div className="flex items-end justify-center space-x-4">
+            {/* 2nd Place */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center mb-2 relative">
+                <span className="text-2xl">{leaderboardData[1].avatar}</span>
+                <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(leaderboardData[1].status)}`}></div>
               </div>
+              <div className="bg-gray-400 rounded-t-2xl px-4 py-6 h-20">
+                <Medal className="w-6 h-6 text-white mx-auto mb-1" />
+                <p className="text-white font-black text-sm">2nd</p>
+              </div>
+              <p className="font-black text-sm mt-2">{leaderboardData[1].name}</p>
             </div>
-            <div className="grid grid-cols-4 gap-3 text-center">
-              <div className="bg-white/20 rounded-xl p-2">
-                <div className="text-lg font-black">🔥 7</div>
-                <div className="text-xs font-bold">Streak</div>
+
+            {/* 1st Place */}
+            <div className="text-center">
+              <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mb-2 border-4 border-yellow-accent relative">
+                <span className="text-3xl">{leaderboardData[0].avatar}</span>
+                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${getStatusColor(leaderboardData[0].status)}`}></div>
               </div>
-              <div className="bg-white/20 rounded-xl p-2">
-                <div className="text-lg font-black">📊 23</div>
-                <div className="text-xs font-bold">Sessions</div>
+              <div className="bg-yellow-500 rounded-t-2xl px-6 py-8 h-24">
+                <Crown className="w-8 h-8 text-white mx-auto mb-1" />
+                <p className="text-white font-black">1st</p>
               </div>
-              <div className="bg-white/20 rounded-xl p-2">
-                <div className="text-lg font-black">📍 45km</div>
-                <div className="text-xs font-bold">Distance</div>
+              <p className="font-black mt-2">{leaderboardData[0].name}</p>
+            </div>
+
+            {/* 3rd Place */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-orange-400 rounded-full flex items-center justify-center mb-2 relative">
+                <span className="text-2xl">{leaderboardData[2].avatar}</span>
+                <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(leaderboardData[2].status)}`}></div>
               </div>
-              <div className="bg-white/20 rounded-xl p-2">
-                <div className="text-lg font-black">📸 28</div>
-                <div className="text-xs font-bold">Photos</div>
+              <div className="bg-orange-400 rounded-t-2xl px-4 py-6 h-16">
+                <Award className="w-6 h-6 text-white mx-auto mb-1" />
+                <p className="text-white font-black text-sm">3rd</p>
               </div>
+              <p className="font-black text-sm mt-2">{leaderboardData[2].name}</p>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Leaderboard List */}
-      <div className="px-4 space-y-3">
-        {leaderboardData.map((user, index) => {
-          const isCurrentUser = user.name === 'You';
-          
-          return (
-            <div
-              key={index}
-              onClick={() => handleUserClick(user)}
-              className={`bg-white rounded-3xl p-4 shadow-xl border-2 transition-all transform ${
-                isCurrentUser 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : user.rank <= 3 
-                    ? 'border-yellow-accent hover:scale-102 cursor-pointer' 
-                    : 'border-light-green hover:scale-102 cursor-pointer'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-16 h-16 ${getRankGradient(user.rank, isCurrentUser)} rounded-full flex items-center justify-center shadow-lg`}>
-                    <div className="text-center">
-                      <div className="text-2xl mb-1">{user.avatar}</div>
-                      <div className="flex justify-center">
-                        {getRankIcon(user.rank)}
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-bright-green">
-                      {user.name} {isCurrentUser && '(You)'}
-                    </h3>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="font-bold text-gray-600">{user.city}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 mt-1">
-                      {user.badges.map((badge, badgeIndex) => (
-                        <span key={badgeIndex} className="text-lg">{badge}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-black text-bright-green">🪙 {user.coins}</div>
-                  <div className="text-sm font-bold text-gray-600">NatureCoins</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-3">
-                <div className="bg-light-green rounded-xl p-3 text-center">
-                  <div className="text-lg font-black text-bright-green">🔥 {user.streak}</div>
-                  <div className="text-xs font-bold text-gray-600">Day Streak</div>
-                </div>
-                <div className="bg-light-green rounded-xl p-3 text-center">
-                  <div className="text-lg font-black text-bright-green">📊 {user.sessions}</div>
-                  <div className="text-xs font-bold text-gray-600">Sessions</div>
-                </div>
-                <div className="bg-light-green rounded-xl p-3 text-center">
-                  <div className="text-lg font-black text-bright-green">📍 {user.distance}km</div>
-                  <div className="text-xs font-bold text-gray-600">Distance</div>
-                </div>
-                <div className="bg-light-green rounded-xl p-3 text-center">
-                  <div className="text-lg font-black text-bright-green">📸 {user.photos}</div>
-                  <div className="text-xs font-bold text-gray-600">Photos</div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </div>
 
-      {/* Achievement Tips */}
-      <div className="px-4 py-6">
-        <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-forest-green">
-          <h2 className="text-xl font-black text-bright-green mb-4 text-center">🌟 Climb the Leaderboard! 🌟</h2>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3 bg-light-green rounded-2xl p-3">
-              <span className="text-2xl">🚶‍♂️</span>
-              <div>
-                <p className="font-black text-bright-green text-sm">Daily Sessions</p>
-                <p className="text-xs text-gray-600 font-bold">Complete outdoor activities daily for bonus coins!</p>
+      {/* Full Leaderboard */}
+      <div className="px-6">
+        <div className="space-y-3">
+          {leaderboardData.map((user, index) => (
+            <div 
+              key={user.rank}
+              onClick={() => !user.isUser && setShowProfile(user.rank)}
+              className={`rounded-3xl p-4 border-3 transition-all hover:scale-102 cursor-pointer ${
+                user.isUser 
+                  ? 'bg-gradient-to-r from-yellow-accent to-orange-accent border-forest-green shadow-xl' 
+                  : user.isTop
+                  ? 'bg-white border-yellow-accent shadow-lg hover:shadow-xl'
+                  : 'bg-white border-light-green hover:border-forest-green'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center justify-center">
+                    {getRankIcon(user.rank)}
+                  </div>
+                  
+                  <div className={`text-4xl p-2 rounded-full relative ${user.isUser ? 'bg-white' : 'bg-light-green'}`}>
+                    {user.avatar}
+                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(user.status)}`}></div>
+                  </div>
+                  
+                  <div>
+                    <p className={`font-black text-xl ${user.isUser ? 'text-white' : 'text-bright-green'}`}>
+                      {user.name}
+                    </p>
+                    <p className={`text-sm font-bold ${user.isUser ? 'text-white' : 'text-text-dark'}`}>
+                      {user.badge}
+                    </p>
+                    <p className={`text-xs font-bold ${user.isUser ? 'text-white' : 'text-forest-green'}`}>
+                      📍 {user.location}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className={`font-black text-xl ${user.isUser ? 'text-white' : 'text-forest-green'}`}>
+                    🪙 {user.coins.toLocaleString()}
+                  </div>
+                  {!user.isUser && (
+                    <div className="flex space-x-1 mt-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openMessageModal(user.name);
+                        }}
+                        className="bg-forest-green text-white rounded-full p-2 hover:scale-110 transition-transform"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                      <button className="bg-yellow-accent text-bright-green rounded-full p-2 hover:scale-110 transition-transform">
+                        <MapPin className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex items-center space-x-3 bg-light-green rounded-2xl p-3">
-              <span className="text-2xl">📸</span>
-              <div>
-                <p className="font-black text-bright-green text-sm">Nature Photography</p>
-                <p className="text-xs text-gray-600 font-bold">Capture moments to earn extra points and badges!</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 bg-light-green rounded-2xl p-3">
-              <span className="text-2xl">🔥</span>
-              <div>
-                <p className="font-black text-bright-green text-sm">Maintain Streaks</p>
-                <p className="text-xs text-gray-600 font-bold">Consistent activity brings multiplier bonuses!</p>
-              </div>
-            </div>
+          ))}
+        </div>
+        
+        <div className="mt-6 text-center">
+          <div className="bg-white rounded-2xl p-4 border-3 border-light-green">
+            <p className="text-text-dark font-bold text-lg">
+              🎯 <span className="font-black text-forest-green text-xl">2,600 coins</span> to next rank!
+            </p>
           </div>
         </div>
       </div>

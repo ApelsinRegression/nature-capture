@@ -11,7 +11,6 @@ import MainPage from "./pages/MainPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ArticlePage from "./pages/ArticlePage";
 import ProfilePage from "./pages/ProfilePage";
-import MusicPage from "./pages/MusicPage";
 
 const queryClient = new QueryClient();
 
@@ -61,7 +60,6 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<MainPage />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
-                  <Route path="/music" element={<MusicPage />} />
                   <Route path="/article" element={<ArticlePage />} />
                   <Route path="/profile" element={<ProfilePage onLogout={handleLogout} />} />
                 </Routes>
