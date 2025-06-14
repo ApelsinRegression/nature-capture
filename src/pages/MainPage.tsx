@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import AirQualityMonitor from '../components/AirQualityMonitor';
 import WeatherMonitor from '../components/WeatherMonitor';
 import ExtendedWeatherInfo from '../components/ExtendedWeatherInfo';
 import DateTimeDisplay from '../components/DateTimeDisplay';
+import { userManager } from '../utils/userManager';
 
 interface Position {
   lat: number;
@@ -72,6 +72,9 @@ const MainPage: React.FC = () => {
   const [addedActivities, setAddedActivities] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('addedActivities') || '[]');
   });
+
+  // Get current user data
+  const currentUser = userManager.getCurrentUser();
 
   const allActivities = [
     { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
@@ -279,11 +282,21 @@ const MainPage: React.FC = () => {
     
     if (isSessionActive) {
       setIsSessionActive(false);
+      
+      // Calculate coins: 1 coin per minute + activity bonuses
+      const timeCoins = Math.floor(sessionTime / 60);
+      const activityCoins = completedActivities.reduce((total, activityName) => {
+        const activity = allActivities.find(a => a.name === activityName);
+        return total + (activity?.coins || 0);
+      }, 0);
+      const totalCoins = timeCoins + activityCoins;
+      
       const sessionData = {
         id: Date.now().toString(),
         date: new Date().toISOString(),
         distance: calculateDistance(),
         time: sessionTime,
+        coinsEarned: totalCoins,
         route: sessionRoute,
         photos: sessionPhotos,
         comments: sessionComments,
@@ -291,9 +304,8 @@ const MainPage: React.FC = () => {
         activities: completedActivities
       };
       
-      const existingSessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
-      existingSessions.push(sessionData);
-      localStorage.setItem('walkingSessions', JSON.stringify(existingSessions));
+      // Save session and update user stats
+      userManager.addWalkingSession(sessionData);
       
       setShowSessionComplete(true);
       setTimeout(() => {
@@ -342,12 +354,12 @@ const MainPage: React.FC = () => {
   };
 
   const calculateTotalCoins = () => {
-    const baseCoins = Math.floor(sessionTime / 60);
+    const timeCoins = Math.floor(sessionTime / 60); // 1 coin per minute
     const activityCoins = completedActivities.reduce((total, activityName) => {
       const activity = allActivities.find(a => a.name === activityName);
       return total + (activity?.coins || 0);
     }, 0);
-    return baseCoins + activityCoins;
+    return timeCoins + activityCoins;
   };
 
   const handleStreakClick = () => {
@@ -695,11 +707,11 @@ const MainPage: React.FC = () => {
           <div className="space-y-4 mb-6">
             <div className="bg-gradient-to-r from-yellow-accent to-orange-accent rounded-2xl p-4 text-white">
               <p className="font-black text-xl">🪙 +{calculateTotalCoins()} NatureCoins</p>
-              <p className="font-bold">💰 Base: {Math.floor(sessionTime / 60)} + Activities: {calculateTotalCoins() - Math.floor(sessionTime / 60)}</p>
+              <p className="font-bold">💰 Time: {Math.floor(sessionTime / 60)} + Activities: {calculateTotalCoins() - Math.floor(sessionTime / 60)}</p>
             </div>
             
             <div className="bg-light-green rounded-2xl p-4">
-              <p className="font-black text-bright-green text-lg">🔥 Streak: 7 days! 🔥</p>
+              <p className="font-black text-bright-green text-lg">🔥 Streak: {currentUser?.currentStreak || 0} days! 🔥</p>
             </div>
           </div>
 
@@ -749,13 +761,13 @@ const MainPage: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-2">
-              {/* Coins display */}
+              {/* Real coins display */}
               <div className="bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full px-2 py-1 shadow-lg border border-white">
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
                     <span className="text-yellow-500 text-xs font-black">🪙</span>
                   </div>
-                  <span className="font-black text-white text-xs">247</span>
+                  <span className="font-black text-white text-xs">{currentUser?.coins || 0}</span>
                 </div>
               </div>
               
@@ -905,8 +917,8 @@ const MainPage: React.FC = () => {
                     <p className="text-xl font-black">{calculateDistance().toFixed(1)} km</p>
                   </div>
                   <div className="bg-orange-accent rounded-2xl p-3 text-white">
-                    <p className="font-black text-sm">🔥 Calories</p>
-                    <p className="text-xl font-black">{Math.floor(sessionTime / 2)}</p>
+                    <p className="font-black text-sm">🪙 Coins</p>
+                    <p className="text-xl font-black">{calculateTotalCoins()}</p>
                   </div>
                 </div>
                 <Button
@@ -935,7 +947,8 @@ const MainPage: React.FC = () => {
                   🌈 Ready for Nature Time?
                 </h2>
                 <p className="text-text-dark font-bold mb-4">
-                  Start your outdoor adventure and earn NatureCoins! 🪙✨
+                  Start your outdoor adventure and earn NatureCoins! 🪙✨<br />
+                  <span className="text-sm">1 coin per minute + activity bonuses!</span>
                 </p>
                 
                 {!locationGranted && (
@@ -1013,12 +1026,12 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Quick Stats and Messaging */}
+      {/* Quick Stats and Messaging - Updated with real stats */}
       <div className="px-4 mb-6">
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-white rounded-2xl p-3 border-2 border-light-green text-center">
             <div className="w-10 h-10 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-white font-black text-sm">23</span>
+              <span className="text-white font-black text-sm">{currentUser?.totalSessions || 0}</span>
             </div>
             <p className="font-black text-text-dark text-sm">📊 Sessions</p>
           </div>
@@ -1027,7 +1040,7 @@ const MainPage: React.FC = () => {
             onClick={handleStreakClick}
           >
             <div className="w-10 h-10 bg-yellow-accent rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-bright-green font-black text-sm">7</span>
+              <span className="text-bright-green font-black text-sm">{currentUser?.currentStreak || 0}</span>
             </div>
             <p className="font-black text-text-dark text-sm">🔥 Streak</p>
           </div>
