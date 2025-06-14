@@ -3,17 +3,22 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface AuthScreenProps {
-  onLogin: (email: string, password: string) => void;
+  onAuth: (email: string, password: string, isSignup: boolean) => void;
 }
 
-const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
-  const [isLogin, setIsLogin] = useState(true);
+const AuthScreen: React.FC<AuthScreenProps> = ({ onAuth }) => {
+  const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(email, password);
+    if (!email.trim() || !password.trim()) {
+      alert('Please fill in all fields');
+      return;
+    }
+    console.log('Auth form submitted:', { email, isSignup });
+    onAuth(email, password, isSignup);
   };
 
   return (
@@ -49,9 +54,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
           <div className="bg-white rounded-3xl p-8 shadow-2xl border-4 border-yellow-accent">
             <div className="flex mb-6">
               <button
-                onClick={() => setIsLogin(true)}
+                onClick={() => setIsSignup(false)}
                 className={`flex-1 py-3 px-4 rounded-2xl font-bold text-lg transition-all ${
-                  isLogin 
+                  !isSignup 
                     ? 'bg-forest-green text-white shadow-lg' 
                     : 'bg-light-green text-bright-green'
                 }`}
@@ -59,9 +64,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                 Login
               </button>
               <button
-                onClick={() => setIsLogin(false)}
+                onClick={() => setIsSignup(true)}
                 className={`flex-1 py-3 px-4 rounded-2xl font-bold text-lg transition-all ml-2 ${
-                  !isLogin 
+                  isSignup 
                     ? 'bg-forest-green text-white shadow-lg' 
                     : 'bg-light-green text-bright-green'
                 }`}
@@ -95,9 +100,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                 type="submit"
                 className="w-full bg-gradient-to-r from-forest-green to-bright-green text-white font-bold py-4 rounded-2xl text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
               >
-                {isLogin ? '🚀 Let\'s Explore!' : '🌟 Join Nature!'}
+                {isSignup ? '🌟 Join Nature!' : '🚀 Let\'s Explore!'}
               </Button>
             </form>
+
+            {/* Quick test accounts info */}
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p className="font-semibold">Quick test:</p>
+              <p>Email: test@test.com</p>
+              <p>Password: test123</p>
+            </div>
           </div>
         </div>
       </div>
