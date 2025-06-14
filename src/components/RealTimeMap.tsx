@@ -28,47 +28,81 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
   const currentMarkerRef = useRef<L.Marker | null>(null);
   const routePolylineRef = useRef<L.Polyline | null>(null);
   const watchIdRef = useRef<number | null>(null);
+  const initializedRef = useRef<boolean>(false);
 
   // Initialize map
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || initializedRef.current) return;
 
-    mapInstanceRef.current = L.map(mapRef.current).setView([51.505, -0.09], 13);
+    // Get saved current position from localStorage
+    const savedPosition = localStorage.getItem('currentPosition');
+    let initialCenter: [number, number] = [51.505, -0.09]; // Default London
+    
+    if (savedPosition) {
+      try {
+        const position = JSON.parse(savedPosition);
+        initialCenter = [position.lat, position.lng];
+        console.log('Using saved position for map initialization:', position);
+      } catch (error) {
+        console.error('Error parsing saved position:', error);
+      }
+    }
+
+    mapInstanceRef.current = L.map(mapRef.current).setView(initialCenter, 15);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapInstanceRef.current);
 
-    // Try to get user's current location and center map there
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          
-          if (mapInstanceRef.current) {
-            mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], 15);
-            
-            // Add user location marker
-            if (currentMarkerRef.current) {
-              mapInstanceRef.current.removeLayer(currentMarkerRef.current);
-            }
-            
-            currentMarkerRef.current = L.marker([userLocation.lat, userLocation.lng])
-              .addTo(mapInstanceRef.current)
-              .bindPopup('📍 You are here!')
-              .openPopup();
-            
-            onPositionUpdate(userLocation);
-          }
-        },
-        (error) => {
-          console.error('Could not get user location for map:', error);
+    // If we have a saved position, add marker immediately
+    if (savedPosition) {
+      try {
+        const position = JSON.parse(savedPosition);
+        if (currentMarkerRef.current) {
+          mapInstanceRef.current.removeLayer(currentMarkerRef.current);
         }
-      );
+        
+        currentMarkerRef.current = L.marker([position.lat, position.lng])
+          .addTo(mapInstanceRef.current)
+          .bindPopup('📍 You are here!')
+          .openPopup();
+      } catch (error) {
+        console.error('Error adding saved position marker:', error);
+      }
+    } else {
+      // Try to get user's current location and center map there
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], 15);
+              
+              // Add user location marker
+              if (currentMarkerRef.current) {
+                mapInstanceRef.current.removeLayer(currentMarkerRef.current);
+              }
+              
+              currentMarkerRef.current = L.marker([userLocation.lat, userLocation.lng])
+                .addTo(mapInstanceRef.current)
+                .bindPopup('📍 You are here!')
+                .openPopup();
+              
+              onPositionUpdate(userLocation);
+            }
+          },
+          (error) => {
+            console.error('Could not get user location for map:', error);
+          }
+        );
+      }
     }
+
+    initializedRef.current = true;
 
     return () => {
       if (mapInstanceRef.current) {
@@ -79,8 +113,9 @@ const RealTimeMap: React.FC<RealTimeMapProps> = ({ isActive, onPositionUpdate, r
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
+      initializedRef.current = false;
     };
-  }, []);
+  }, [onPositionUpdate]);
 
   // Start/stop location tracking based on isActive
   useEffect(() => {
