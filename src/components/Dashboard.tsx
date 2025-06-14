@@ -8,6 +8,7 @@ import TodaySnapshot from './TodaySnapshot';
 import RecentSession from './RecentSession';
 import Leaderboard from './Leaderboard';
 import ProfileSection from './ProfileSection';
+import { userManager } from '../utils/userManager';
 
 interface LocationData {
   latitude: number;
@@ -20,6 +21,8 @@ const Dashboard = () => {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
+
+  const currentUser = userManager.getCurrentUser();
 
   useEffect(() => {
     requestLocationPermission();
@@ -96,9 +99,11 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center space-x-3">
               <div className="bg-yellow-accent text-bright-green rounded-full px-4 py-2 font-bold text-lg">
-                🪙 247 NatureCoins
+                🪙 {currentUser?.coins || 0} NatureCoins
               </div>
-              <div className="w-12 h-12 bg-white rounded-full border-4 border-light-green"></div>
+              <div className="w-12 h-12 bg-white rounded-full border-4 border-light-green flex items-center justify-center text-2xl">
+                {currentUser?.avatar || '🌱'}
+              </div>
             </div>
           </div>
         </div>

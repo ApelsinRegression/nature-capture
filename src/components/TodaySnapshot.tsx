@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Timer, Wind, Sun, Droplets } from 'lucide-react';
+import { userManager } from '../utils/userManager';
 
 interface LocationData {
   latitude: number;
@@ -13,8 +14,18 @@ interface TodaySnapshotProps {
 }
 
 const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ location }) => {
+  const currentUser = userManager.getCurrentUser();
+  
+  // Calculate today's time outside from sessions today
+  const today = new Date().toDateString();
+  const todaysSessions = currentUser?.walkingSessions.filter(session => 
+    new Date(session.date).toDateString() === today
+  ) || [];
+  
+  const timeOutsideToday = todaysSessions.reduce((total, session) => total + session.time, 0);
+
   const todayData = {
-    timeOutside: 0,
+    timeOutside: Math.floor(timeOutsideToday / 60), // Convert to minutes
     aqi: 42,
     aqiStatus: 'Good',
     temperature: 22,
