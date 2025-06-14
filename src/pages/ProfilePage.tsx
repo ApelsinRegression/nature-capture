@@ -83,9 +83,39 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const natureEmojis = ['🌱', '🌿', '🌳', '🍃', '🌺', '🌻', '🌷', '🌸', '🌼', '🌹', '🦋', '🐝', '🐞', '🦅', '🐿️', '🍄', '⭐', '🌙', '☀️', '🌈'];
 
   const cities = [
-    'New York', 'San Francisco', 'Los Angeles', 'Chicago', 'Miami', 'Seattle', 'Boston', 
-    'Washington DC', 'Denver', 'Portland', 'Austin', 'Atlanta', 'Phoenix', 'Las Vegas',
-    'London', 'Paris', 'Tokyo', 'Sydney', 'Toronto', 'Berlin', 'Barcelona', 'Amsterdam'
+    // North America
+    'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose',
+    'Austin', 'Jacksonville', 'Fort Worth', 'Columbus', 'Charlotte', 'San Francisco', 'Indianapolis', 'Seattle', 'Denver', 'Washington DC',
+    'Boston', 'El Paso', 'Nashville', 'Detroit', 'Oklahoma City', 'Portland', 'Las Vegas', 'Memphis', 'Louisville', 'Baltimore',
+    'Milwaukee', 'Albuquerque', 'Tucson', 'Fresno', 'Mesa', 'Sacramento', 'Atlanta', 'Kansas City', 'Colorado Springs', 'Miami',
+    'Raleigh', 'Omaha', 'Long Beach', 'Virginia Beach', 'Oakland', 'Minneapolis', 'Tampa', 'Arlington', 'New Orleans', 'Wichita',
+    
+    // Canada
+    'Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Edmonton', 'Ottawa', 'Winnipeg', 'Quebec City', 'Hamilton', 'Kitchener',
+    
+    // Europe
+    'London', 'Berlin', 'Madrid', 'Rome', 'Paris', 'Bucharest', 'Vienna', 'Hamburg', 'Warsaw', 'Budapest',
+    'Barcelona', 'Munich', 'Milan', 'Prague', 'Sofia', 'Brussels', 'Birmingham', 'Cologne', 'Naples', 'Turin',
+    'Amsterdam', 'Zagreb', 'Marseille', 'Riga', 'Vilnius', 'Krakow', 'Stockholm', 'Helsinki', 'Oslo', 'Copenhagen',
+    'Dublin', 'Ljubljana', 'Bratislava', 'Tallinn', 'Athens', 'Thessaloniki', 'Porto', 'Lisbon', 'Seville', 'Valencia',
+    
+    // Asia
+    'Tokyo', 'Delhi', 'Shanghai', 'Dhaka', 'São Paulo', 'Cairo', 'Mexico City', 'Beijing', 'Mumbai', 'Osaka',
+    'Karachi', 'Chongqing', 'Istanbul', 'Buenos Aires', 'Kolkata', 'Lagos', 'Kinshasa', 'Manila', 'Tianjin', 'Guangzhou',
+    'Rio de Janeiro', 'Lahore', 'Bangalore', 'Moscow', 'Shenzhen', 'Jakarta', 'Seoul', 'Lima', 'London', 'Tehran',
+    'Bogotá', 'Hong Kong', 'Ho Chi Minh City', 'Hyderabad', 'Chennai', 'Luanda', 'Pune', 'Ahmedabad', 'Surat', 'Jaipur',
+    
+    // Australia & Oceania
+    'Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Gold Coast', 'Newcastle', 'Canberra', 'Sunshine Coast', 'Wollongong',
+    'Auckland', 'Wellington', 'Christchurch', 'Hamilton', 'Tauranga',
+    
+    // South America
+    'São Paulo', 'Rio de Janeiro', 'Buenos Aires', 'Lima', 'Bogotá', 'Santiago', 'Caracas', 'Salvador', 'Brasília', 'Fortaleza',
+    'Guayaquil', 'Quito', 'Cali', 'Medellín', 'Córdoba', 'Montevideo', 'La Paz', 'Santa Cruz', 'Asunción', 'Recife',
+    
+    // Africa
+    'Lagos', 'Cairo', 'Kinshasa', 'Luanda', 'Nairobi', 'Casablanca', 'Alexandria', 'Abidjan', 'Kano', 'Ibadan',
+    'Cape Town', 'Johannesburg', 'Durban', 'Pretoria', 'Port Elizabeth', 'Bloemfontein', 'East London', 'Pietermaritzburg'
   ];
 
   const friends = userManager.getFriends().map(friend => ({
