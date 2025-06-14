@@ -12,6 +12,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import ArticlePage from "./pages/ArticlePage";
 import ProfilePage from "./pages/ProfilePage";
 import MusicPage from "./pages/MusicPage";
+import { userManager } from "./utils/userManager";
 
 const queryClient = new QueryClient();
 
@@ -20,22 +21,26 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (simulate checking localStorage)
-    const token = localStorage.getItem('userToken');
-    setIsAuthenticated(!!token);
+    // Check if user is logged in
+    const currentUser = userManager.getCurrentUser();
+    setIsAuthenticated(!!currentUser);
     setIsLoading(false);
   }, []);
 
   const handleLogin = (email: string, password: string) => {
-    // Simulate login
-    localStorage.setItem('userToken', 'fake-token');
-    localStorage.setItem('userName', email.split('@')[0]);
-    setIsAuthenticated(true);
+    // Try to login first, if no user exists, register
+    let user = userManager.loginUser(email, password);
+    if (!user) {
+      user = userManager.registerUser(email, password);
+    }
+    
+    if (user) {
+      setIsAuthenticated(true);
+    }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userName');
+    userManager.logoutUser();
     setIsAuthenticated(false);
   };
 

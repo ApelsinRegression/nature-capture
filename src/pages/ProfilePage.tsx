@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import ProfileHeader from '../components/profile/ProfileHeader';
@@ -15,6 +14,7 @@ import FriendsManager from '../components/friends/FriendsManager';
 import EventCreator from '../components/events/EventCreator';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, UserPlus, MessageSquare } from 'lucide-react';
+import { userManager } from '../utils/userManager';
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -50,13 +50,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const location = useLocation();
   const { viewingUser, isPublicView, openMessaging } = location.state || {};
   
-  const [userName, setUserName] = useState(
-    viewingUser?.name || localStorage.getItem('userName') || 'amirdayirov09'
-  );
-  const [userCity, setUserCity] = useState(
-    viewingUser?.city || localStorage.getItem('userCity') || 'New York'
-  );
-  const [selectedEmoji, setSelectedEmoji] = useState(viewingUser?.avatar || '🌱');
+  const currentUser = userManager.getCurrentUser();
+  const profileUser = viewingUser || currentUser;
+  
+  const [userName, setUserName] = useState(profileUser?.name || 'User');
+  const [userCity, setUserCity] = useState(profileUser?.city || 'New York');
+  const [selectedEmoji, setSelectedEmoji] = useState(profileUser?.avatar || '🌱');
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showMessaging, setShowMessaging] = useState(openMessaging || false);
@@ -71,14 +70,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   
   const userStats = {
-    totalSessions: 23,
-    totalHours: 12.5,
-    currentStreak: 7,
-    badges: 8,
-    level: 'Nature Seeker',
-    nextLevel: 'Forest Friend',
-    coins: 247,
-    rank: viewingUser?.rank || 4
+    totalSessions: profileUser?.totalSessions || 0,
+    totalHours: profileUser?.totalHours || 0,
+    currentStreak: profileUser?.currentStreak || 0,
+    badges: profileUser?.badges || 0,
+    level: profileUser?.level || 'Beginner',
+    nextLevel: profileUser?.nextLevel || 'Nature Seeker',
+    coins: profileUser?.coins || 0,
+    rank: 1 // Calculate rank based on all users
   };
 
   const natureEmojis = ['🌱', '🌿', '🌳', '🍃', '🌺', '🌻', '🌷', '🌸', '🌼', '🌹', '🦋', '🐝', '🐞', '🦅', '🐿️', '🍄', '⭐', '🌙', '☀️', '🌈'];
@@ -89,13 +88,29 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     'London', 'Paris', 'Tokyo', 'Sydney', 'Toronto', 'Berlin', 'Barcelona', 'Amsterdam'
   ];
 
-  const friends = [
-    { name: 'Alex Green', emoji: '🌿', status: 'online', lastSeen: 'Active now 🟢' },
-    { name: 'Maya Forest', emoji: '🌳', status: 'offline', lastSeen: '2 hours ago 🟡' },
-    { name: 'Leo Sunshine', emoji: '☀️', status: 'online', lastSeen: 'Active now 🟢' },
-    { name: 'Luna Star', emoji: '⭐', status: 'offline', lastSeen: '1 day ago 🔴' },
-    { name: 'River Blue', emoji: '🌊', status: 'online', lastSeen: 'Active now 🟢' },
-  ];
+  const friends = userManager.getFriends().map(friend => ({
+    name: friend.name,
+    emoji: friend.avatar,
+    status: 'offline',
+    lastSeen: '1 day ago 🔴'
+  }));
+
+  useEffect(() => {
+    if (!isPublicView && currentUser) {
+      setJoinedActivities([]);
+      setWalkingSessions(currentUser.walkingSessions.map(session => ({
+        date: session.date,
+        distance: session.distance,
+        time: session.time,
+        route: session.route,
+        photos: session.photos,
+        comments: session.comments,
+        feeling: session.feeling,
+        activities: session.activities
+      })));
+      setMessages([]);
+    }
+  }, [isPublicView, currentUser]);
 
   const calendarData = Array.from({ length: 30 }, (_, i) => {
     const session = walkingSessions.find(s => {
@@ -114,32 +129,26 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   });
 
   const badges = [
-    { name: 'First Steps', emoji: '👣', unlocked: true },
-    { name: 'Early Bird', emoji: '🌅', unlocked: true },
-    { name: 'Tree Hugger', emoji: '🌳', unlocked: true },
-    { name: 'Rain Walker', emoji: '🌧️', unlocked: true },
-    { name: 'Sunset Chaser', emoji: '🌅', unlocked: true },
-    { name: 'Mountain Climber', emoji: '⛰️', unlocked: false },
-    { name: 'Ocean Explorer', emoji: '🌊', unlocked: false },
-    { name: 'Star Gazer', emoji: '⭐', unlocked: false },
+    { name: 'First Steps', emoji: '👣', unlocked: userStats.totalSessions > 0 },
+    { name: 'Early Bird', emoji: '🌅', unlocked: userStats.coins > 50 },
+    { name: 'Tree Hugger', emoji: '🌳', unlocked: userStats.coins > 100 },
+    { name: 'Rain Walker', emoji: '🌧️', unlocked: userStats.coins > 200 },
+    { name: 'Sunset Chaser', emoji: '🌅', unlocked: userStats.coins > 500 },
+    { name: 'Mountain Climber', emoji: '⛰️', unlocked: userStats.coins > 1000 },
+    { name: 'Ocean Explorer', emoji: '🌊', unlocked: userStats.coins > 1500 },
+    { name: 'Star Gazer', emoji: '⭐', unlocked: userStats.coins > 2000 },
   ];
 
-  useEffect(() => {
-    if (!isPublicView) {
-      const activities = JSON.parse(localStorage.getItem('joinedActivities') || '[]');
-      const sessions = JSON.parse(localStorage.getItem('walkingSessions') || '[]');
-      const savedMessages = JSON.parse(localStorage.getItem('messages') || '[]');
-      setJoinedActivities(activities);
-      setWalkingSessions(sessions);
-      setMessages(savedMessages);
-    }
-  }, [isPublicView]);
-
   const handleSaveProfile = () => {
-    setUserName(tempUserName);
-    setUserCity(tempUserCity);
-    localStorage.setItem('userName', tempUserName);
-    localStorage.setItem('userCity', tempUserCity);
+    if (!isPublicView && currentUser) {
+      userManager.updateUser({
+        name: tempUserName,
+        city: tempUserCity,
+        avatar: selectedEmoji
+      });
+      setUserName(tempUserName);
+      setUserCity(tempUserCity);
+    }
     setIsEditing(false);
   };
 
@@ -335,36 +344,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
       
       <ProfileStats userStats={userStats} />
       <ProfileBadges badges={badges} />
-
-      {/* Show message history for own profile */}
-      {!isPublicView && messages.length > 0 && (
-        <div className="px-6 mb-8">
-          <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-blue-500">
-            <h2 className="text-lg font-nunito font-bold text-bright-green mb-4 text-center">
-              💬 Recent Messages 💬
-            </h2>
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {messages.slice(-5).reverse().map((message) => (
-                <div key={message.id} className="bg-light-green rounded-2xl p-3">
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="font-bold text-bright-green text-sm">To: {message.to}</p>
-                    <p className="text-xs text-gray-600">
-                      {new Date(message.timestamp).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <p className="text-sm font-bold text-text-dark">{message.text}</p>
-                </div>
-              ))}
-            </div>
-            <Button
-              onClick={() => setShowMessaging(true)}
-              className="w-full mt-4 bg-blue-500 text-white font-black py-2 rounded-2xl hover:bg-blue-600 transition-all"
-            >
-              📱 View All Messages
-            </Button>
-          </div>
-        </div>
-      )}
       
       {!isPublicView && (
         <ProfileActions 

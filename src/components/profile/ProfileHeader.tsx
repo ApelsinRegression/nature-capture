@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Edit, MapPin } from 'lucide-react';
+import { userManager } from '../../utils/userManager';
 
 interface ProfileHeaderProps {
   userName: string;
@@ -28,6 +29,46 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isEditing,
   onEditClick
 }) => {
+  const currentUser = userManager.getCurrentUser();
+  const allUsers = userManager.getAllUsers();
+  
+  // Calculate real rank
+  const sortedUsers = allUsers.sort((a, b) => b.coins - a.coins);
+  const userRank = currentUser ? sortedUsers.findIndex(u => u.id === currentUser.id) + 1 : 1;
+  
+  const getCoinsToNextLevel = () => {
+    switch (userStats.nextLevel) {
+      case 'Nature Seeker': return 500 - userStats.coins;
+      case 'Forest Friend': return 1000 - userStats.coins;
+      case 'Forest Guardian': return 2000 - userStats.coins;
+      default: return 0;
+    }
+  };
+
+  const getProgressPercentage = () => {
+    const currentLevelCoins = (() => {
+      switch (userStats.level) {
+        case 'Beginner': return 0;
+        case 'Nature Seeker': return 500;
+        case 'Forest Friend': return 1000;
+        case 'Forest Guardian': return 2000;
+        default: return 0;
+      }
+    })();
+    
+    const nextLevelCoins = (() => {
+      switch (userStats.nextLevel) {
+        case 'Nature Seeker': return 500;
+        case 'Forest Friend': return 1000;
+        case 'Forest Guardian': return 2000;
+        default: return 2000;
+      }
+    })();
+    
+    const progress = ((userStats.coins - currentLevelCoins) / (nextLevelCoins - currentLevelCoins)) * 100;
+    return Math.min(100, Math.max(0, progress));
+  };
+
   return (
     <div className="bg-gradient-to-r from-forest-green to-bright-green rounded-b-3xl mx-4 mb-8 shadow-xl">
       <div className="p-6">
@@ -75,7 +116,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <div className="text-sm font-bold text-light-green">Day Streak</div>
           </div>
           <div className="bg-white/20 rounded-2xl p-4 text-center">
-            <div className="text-2xl font-black text-white mb-1">🏆 #{userStats.rank}</div>
+            <div className="text-2xl font-black text-white mb-1">🏆 #{userRank}</div>
             <div className="text-sm font-bold text-light-green">Global Rank</div>
           </div>
         </div>
@@ -89,11 +130,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <div className="bg-white/30 rounded-full h-2">
             <div 
               className="bg-yellow-accent rounded-full h-2 transition-all duration-500"
-              style={{ width: '65%' }}
+              style={{ width: `${getProgressPercentage()}%` }}
             ></div>
           </div>
           <p className="text-white text-xs font-bold mt-2 text-center">
-            🌟 650 more coins to reach {userStats.nextLevel}! 🌟
+            🌟 {Math.max(0, getCoinsToNextLevel())} more coins to reach {userStats.nextLevel}! 🌟
           </p>
         </div>
       </div>

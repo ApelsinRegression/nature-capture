@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Crown, Medal, Trophy, MapPin, Users, Globe } from 'lucide-react';
+import { userManager } from '../utils/userManager';
 
 interface LeaderboardEntry {
   id: string;
@@ -12,71 +13,63 @@ interface LeaderboardEntry {
   city: string;
   isFriend: boolean;
   rank: number;
+  coins: number;
 }
 
 const LeaderboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'local' | 'global' | 'friends'>('local');
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
 
-  const currentUserCity = localStorage.getItem('userCity') || 'New York';
+  const currentUser = userManager.getCurrentUser();
+  const currentUserCity = currentUser?.city || 'New York';
 
-  const generateLeaderboardData = (type: 'local' | 'global' | 'friends'): LeaderboardEntry[] => {
-    const baseData = [
-      { name: 'Alex Green', avatar: '🌿', city: 'New York', isFriend: true },
-      { name: 'Maya Forest', avatar: '🌳', city: 'New York', isFriend: true },
-      { name: 'Leo Sunshine', avatar: '☀️', city: 'San Francisco', isFriend: true },
-      { name: 'Luna Star', avatar: '⭐', city: 'New York', isFriend: true },
-      { name: 'River Blue', avatar: '🌊', city: 'Boston', isFriend: false },
-      { name: 'Ocean Breeze', avatar: '🌊', city: 'Miami', isFriend: false },
-      { name: 'Mountain Peak', avatar: '⛰️', city: 'Denver', isFriend: false },
-      { name: 'Forest Walker', avatar: '🌲', city: 'Seattle', isFriend: false },
-      { name: 'Sky Runner', avatar: '☁️', city: 'Portland', isFriend: false },
-      { name: 'Earth Keeper', avatar: '🌍', city: 'Austin', isFriend: false },
-      { name: 'Nature Lover', avatar: '🍃', city: 'Chicago', isFriend: false },
-      { name: 'Sunset Chaser', avatar: '🌅', city: 'Los Angeles', isFriend: false },
-      { name: 'Morning Dew', avatar: '💧', city: 'Atlanta', isFriend: false },
-      { name: 'Wind Dancer', avatar: '💨', city: 'Phoenix', isFriend: false },
-      { name: 'Rain Walker', avatar: '🌧️', city: 'Seattle', isFriend: false },
-      { name: 'Sun Beam', avatar: '☀️', city: 'Miami', isFriend: false },
-      { name: 'Moon Light', avatar: '🌙', city: 'Las Vegas', isFriend: false },
-      { name: 'Star Gazer', avatar: '✨', city: 'Denver', isFriend: false },
-      { name: 'Cloud Surfer', avatar: '☁️', city: 'San Francisco', isFriend: false },
-      { name: 'Wave Rider', avatar: '🌊', city: 'San Diego', isFriend: false },
-    ];
+  useEffect(() => {
+    generateLeaderboardData();
+  }, [activeTab]);
 
-    let filteredData = [...baseData];
+  const generateLeaderboardData = (): void => {
+    let users = userManager.getAllUsers();
+    const currentUserFriends = userManager.getFriends();
+    const friendIds = currentUserFriends.map(f => f.id);
 
-    if (type === 'local') {
-      filteredData = baseData.filter(user => user.city === currentUserCity);
-    } else if (type === 'friends') {
-      filteredData = baseData.filter(user => user.isFriend);
+    if (activeTab === 'local') {
+      users = userManager.getUsersByCity(currentUserCity);
+    } else if (activeTab === 'friends') {
+      users = currentUserFriends;
     }
 
-    // Generate random distances and sort
-    const withDistances = filteredData.map((user, index) => ({
-      ...user,
-      id: `user-${index}`,
-      distance: Math.random() * 50 + 10, // 10-60 km
-      rank: 0
-    }));
-
-    // Sort by distance and assign ranks
-    withDistances.sort((a, b) => b.distance - a.distance);
-    withDistances.forEach((user, index) => {
-      user.rank = index + 1;
+    // Convert to leaderboard entries with total walking distance
+    const entries: LeaderboardEntry[] = users.map((user) => {
+      const totalDistance = user.walkingSessions.reduce((sum, session) => sum + session.distance, 0);
+      
+      return {
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar,
+        distance: totalDistance,
+        city: user.city,
+        isFriend: friendIds.includes(user.id),
+        rank: 0,
+        coins: user.coins
+      };
     });
 
-    return withDistances.slice(0, 20); // Return top 20
+    // Sort by distance and assign ranks
+    entries.sort((a, b) => b.distance - a.distance);
+    entries.forEach((entry, index) => {
+      entry.rank = index + 1;
+    });
+
+    setLeaderboardData(entries);
   };
 
-  const leaderboardData = generateLeaderboardData(activeTab);
-
   const handleUserClick = (user: LeaderboardEntry) => {
-    // Navigate to user profile with limited access
+    // Navigate to user profile
     navigate('/profile', { 
       state: { 
         viewingUser: user,
-        isPublicView: !user.isFriend 
+        isPublicView: user.id !== currentUser?.id 
       } 
     });
   };
@@ -139,8 +132,8 @@ const LeaderboardPage: React.FC = () => {
               >
                 {getTabIcon(tab)}
                 <span className="capitalize">
-                  {tab === 'local' ? `🏙️ ${currentUserCity}` : 
-                   tab === 'global' ? '🌍 Global' : '👥 Friends'}
+                  {tab === 'local' ? currentUserCity : 
+                   tab === 'global' ? 'Global' : 'Friends'}
                 </span>
               </Button>
             ))}
@@ -188,13 +181,13 @@ const LeaderboardPage: React.FC = () => {
           {leaderboardData.length === 0 && (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">🏆</div>
-              <p className="text-bright-green font-bold text-lg">No data available</p>
+              <p className="text-bright-green font-bold text-lg">No users yet</p>
               <p className="text-text-dark font-bold">
                 {activeTab === 'local' 
                   ? `No users found in ${currentUserCity}` 
                   : activeTab === 'friends' 
                     ? 'Add some friends to see their progress!' 
-                    : 'Loading global leaderboard...'}
+                    : 'Be the first to join the leaderboard!'}
               </p>
             </div>
           )}
