@@ -44,27 +44,95 @@ export class UserManager {
 
   constructor() {
     this.loadUsers();
+    this.initializeTestUser();
   }
 
   private loadUsers(): void {
-    const savedUsers = localStorage.getItem('app_users');
-    const savedCurrentUser = localStorage.getItem('app_current_user');
-    
-    if (savedUsers) {
-      const usersArray: User[] = JSON.parse(savedUsers);
-      usersArray.forEach(user => {
-        this.users.set(user.id, user);
-      });
+    try {
+      const savedUsers = localStorage.getItem('app_users');
+      const savedCurrentUser = localStorage.getItem('app_current_user');
+      
+      if (savedUsers) {
+        const usersArray: User[] = JSON.parse(savedUsers);
+        usersArray.forEach(user => {
+          this.users.set(user.id, user);
+        });
+        console.log('Loaded users from localStorage:', usersArray.length);
+      }
+      
+      this.currentUserId = savedCurrentUser;
+      console.log('Current user ID loaded:', this.currentUserId);
+    } catch (error) {
+      console.error('Error loading users from localStorage:', error);
     }
-    
-    this.currentUserId = savedCurrentUser;
   }
 
   private saveUsers(): void {
-    const usersArray = Array.from(this.users.values());
-    localStorage.setItem('app_users', JSON.stringify(usersArray));
-    if (this.currentUserId) {
-      localStorage.setItem('app_current_user', this.currentUserId);
+    try {
+      const usersArray = Array.from(this.users.values());
+      localStorage.setItem('app_users', JSON.stringify(usersArray));
+      if (this.currentUserId) {
+        localStorage.setItem('app_current_user', this.currentUserId);
+      }
+      console.log('Saved users to localStorage:', usersArray.length);
+    } catch (error) {
+      console.error('Error saving users to localStorage:', error);
+    }
+  }
+
+  private initializeTestUser(): void {
+    // Create test user if it doesn't exist
+    const testEmail = 'test@test.com';
+    const existingTestUser = Array.from(this.users.values()).find(u => u.email === testEmail);
+    
+    if (!existingTestUser) {
+      const testUserId = `user_test_${Date.now()}`;
+      const testUser: User = {
+        id: testUserId,
+        name: 'Test User',
+        email: testEmail,
+        avatar: '🌱',
+        city: 'New York',
+        coins: 150,
+        totalSessions: 5,
+        totalHours: 2.5,
+        currentStreak: 3,
+        badges: 2,
+        level: 'Nature Seeker',
+        nextLevel: 'Forest Friend',
+        joinDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+        walkingSessions: [
+          {
+            id: 'session_1',
+            date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+            distance: 1.2,
+            time: 25,
+            coinsEarned: 35,
+            route: [],
+            photos: [],
+            comments: [],
+            feeling: 5,
+            activities: ['walking', 'bird_watching']
+          },
+          {
+            id: 'session_2',
+            date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+            distance: 2.1,
+            time: 45,
+            coinsEarned: 55,
+            route: [],
+            photos: [],
+            comments: [],
+            feeling: 4,
+            activities: ['walking', 'photography']
+          }
+        ],
+        friends: []
+      };
+      
+      this.users.set(testUserId, testUser);
+      this.saveUsers();
+      console.log('Initialized test user with sample data');
     }
   }
 
@@ -94,33 +162,27 @@ export class UserManager {
     this.currentUserId = userId;
     this.saveUsers();
     
-    // Update localStorage for compatibility
-    localStorage.setItem('userToken', `token_${userId}`);
-    localStorage.setItem('userName', username);
-    localStorage.setItem('userCity', newUser.city);
-    
+    console.log('User registered and saved:', newUser);
     return newUser;
   }
 
   loginUser(email: string, password: string): User | null {
     const user = Array.from(this.users.values()).find(u => u.email === email);
-    if (user) {
+    if (user && (password === 'test123' || email !== 'test@test.com')) {
       this.currentUserId = user.id;
       this.saveUsers();
-      
-      // Update localStorage for compatibility
-      localStorage.setItem('userToken', `token_${user.id}`);
-      localStorage.setItem('userName', user.name);
-      localStorage.setItem('userCity', user.city);
-      
+      console.log('User logged in:', user);
       return user;
     }
+    console.log('Login failed for email:', email);
     return null;
   }
 
   getCurrentUser(): User | null {
     if (!this.currentUserId) return null;
-    return this.users.get(this.currentUserId) || null;
+    const user = this.users.get(this.currentUserId);
+    console.log('Getting current user:', user);
+    return user || null;
   }
 
   updateUser(updates: Partial<User>): void {
@@ -131,10 +193,7 @@ export class UserManager {
       const updatedUser = { ...user, ...updates };
       this.users.set(this.currentUserId, updatedUser);
       this.saveUsers();
-      
-      // Update localStorage for compatibility
-      if (updates.name) localStorage.setItem('userName', updates.name);
-      if (updates.city) localStorage.setItem('userCity', updates.city);
+      console.log('User updated and saved:', updatedUser);
     }
   }
 
@@ -153,11 +212,43 @@ export class UserManager {
       user.totalHours += session.time / 60;
       user.coins += session.coinsEarned;
       
+      // Update streak logic
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+      const sessionDate = new Date(session.date).toDateString();
+      
+      if (sessionDate === today || sessionDate === yesterday) {
+        // Check if this is the first session today/yesterday in sequence
+        const sortedSessions = user.walkingSessions
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        let streak = 0;
+        let currentDate = new Date();
+        
+        for (const s of sortedSessions) {
+          const sDate = new Date(s.date);
+          const daysDiff = Math.floor((currentDate.getTime() - sDate.getTime()) / (24 * 60 * 60 * 1000));
+          
+          if (daysDiff === 0 || (daysDiff === 1 && streak === 0)) {
+            streak++;
+            currentDate = sDate;
+          } else if (daysDiff === 1) {
+            streak++;
+            currentDate = sDate;
+          } else {
+            break;
+          }
+        }
+        
+        user.currentStreak = Math.max(user.currentStreak, streak);
+      }
+      
       // Update level based on coins
       this.updateUserLevel(user);
       
       this.users.set(this.currentUserId, user);
       this.saveUsers();
+      console.log('Walking session added and user updated:', user);
     }
   }
 
@@ -206,11 +297,10 @@ export class UserManager {
   }
 
   logoutUser(): void {
+    console.log('Logging out user:', this.currentUserId);
     this.currentUserId = null;
     localStorage.removeItem('app_current_user');
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userCity');
+    // Don't remove other localStorage items as they contain user data
   }
 
   clearAllData(): void {
@@ -224,6 +314,7 @@ export class UserManager {
     localStorage.removeItem('walkingSessions');
     localStorage.removeItem('joinedActivities');
     localStorage.removeItem('messages');
+    console.log('All user data cleared');
   }
 }
 

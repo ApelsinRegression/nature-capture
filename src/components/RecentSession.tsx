@@ -1,16 +1,41 @@
 
 import React from 'react';
 import { Clock, MapPin, Heart, Zap } from 'lucide-react';
+import { userManager } from '../utils/userManager';
 
 const RecentSession: React.FC = () => {
-  const lastSession = {
-    date: 'Yesterday',
-    duration: '25 min',
-    location: 'Central Park Trail',
-    distance: '1.2 km',
-    mood: 5,
-    coins: 25
+  const currentUser = userManager.getCurrentUser();
+  
+  // Get the most recent session
+  const recentSession = currentUser?.walkingSessions && currentUser.walkingSessions.length > 0
+    ? currentUser.walkingSessions
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    : null;
+
+  // Default session if no real session exists
+  const defaultSession = {
+    date: 'No sessions yet',
+    duration: '0 min',
+    location: 'Start your first walk!',
+    distance: '0 km',
+    mood: 0,
+    coins: 0
   };
+
+  const lastSession = recentSession ? {
+    date: new Date(recentSession.date).toLocaleDateString() === new Date().toLocaleDateString() 
+      ? 'Today'
+      : new Date(recentSession.date).toLocaleDateString() === new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString()
+      ? 'Yesterday'
+      : new Date(recentSession.date).toLocaleDateString(),
+    duration: `${recentSession.time} min`,
+    location: recentSession.activities.length > 0 
+      ? `${recentSession.activities[0].replace('_', ' ')}`
+      : 'Nature Walk',
+    distance: `${recentSession.distance} km`,
+    mood: recentSession.feeling,
+    coins: recentSession.coinsEarned
+  } : defaultSession;
 
   return (
     <div className="duolingo-card">

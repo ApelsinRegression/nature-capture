@@ -11,19 +11,24 @@ interface UserStats {
 }
 
 interface ProfileStatsProps {
-  userStats: UserStats;
+  userStats?: UserStats;
 }
 
 const ProfileStats: React.FC<ProfileStatsProps> = ({ userStats }) => {
   const currentUser = userManager.getCurrentUser();
   
-  // Use real data from userManager if available, otherwise use passed userStats
+  // Always use real data from userManager
   const stats = currentUser ? {
     totalSessions: currentUser.totalSessions,
-    totalHours: Math.floor(currentUser.totalHours),
+    totalHours: Math.floor(currentUser.totalHours * 10) / 10, // Round to 1 decimal
     currentStreak: currentUser.currentStreak,
     badges: currentUser.badges
-  } : userStats;
+  } : (userStats || {
+    totalSessions: 0,
+    totalHours: 0,
+    currentStreak: 0,
+    badges: 0
+  });
 
   return (
     <div className="px-6 mb-8">
