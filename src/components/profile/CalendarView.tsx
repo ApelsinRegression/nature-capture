@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { userManager } from '@/utils/userManager';
 
 interface WalkingSession {
   date: string;
@@ -31,6 +32,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const currentDate = new Date();
   const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+  // Get current user's walking sessions directly from userManager
+  const currentUser = userManager.getCurrentUser();
+  const walkingSessions = currentUser?.walkingSessions || [];
+
+  console.log('Walking sessions:', walkingSessions);
+  console.log('Current user coins:', currentUser?.coins);
+
   // Calculate coins from distance (same formula as in the app)
   const calculateCoinsFromDistance = (distance: number) => {
     return Math.floor(distance * 10);
@@ -39,26 +47,31 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   // Find session for selected date and calculate coins earned that day
   const getCoinsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    const session = calendarData.find(day => {
-      if (!day.session) return false;
-      const sessionDate = new Date(day.session.date).toISOString().split('T')[0];
+    console.log('Looking for session on date:', dateStr);
+    
+    const session = walkingSessions.find(session => {
+      const sessionDate = new Date(session.date).toISOString().split('T')[0];
+      console.log('Comparing with session date:', sessionDate);
       return sessionDate === dateStr;
-    })?.session;
+    });
     
     if (session && session.distance > 0) {
-      return calculateCoinsFromDistance(session.distance);
+      const coins = calculateCoinsFromDistance(session.distance);
+      console.log('Found session with distance:', session.distance, 'coins:', coins);
+      return coins;
     }
+    
+    console.log('No session found for date:', dateStr);
     return 0;
   };
 
   // Find session for selected date
   const findSessionForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return calendarData.find(day => {
-      if (!day.session) return false;
-      const sessionDate = new Date(day.session.date).toISOString().split('T')[0];
+    return walkingSessions.find(session => {
+      const sessionDate = new Date(session.date).toISOString().split('T')[0];
       return sessionDate === dateStr;
-    })?.session;
+    });
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -84,6 +97,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const customDayContent = (date: Date) => {
     const coins = getCoinsForDate(date);
     const colorClass = getCoinColor(coins);
+    
+    console.log('Rendering day:', date.getDate(), 'with coins:', coins, 'color:', colorClass);
     
     if (coins > 0) {
       return (
@@ -117,6 +132,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         
         <div className="mb-4">
           <p className="text-base font-bold text-bright-green text-center">💰 Daily Coins Earned 💰</p>
+          <p className="text-sm text-gray-600 text-center">Total coins: {currentUser?.coins || 0} 🪙</p>
         </div>
 
         <div className="flex justify-center mb-6">
