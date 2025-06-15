@@ -1,46 +1,8 @@
-
 import React from 'react';
 import { Clock } from 'lucide-react';
 
 const ArticlePage: React.FC = () => {
   const articles = [
-    {
-      id: 1,
-      title: "The Science of Forest Bathing",
-      excerpt: "Discover how spending time in forests can reduce stress hormones and boost your immune system.",
-      readTime: "5 min read",
-      category: "Health",
-      image: "/lovable-uploads/32708266-d62b-4f42-a05b-822c91a021a8.png",
-      featured: false,
-      link: "https://www.nationalgeographic.com/travel/article/forest-bathing-japan-health-benefits"
-    },
-    {
-      id: 2,
-      title: "Urban Nature: Finding Green in the City",
-      excerpt: "Learn how to connect with nature even in urban environments.",
-      readTime: "3 min read",
-      category: "Lifestyle",
-      image: "/lovable-uploads/f1457e39-8dd6-4e91-9962-d1b090e9bee1.png",
-      link: "https://www.unicef.org/parenting/childrens-mental-health/how-nature-can-help-childrens-mental-health"
-    },
-    {
-      id: 3,
-      title: "Seasonal Wellness: Spring Awakening",
-      excerpt: "How the changing seasons affect our mental health and well-being.",
-      readTime: "4 min read",
-      category: "Wellness",
-      image: "/lovable-uploads/e735c5d5-87ac-488e-8ec4-835f6a0293cb.png",
-      link: "https://www.mentalhealth.org.uk/our-work/research/nature-how-connecting-nature-benefits-our-mental-health"
-    },
-    {
-      id: 4,
-      title: "Walking Meditation: Steps to Mindfulness",
-      excerpt: "Combine the benefits of walking with mindfulness practices.",
-      readTime: "6 min read",
-      category: "Mindfulness",
-      image: "/lovable-uploads/2ff263a7-e0a6-4359-bc0e-9819bf842ba2.png",
-      link: "https://www.psychologytoday.com/us/blog/the-athletes-way/201909/green-exercise-how-nature-walks-improve-mental-health"
-    },
     {
       id: 5,
       title: "A lower connection to nature is related to lower mental health",
