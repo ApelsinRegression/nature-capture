@@ -728,6 +728,29 @@ const MainPage: React.FC = () => {
             </div>
           )}
 
+          {/* COMPLETED ACTIVITIES - Show activities completed during session */}
+          {completedActivities.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-black text-bright-green mb-4">🎯 ACTIVITIES COMPLETED 🎯</h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {completedActivities.map((activityName, index) => {
+                  const activity = allActivities.find(a => a.name === activityName);
+                  if (!activity) return null;
+                  return (
+                    <div key={index} className="bg-gradient-to-r from-green-400 to-green-600 rounded-2xl p-3 border-2 border-green-300 shadow-lg text-white">
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-sm text-left flex-1">{activity.name}</p>
+                        <div className="bg-white rounded-full px-2 py-1 ml-2">
+                          <span className="font-black text-green-600 text-sm">+{activity.coins} 🪙</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* BENEFITS - More prominent display */}
           <div className="mb-8">
             <h3 className="text-2xl font-black text-bright-green mb-4">🌟 YOUR HEALTH BENEFITS 🌟</h3>
