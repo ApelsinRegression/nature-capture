@@ -8,6 +8,7 @@ import WeatherMonitor from '../components/WeatherMonitor';
 import ExtendedWeatherInfo from '../components/ExtendedWeatherInfo';
 import DateTimeDisplay from '../components/DateTimeDisplay';
 import { userManager } from '../utils/userManager';
+import { FactsManager } from '../utils/factsManager';
 
 interface Position {
   lat: number;
@@ -638,6 +639,8 @@ const MainPage: React.FC = () => {
   }
 
   if (showSessionComplete) {
+    const randomFact = FactsManager.getRandomFact();
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-forest-green to-bright-green flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl p-8 shadow-2xl border-4 border-yellow-accent text-center max-w-md w-full">
@@ -717,7 +720,7 @@ const MainPage: React.FC = () => {
 
           <div className="bg-forest-green rounded-2xl p-4 text-white mb-6">
             <p className="font-bold text-sm mb-2">🌱 Did you know? 🌱</p>
-            <p className="font-bold">Spending just 20 minutes in nature can significantly reduce stress hormones and boost your mood! 🧠✨</p>
+            <p className="font-bold">{randomFact.title}: {randomFact.description}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm mb-6">
