@@ -34,8 +34,8 @@ const MusicPage: React.FC = () => {
       description: 'Gentle, reflective piano ideal for quiet walks.',
       color: 'from-blue-400 to-purple-500',
       tracks: [
-        { id: 'cp1', title: 'Morning in the Forest', artist: 'Grand_Project', duration: '10:55', audioUrl: 'https://pixabay.com/music/download/347089/' },
-        { id: 'cp2', title: 'Silent Evening (Calm Piano)', artist: 'Grand_Project', duration: '5:10', audioUrl: 'https://pixabay.com/music/download/335749/' },
+        { id: 'cp1', title: 'Morning in the Forest', artist: 'Grand_Project', duration: '10:55', audioUrl: 'https://pixabay.com/music/download/music-347089.mp3' },
+        { id: 'cp2', title: 'Silent Evening (Calm Piano)', artist: 'Grand_Project', duration: '5:10', audioUrl: 'https://pixabay.com/music/download/music-335749.mp3' },
       ]
     },
     {
@@ -45,8 +45,8 @@ const MusicPage: React.FC = () => {
       description: 'Ethereal ambient textures with subtle forest tones.',
       color: 'from-green-400 to-blue-500',
       tracks: [
-        { id: 'an1', title: 'Nature Dreamscape', artist: 'Universfield', duration: '3:00', audioUrl: 'https://pixabay.com/music/download/350256/' },
-        { id: 'an2', title: 'Ambient Nature Landscape Music', artist: 'HitsLab', duration: '2:33', audioUrl: 'https://pixabay.com/music/download/15494/' },
+        { id: 'an1', title: 'Nature Dreamscape', artist: 'Universfield', duration: '3:00', audioUrl: 'https://pixabay.com/music/download/music-350256.mp3' },
+        { id: 'an2', title: 'Ambient Nature Landscape Music', artist: 'HitsLab', duration: '2:33', audioUrl: 'https://pixabay.com/music/download/music-15494.mp3' },
       ]
     },
     {
@@ -56,8 +56,8 @@ const MusicPage: React.FC = () => {
       description: 'Spacious, calming ambient atmospheres for relaxation.',
       color: 'from-purple-400 to-pink-500',
       tracks: [
-        { id: 'ms1', title: 'Inner Peace', artist: 'Grand_Project', duration: '10:28', audioUrl: 'https://pixabay.com/music/download/339640/' },
-        { id: 'ms2', title: 'Beautiful Ambient Nature', artist: 'Michael-X_Studio', duration: '9:44', audioUrl: 'https://pixabay.com/music/download/217407/' },
+        { id: 'ms1', title: 'Inner Peace', artist: 'Grand_Project', duration: '10:28', audioUrl: 'https://pixabay.com/music/download/music-339640.mp3' },
+        { id: 'ms2', title: 'Beautiful Ambient Nature', artist: 'Michael-X_Studio', duration: '9:44', audioUrl: 'https://pixabay.com/music/download/music-217407.mp3' },
       ]
     },
     {
@@ -67,8 +67,8 @@ const MusicPage: React.FC = () => {
       description: 'Breezy, water-like textures and rich natural soundscapes.',
       color: 'from-cyan-400 to-blue-600',
       tracks: [
-        { id: 'wa1', title: 'Calm And Beautiful Nature', artist: 'lvymusic', duration: '3:22', audioUrl: 'https://pixabay.com/music/download/202322/' },
-        { id: 'wa2', title: 'Ambient nature soundscape', artist: 'Surprising_Media', duration: '9:49', audioUrl: 'https://pixabay.com/music/download/171422/' },
+        { id: 'wa1', title: 'Calm And Beautiful Nature', artist: 'lvymusic', duration: '3:22', audioUrl: 'https://pixabay.com/music/download/music-202322.mp3' },
+        { id: 'wa2', title: 'Ambient nature soundscape', artist: 'Surprising_Media', duration: '9:49', audioUrl: 'https://pixabay.com/music/download/music-171422.mp3' },
       ]
     },
     {
@@ -78,8 +78,8 @@ const MusicPage: React.FC = () => {
       description: 'Gentle acoustic guitar with natural ambiance.',
       color: 'from-yellow-400 to-orange-500',
       tracks: [
-        { id: 'af1', title: 'Nature Calls', artist: 'folk_acoustic', duration: '3:00', audioUrl: 'https://pixabay.com/music/download/347264/' },
-        { id: 'af2', title: 'The Beat of Nature', artist: 'folk_acoustic', duration: '2:53', audioUrl: 'https://pixabay.com/music/download/347265/' },
+        { id: 'af1', title: 'Nature Calls', artist: 'folk_acoustic', duration: '3:00', audioUrl: 'https://pixabay.com/music/download/music-347264.mp3' },
+        { id: 'af2', title: 'The Beat of Nature', artist: 'folk_acoustic', duration: '2:53', audioUrl: 'https://pixabay.com/music/download/music-347265.mp3' },
       ]
     },
   ];
