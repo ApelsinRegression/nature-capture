@@ -93,11 +93,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     // Canada
     'Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Edmonton', 'Ottawa', 'Winnipeg', 'Quebec City', 'Hamilton', 'Kitchener',
     
+    // Kazakhstan
+    'Astana', 'Almaty', 'Shymkent', 'Karaganda', 'Aktobe', 'Taraz', 'Pavlodar', 'Oskemen', 'Semey', 'Atyrau',
+    
     // Europe
     'London', 'Berlin', 'Madrid', 'Rome', 'Paris', 'Bucharest', 'Vienna', 'Hamburg', 'Warsaw', 'Budapest',
     'Barcelona', 'Munich', 'Milan', 'Prague', 'Sofia', 'Brussels', 'Birmingham', 'Cologne', 'Naples', 'Turin',
-    'Amsterdam', 'Zagreb', 'Marseille', 'Riga', 'Vilnius', 'Krakow', 'Stockholm', 'Helsinki', 'Oslo', 'Copenhagen',
-    'Dublin', 'Ljubljana', 'Bratislava', 'Tallinn', 'Athens', 'Thessaloniki', 'Porto', 'Lisbon', 'Seville', 'Valencia',
     
     // Asia
     'Tokyo', 'Delhi', 'Shanghai', 'Dhaka', 'São Paulo', 'Cairo', 'Mexico City', 'Beijing', 'Mumbai', 'Osaka',
