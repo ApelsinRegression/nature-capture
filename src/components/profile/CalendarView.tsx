@@ -1,6 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 interface WalkingSession {
   date: string;
@@ -13,16 +15,8 @@ interface WalkingSession {
   activities: string[];
 }
 
-interface CalendarDay {
-  day: number;
-  distance: number;
-  hasActivity: boolean;
-  session: WalkingSession | null;
-  isCurrentMonth: boolean;
-}
-
 interface CalendarViewProps {
-  calendarData: CalendarDay[];
+  calendarData: any[];
   onBackClick: () => void;
   onSessionClick: (session: WalkingSession) => void;
 }
@@ -32,17 +26,46 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   onBackClick, 
   onSessionClick 
 }) => {
-  const getDistanceColor = (distance: number, isCurrentMonth: boolean) => {
-    if (!isCurrentMonth) return 'bg-gray-50 text-gray-300';
-    if (distance === 0) return 'bg-gray-100';
-    if (distance < 1) return 'bg-green-200';
-    if (distance < 3) return 'bg-green-400';
-    if (distance < 5) return 'bg-green-600';
-    return 'bg-green-800';
-  };
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   const currentDate = new Date();
   const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  // Find session for selected date
+  const findSessionForDate = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return calendarData.find(day => {
+      if (!day.session) return false;
+      const sessionDate = new Date(day.session.date).toISOString().split('T')[0];
+      return sessionDate === dateStr;
+    })?.session;
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      const session = findSessionForDate(date);
+      if (session) {
+        onSessionClick(session);
+      }
+    }
+  };
+
+  // Custom day content to show walking distances
+  const customDayContent = (date: Date) => {
+    const session = findSessionForDate(date);
+    if (session && session.distance > 0) {
+      return (
+        <div className="relative">
+          <div className="text-xs font-bold">{date.getDate()}</div>
+          <div className="text-xs text-green-600 font-bold">
+            {session.distance.toFixed(1)}km
+          </div>
+        </div>
+      );
+    }
+    return <div className="text-sm">{date.getDate()}</div>;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
@@ -61,27 +84,26 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           <p className="text-base font-bold text-bright-green text-center">🚶 Daily Walking Distances 🚶</p>
         </div>
 
-        <div className="grid grid-cols-7 gap-2 mb-4">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-            <div key={index} className="text-center font-bold text-bright-green p-2 text-sm">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-2">
-          {calendarData.map((day, index) => (
-            <div
-              key={index}
-              onClick={() => day.session && onSessionClick(day.session)}
-              className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-sm font-bold cursor-pointer transition-all hover:scale-105 ${getDistanceColor(day.distance, day.isCurrentMonth)}`}
-            >
-              <span className={`text-xs ${day.isCurrentMonth ? 'text-white' : 'text-gray-400'}`}>{day.day}</span>
-              {day.distance > 0 && day.isCurrentMonth && (
-                <span className="text-xs text-white">{day.distance.toFixed(1)}km</span>
-              )}
-            </div>
-          ))}
+        <div className="flex justify-center mb-6">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={handleDateSelect}
+            className={cn("p-3 pointer-events-auto border rounded-lg")}
+            components={{
+              Day: ({ date, ...props }) => (
+                <div className="relative p-2 hover:bg-green-100 rounded cursor-pointer">
+                  {customDayContent(date)}
+                </div>
+              )
+            }}
+            modifiers={{
+              hasSession: (date) => !!findSessionForDate(date)
+            }}
+            modifiersStyles={{
+              hasSession: { backgroundColor: '#dcfce7', fontWeight: 'bold' }
+            }}
+          />
         </div>
 
         <div className="mt-6 flex justify-center space-x-2 text-xs">
