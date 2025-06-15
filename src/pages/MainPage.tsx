@@ -380,13 +380,6 @@ const MainPage: React.FC = () => {
     navigate('/profile');
   };
 
-  const handlePositionUpdate = (position: Position) => {
-    setCurrentPosition(position);
-    if (isSessionActive) {
-      setSessionRoute(prev => [...prev, position]);
-    }
-  };
-
   const calculateDistance = () => {
     if (sessionRoute.length < 2) return 0;
     let distance = 0;
@@ -595,7 +588,7 @@ const MainPage: React.FC = () => {
               onClick={handleTakePhoto}
               className="w-full bg-yellow-accent text-bright-green font-black py-4 rounded-2xl text-lg hover:bg-bright-green hover:text-white transition-all"
             >
-              <Camera className="w-6 h-6 mr-3" />
+              <Camera className="w-6 h-6 mr-2" />
               📸 Take Photo
             </Button>
 
@@ -679,7 +672,7 @@ const MainPage: React.FC = () => {
               {sessionBenefits.map((benefit) => (
                 <div key={benefit.id} className="bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-4 border-2 border-green-400 shadow-lg text-white flex items-center space-x-3 transform hover:scale-105 transition-transform duration-300">
                   <Sparkles className="w-6 h-6 text-yellow-300 flex-shrink-0" />
-                  <p className="font-bold text-base font-nunito">
+                  <p className="font-bold text-base font-poppins">
                     {benefit.description}
                   </p>
                 </div>
@@ -813,9 +806,7 @@ const MainPage: React.FC = () => {
             </Button>
           </div>
           <RealTimeMap 
-            isActive={isSessionActive}
-            onPositionUpdate={handlePositionUpdate}
-            route={sessionRoute}
+            currentPosition={currentPosition}
           />
         </div>
       </div>
