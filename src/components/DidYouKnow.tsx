@@ -5,7 +5,6 @@ import { FactsManager } from '../utils/factsManager';
 
 interface NatureFact {
   id: number;
-  title: string;
   description: string;
 }
 
@@ -41,9 +40,6 @@ const DidYouKnow: React.FC = () => {
       </div>
       
       <div className="bg-gradient-to-br from-light-green to-white rounded-2xl p-4 border-2 border-forest-green">
-        <h4 className="font-bold text-bright-green text-lg mb-2">
-          {currentFact.title}
-        </h4>
         <p className="text-text-dark text-sm leading-relaxed">
           {currentFact.description}
         </p>
