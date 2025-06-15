@@ -40,17 +40,17 @@ const DidYouKnow: React.FC = () => {
         </button>
       </div>
       
-      <div className="bg-gradient-to-br from-white via-yellow-50 to-green-100 rounded-2xl p-5 border-3 border-green-400 shadow-inner relative overflow-hidden">
+      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 border-4 border-green-700 shadow-xl relative overflow-hidden">
         {/* Decorative elements */}
-        <div className="absolute top-2 right-2 text-2xl opacity-20">✨</div>
-        <div className="absolute bottom-2 left-2 text-xl opacity-20">🌟</div>
+        <div className="absolute top-3 right-3 text-3xl opacity-30 text-white">✨</div>
+        <div className="absolute bottom-3 left-3 text-2xl opacity-30 text-white">🌟</div>
         
         <div className="relative z-10">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-md">
-              <span className="text-white text-lg">💚</span>
+          <div className="flex items-start space-x-4">
+            <div className="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-green-600 text-xl">💚</span>
             </div>
-            <p className="text-text-dark text-base leading-relaxed font-medium flex-1">
+            <p className="text-white text-lg leading-relaxed font-bold font-nunito flex-1">
               {currentFact.description}
             </p>
           </div>
