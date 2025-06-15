@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send, RefreshCw, Locate } from 'lucide-react';
+import { Play, Pause, MapPin, Activity, Wind, Thermometer, Eye, MessageSquare, Camera, Star, Send, RefreshCw, Locate, Sparkles } from 'lucide-react';
 import RealTimeMap from '../components/RealTimeMap';
 import AirQualityMonitor from '../components/AirQualityMonitor';
 import WeatherMonitor from '../components/WeatherMonitor';
@@ -676,9 +676,10 @@ const MainPage: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-xl font-bold text-bright-green mb-4">🌟 Benefits You Just Gained 🌟</h3>
             <div className="space-y-3">
-              {sessionBenefits.map((benefit, index) => (
-                <div key={benefit.id} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border-2 border-forest-green text-left">
-                  <p className="text-xs text-text-dark leading-relaxed">
+              {sessionBenefits.map((benefit) => (
+                <div key={benefit.id} className="bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-4 border-2 border-green-400 shadow-lg text-white flex items-center space-x-3 transform hover:scale-105 transition-transform duration-300">
+                  <Sparkles className="w-6 h-6 text-yellow-300 flex-shrink-0" />
+                  <p className="font-bold text-base font-nunito">
                     {benefit.description}
                   </p>
                 </div>
