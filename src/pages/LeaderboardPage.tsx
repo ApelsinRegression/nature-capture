@@ -9,7 +9,7 @@ interface LeaderboardEntry {
   id: string;
   name: string;
   avatar: string;
-  distance: number;
+  totalMinutes: number;
   city: string;
   isFriend: boolean;
   rank: number;
@@ -39,15 +39,21 @@ const LeaderboardPage: React.FC = () => {
       users = currentUserFriends;
     }
 
-    // Convert to leaderboard entries with total walking time
+    // Convert to leaderboard entries with total walking time in minutes
     const entries: LeaderboardEntry[] = users.map((user) => {
-      const totalTime = user.walkingSessions.reduce((sum, session) => sum + session.time, 0);
+      // Sum all walking session times (each session.time is in minutes)
+      const totalMinutes = user.walkingSessions.reduce((sum, session) => {
+        console.log(`User ${user.name}, Session time: ${session.time} minutes`);
+        return sum + session.time;
+      }, 0);
+      
+      console.log(`User ${user.name} total walking time: ${totalMinutes} minutes`);
       
       return {
         id: user.id,
         name: user.name,
         avatar: user.avatar,
-        distance: totalTime, // Using distance field to store time for display
+        totalMinutes: totalMinutes,
         city: user.city,
         isFriend: friendIds.includes(user.id),
         rank: 0,
@@ -55,12 +61,13 @@ const LeaderboardPage: React.FC = () => {
       };
     });
 
-    // Sort by time and assign ranks
-    entries.sort((a, b) => b.distance - a.distance);
+    // Sort by total walking time (highest first) and assign ranks
+    entries.sort((a, b) => b.totalMinutes - a.totalMinutes);
     entries.forEach((entry, index) => {
       entry.rank = index + 1;
     });
 
+    console.log('Final leaderboard data:', entries);
     setLeaderboardData(entries);
   };
 
@@ -171,7 +178,9 @@ const LeaderboardPage: React.FC = () => {
                 </div>
                 
                 <div className="text-right">
-                  <p className="font-black text-lg">{Math.floor(user.distance / 60)}h {user.distance % 60}m</p>
+                  <p className="font-black text-lg">
+                    {Math.floor(user.totalMinutes / 60)}h {user.totalMinutes % 60}m
+                  </p>
                   <p className="text-xs font-bold opacity-80">time spent</p>
                 </div>
               </div>
