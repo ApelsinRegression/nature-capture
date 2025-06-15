@@ -292,8 +292,8 @@ const MainPage: React.FC = () => {
     if (isSessionActive) {
       setIsSessionActive(false);
       
-      // Generate random benefits when session ends
-      const randomBenefits = FactsManager.getRandomFacts(4);
+      // Generate a random fact when session ends
+      const randomBenefits = FactsManager.getRandomFacts(1);
       setSessionBenefits(randomBenefits);
       
       // Calculate coins: 1 coin per minute + activity bonuses
@@ -654,21 +654,21 @@ const MainPage: React.FC = () => {
           <div className="text-6xl mb-6">🎉</div>
           <h2 className="text-3xl font-black text-bright-green mb-6">✨ Session Complete! ✨</h2>
           
-          {sessionRoute.length > 1 && (
+          {currentPosition && (
             <div className="mb-6">
-              <h3 className="text-xl font-bold text-bright-green mb-3">🗺️ Your Route 🗺️</h3>
+              <h3 className="text-xl font-bold text-bright-green mb-3">🗺️ Your Location 🗺️</h3>
               <div className="bg-light-green rounded-2xl p-4 border-2 border-forest-green">
                 <div className="text-center">
-                  <div className="text-4xl mb-2">🛤️</div>
-                  <p className="font-bold text-bright-green">Distance: {calculateDistance().toFixed(2)} km</p>
-                  <p className="text-sm font-bold text-text-dark">Route tracked with GPS</p>
+                  <div className="text-4xl mb-2">📍</div>
+                  <p className="font-bold text-bright-green">Lat: {currentPosition.lat.toFixed(4)}, Lng: {currentPosition.lng.toFixed(4)}</p>
+                  <p className="text-sm font-bold text-text-dark">Final location recorded</p>
                 </div>
               </div>
             </div>
           )}
 
           <div className="mb-6">
-            <h3 className="text-xl font-bold text-bright-green mb-4">🌟 Benefits You Just Gained 🌟</h3>
+            <h3 className="text-xl font-bold text-bright-green mb-4">💡 Did You Know? 💡</h3>
             <div className="space-y-3">
               {sessionBenefits.map((benefit) => (
                 <div key={benefit.id} className="bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-4 border-2 border-green-400 shadow-lg text-white flex items-center space-x-3 transform hover:scale-105 transition-transform duration-300">
