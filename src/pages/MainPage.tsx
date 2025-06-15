@@ -732,25 +732,31 @@ const MainPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-bright-green mb-3">🎯 What did you do? 🎯</h3>
-            <div className="space-y-2">
-              {allActivities.slice(0, 3).map((activity, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleActivityComplete(activity.name)}
-                  className={`w-full p-3 rounded-2xl border-2 transition-all hover:scale-105 ${
-                    completedActivities.includes(activity.name)
-                      ? 'bg-yellow-accent border-bright-green text-bright-green'
-                      : 'bg-white border-light-green text-text-dark hover:border-bright-green'
-                  }`}
-                >
-                  <span className="font-bold">{activity.name}</span>
-                  <span className="ml-2 text-sm">🪙 +{activity.coins}</span>
-                </button>
-              ))}
+          {suggestedActivities.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-bright-green mb-3">🎯 Your Activities 🎯</h3>
+              <div className="space-y-2">
+                {suggestedActivities.map((activityName, index) => {
+                  const activity = allActivities.find(a => a.name === activityName);
+                  if (!activity) return null;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleActivityComplete(activity.name)}
+                      className={`w-full p-3 rounded-2xl border-2 transition-all hover:scale-105 ${
+                        completedActivities.includes(activity.name)
+                          ? 'bg-yellow-accent border-bright-green text-bright-green'
+                          : 'bg-white border-light-green text-text-dark hover:border-bright-green'
+                      }`}
+                    >
+                      <span className="font-bold">{activity.name}</span>
+                      <span className="ml-2 text-sm">🪙 +{activity.coins}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-4 mb-6">
             <div className="bg-gradient-to-r from-yellow-accent to-orange-accent rounded-2xl p-4 text-white">
