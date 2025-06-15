@@ -8,6 +8,7 @@ import TodaySnapshot from './TodaySnapshot';
 import RecentSession from './RecentSession';
 import Leaderboard from './Leaderboard';
 import ProfileSection from './ProfileSection';
+import DidYouKnow from './DidYouKnow';
 import { userManager } from '../utils/userManager';
 
 interface LocationData {
@@ -161,6 +162,9 @@ const Dashboard = () => {
           
           {/* Recent Session */}
           <RecentSession />
+          
+          {/* Did You Know */}
+          <DidYouKnow />
           
           {/* Environmental Science */}
           <EnvironmentalData location={location} />
