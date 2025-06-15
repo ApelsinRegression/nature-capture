@@ -639,7 +639,7 @@ const MainPage: React.FC = () => {
   }
 
   if (showSessionComplete) {
-    const randomFact = FactsManager.getRandomFact();
+    const randomBenefits = FactsManager.getRandomFacts(4);
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-forest-green to-bright-green flex items-center justify-center p-6">
@@ -661,28 +661,18 @@ const MainPage: React.FC = () => {
           )}
 
           <div className="mb-6">
-            <h3 className="text-xl font-bold text-bright-green mb-4">🌟 Benefits Gained 🌟</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-light-green rounded-2xl p-3">
-                <div className="text-2xl mb-1">🧠</div>
-                <p className="font-bold text-bright-green text-sm">Cognitive Boost</p>
-                <p className="text-xs text-text-dark">+15% focus improvement</p>
-              </div>
-              <div className="bg-light-green rounded-2xl p-3">
-                <div className="text-2xl mb-1">☀️</div>
-                <p className="font-bold text-bright-green text-sm">Vitamin D</p>
-                <p className="text-xs text-text-dark">+25% daily requirement</p>
-              </div>
-              <div className="bg-light-green rounded-2xl p-3">
-                <div className="text-2xl mb-1">😌</div>
-                <p className="font-bold text-bright-green text-sm">Stress Relief</p>
-                <p className="text-xs text-text-dark">-30% cortisol levels</p>
-              </div>
-              <div className="bg-light-green rounded-2xl p-3">
-                <div className="text-2xl mb-1">😊</div>
-                <p className="font-bold text-bright-green text-sm">Mood Enhancement</p>
-                <p className="text-xs text-text-dark">+20% serotonin production</p>
-              </div>
+            <h3 className="text-xl font-bold text-bright-green mb-4">🌟 Benefits You Just Gained 🌟</h3>
+            <div className="space-y-3">
+              {randomBenefits.map((benefit, index) => (
+                <div key={benefit.id} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border-2 border-forest-green text-left">
+                  <h4 className="font-bold text-bright-green text-sm mb-1">
+                    {benefit.title}
+                  </h4>
+                  <p className="text-xs text-text-dark leading-relaxed">
+                    {benefit.description}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -716,11 +706,6 @@ const MainPage: React.FC = () => {
             <div className="bg-light-green rounded-2xl p-4">
               <p className="font-black text-bright-green text-lg">🔥 Streak: {currentUser?.currentStreak || 0} days! 🔥</p>
             </div>
-          </div>
-
-          <div className="bg-forest-green rounded-2xl p-4 text-white mb-6">
-            <p className="font-bold text-sm mb-2">🌱 Did you know? 🌱</p>
-            <p className="font-bold">{randomFact.title}: {randomFact.description}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm mb-6">
