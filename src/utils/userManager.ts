@@ -1,4 +1,3 @@
-
 interface User {
   id: string;
   name: string;
@@ -212,36 +211,8 @@ export class UserManager {
       user.totalHours += session.time / 60;
       user.coins += session.coinsEarned;
       
-      // Update streak logic
-      const today = new Date().toDateString();
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
-      const sessionDate = new Date(session.date).toDateString();
-      
-      if (sessionDate === today || sessionDate === yesterday) {
-        // Check if this is the first session today/yesterday in sequence
-        const sortedSessions = user.walkingSessions
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
-        let streak = 0;
-        let currentDate = new Date();
-        
-        for (const s of sortedSessions) {
-          const sDate = new Date(s.date);
-          const daysDiff = Math.floor((currentDate.getTime() - sDate.getTime()) / (24 * 60 * 60 * 1000));
-          
-          if (daysDiff === 0 || (daysDiff === 1 && streak === 0)) {
-            streak++;
-            currentDate = sDate;
-          } else if (daysDiff === 1) {
-            streak++;
-            currentDate = sDate;
-          } else {
-            break;
-          }
-        }
-        
-        user.currentStreak = Math.max(user.currentStreak, streak);
-      }
+      // Update streak logic - count consecutive days, not sessions
+      this.updateUserStreak(user);
       
       // Update level based on coins
       this.updateUserLevel(user);
@@ -250,6 +221,59 @@ export class UserManager {
       this.saveUsers();
       console.log('Walking session added and user updated:', user);
     }
+  }
+
+  private updateUserStreak(user: User): void {
+    if (user.walkingSessions.length === 0) {
+      user.currentStreak = 0;
+      return;
+    }
+
+    // Get unique days with sessions (sorted by date, most recent first)
+    const sessionDays = user.walkingSessions
+      .map(session => new Date(session.date).toDateString())
+      .filter((date, index, array) => array.indexOf(date) === index) // Remove duplicates
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()); // Sort newest first
+
+    if (sessionDays.length === 0) {
+      user.currentStreak = 0;
+      return;
+    }
+
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+    
+    let streak = 0;
+    let expectedDate = new Date();
+    
+    // Start counting from today or yesterday
+    if (sessionDays[0] === today) {
+      expectedDate = new Date();
+    } else if (sessionDays[0] === yesterday) {
+      expectedDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    } else {
+      // No recent sessions, streak is 0
+      user.currentStreak = 0;
+      return;
+    }
+
+    // Count consecutive days
+    for (const sessionDay of sessionDays) {
+      const sessionDate = new Date(sessionDay);
+      const expectedDateString = expectedDate.toDateString();
+      
+      if (sessionDay === expectedDateString) {
+        streak++;
+        // Move to previous day
+        expectedDate = new Date(expectedDate.getTime() - 24 * 60 * 60 * 1000);
+      } else {
+        // Gap found, stop counting
+        break;
+      }
+    }
+    
+    user.currentStreak = streak;
+    console.log('Updated user streak:', streak, 'for user:', user.name);
   }
 
   private updateUserLevel(user: User): void {
