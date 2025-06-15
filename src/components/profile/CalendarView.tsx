@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,6 +13,7 @@ interface WalkingSession {
   comments: any[];
   feeling: number;
   activities: string[];
+  coinsEarned: number;
 }
 
 interface CalendarViewProps {
@@ -39,29 +39,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   console.log('Walking sessions:', walkingSessions);
   console.log('Current user coins:', currentUser?.coins);
 
-  // Calculate coins from distance (same formula as in the app)
-  const calculateCoinsFromDistance = (distance: number) => {
-    return Math.floor(distance * 10);
-  };
-
   // Find session for selected date and calculate coins earned that day
   const getCoinsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    console.log('Looking for session on date:', dateStr);
     
-    const session = walkingSessions.find(session => {
+    const sessionsOnDate = walkingSessions.filter(session => {
       const sessionDate = new Date(session.date).toISOString().split('T')[0];
-      console.log('Comparing with session date:', sessionDate);
       return sessionDate === dateStr;
     });
     
-    if (session && session.distance > 0) {
-      const coins = calculateCoinsFromDistance(session.distance);
-      console.log('Found session with distance:', session.distance, 'coins:', coins);
-      return coins;
+    if (sessionsOnDate.length > 0) {
+      const totalCoins = sessionsOnDate.reduce((sum, session) => sum + (session.coinsEarned || 0), 0);
+      console.log(`Found ${sessionsOnDate.length} sessions on ${dateStr} with total coins: ${totalCoins}`);
+      return totalCoins;
     }
     
-    console.log('No session found for date:', dateStr);
     return 0;
   };
 
@@ -143,7 +135,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             className={cn("p-3 pointer-events-auto border rounded-lg")}
             components={{
               Day: ({ date, ...props }) => (
-                <div className="relative p-1 hover:bg-green-100 rounded cursor-pointer w-9 h-9 flex items-center justify-center">
+                <div 
+                  onClick={() => handleDateSelect(date)}
+                  className="relative p-1 hover:bg-green-100 rounded cursor-pointer w-9 h-9 flex items-center justify-center"
+                >
                   {customDayContent(date)}
                 </div>
               )
