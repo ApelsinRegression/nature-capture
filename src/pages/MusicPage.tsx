@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Volume2, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -264,7 +263,7 @@ const MusicPage: React.FC = () => {
       </div>
 
       {/* Playlists Grid */}
-      <div className="px-4 space-y-4">
+      <div className="px-4 space-y-4 pb-6">
         {playlists.map((playlist) => (
           <div
             key={playlist.id}
@@ -289,36 +288,6 @@ const MusicPage: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Features */}
-      <div className="px-4 py-6">
-        <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-forest-green">
-          <h2 className="text-xl font-black text-bright-green mb-4 text-center">🌟 Music Features 🌟</h2>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3 bg-light-green rounded-2xl p-3">
-              <span className="text-2xl">🎧</span>
-              <div>
-                <p className="font-black text-bright-green text-sm">Session Continuity</p>
-                <p className="text-xs text-gray-600 font-bold">Music keeps playing during your nature sessions!</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 bg-light-green rounded-2xl p-3">
-              <span className="text-2xl">🌿</span>
-              <div>
-                <p className="font-black text-bright-green text-sm">Nature-Focused</p>
-                <p className="text-xs text-gray-600 font-bold">Curated playlists designed for outdoor activities!</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 bg-light-green rounded-2xl p-3">
-              <span className="text-2xl">📱</span>
-              <div>
-                <p className="font-black text-bright-green text-sm">Cross-Page Playback</p>
-                <p className="text-xs text-gray-600 font-bold">Navigate between pages while music continues!</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
