@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, Music } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Playlist {
@@ -16,6 +16,7 @@ interface Track {
   title: string;
   artist: string;
   duration: string;
+  audioUrl: string;
 }
 
 const MusicPage: React.FC = () => {
@@ -23,6 +24,7 @@ const MusicPage: React.FC = () => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const playlists: Playlist[] = [
     {
@@ -32,8 +34,8 @@ const MusicPage: React.FC = () => {
       description: 'Gentle, reflective piano ideal for quiet walks.',
       color: 'from-blue-400 to-purple-500',
       tracks: [
-        { id: 'cp1', title: 'Morning in the Forest', artist: 'Grand_Project', duration: '10:55' },
-        { id: 'cp2', title: 'Silent Evening (Calm Piano)', artist: 'Grand_Project', duration: '5:10' },
+        { id: 'cp1', title: 'Morning in the Forest', artist: 'Grand_Project', duration: '10:55', audioUrl: 'https://pixabay.com/music/download/347089/' },
+        { id: 'cp2', title: 'Silent Evening (Calm Piano)', artist: 'Grand_Project', duration: '5:10', audioUrl: 'https://pixabay.com/music/download/335749/' },
       ]
     },
     {
@@ -43,8 +45,8 @@ const MusicPage: React.FC = () => {
       description: 'Ethereal ambient textures with subtle forest tones.',
       color: 'from-green-400 to-blue-500',
       tracks: [
-        { id: 'an1', title: 'Nature Dreamscape', artist: 'Universfield', duration: '3:00' },
-        { id: 'an2', title: 'Ambient Nature Landscape Music', artist: 'HitsLab', duration: '2:33' },
+        { id: 'an1', title: 'Nature Dreamscape', artist: 'Universfield', duration: '3:00', audioUrl: 'https://pixabay.com/music/download/350256/' },
+        { id: 'an2', title: 'Ambient Nature Landscape Music', artist: 'HitsLab', duration: '2:33', audioUrl: 'https://pixabay.com/music/download/15494/' },
       ]
     },
     {
@@ -54,8 +56,8 @@ const MusicPage: React.FC = () => {
       description: 'Spacious, calming ambient atmospheres for relaxation.',
       color: 'from-purple-400 to-pink-500',
       tracks: [
-        { id: 'ms1', title: 'Inner Peace', artist: 'Grand_Project', duration: '10:28' },
-        { id: 'ms2', title: 'Beautiful Ambient Nature', artist: 'Michael-X_Studio', duration: '9:44' },
+        { id: 'ms1', title: 'Inner Peace', artist: 'Grand_Project', duration: '10:28', audioUrl: 'https://pixabay.com/music/download/339640/' },
+        { id: 'ms2', title: 'Beautiful Ambient Nature', artist: 'Michael-X_Studio', duration: '9:44', audioUrl: 'https://pixabay.com/music/download/217407/' },
       ]
     },
     {
@@ -65,8 +67,8 @@ const MusicPage: React.FC = () => {
       description: 'Breezy, water-like textures and rich natural soundscapes.',
       color: 'from-cyan-400 to-blue-600',
       tracks: [
-        { id: 'wa1', title: 'Calm And Beautiful Nature', artist: 'lvymusic', duration: '3:22' },
-        { id: 'wa2', title: 'Ambient nature soundscape', artist: 'Surprising_Media', duration: '9:49' },
+        { id: 'wa1', title: 'Calm And Beautiful Nature', artist: 'lvymusic', duration: '3:22', audioUrl: 'https://pixabay.com/music/download/202322/' },
+        { id: 'wa2', title: 'Ambient nature soundscape', artist: 'Surprising_Media', duration: '9:49', audioUrl: 'https://pixabay.com/music/download/171422/' },
       ]
     },
     {
@@ -76,8 +78,8 @@ const MusicPage: React.FC = () => {
       description: 'Gentle acoustic guitar with natural ambiance.',
       color: 'from-yellow-400 to-orange-500',
       tracks: [
-        { id: 'af1', title: 'Nature Calls', artist: 'folk_acoustic', duration: '3:00' },
-        { id: 'af2', title: 'The Beat of Nature', artist: 'folk_acoustic', duration: '2:53' },
+        { id: 'af1', title: 'Nature Calls', artist: 'folk_acoustic', duration: '3:00', audioUrl: 'https://pixabay.com/music/download/347264/' },
+        { id: 'af2', title: 'The Beat of Nature', artist: 'folk_acoustic', duration: '2:53', audioUrl: 'https://pixabay.com/music/download/347265/' },
       ]
     },
   ];
@@ -93,19 +95,19 @@ const MusicPage: React.FC = () => {
     setIsPlaying(!isPlaying);
   };
 
-  const nextTrack = () => {
+  const nextTrack = useCallback(() => {
     if (!selectedPlaylist) return;
     const nextIndex = (currentTrackIndex + 1) % selectedPlaylist.tracks.length;
     setCurrentTrackIndex(nextIndex);
     setCurrentTrack(selectedPlaylist.tracks[nextIndex]);
-  };
+  }, [selectedPlaylist, currentTrackIndex]);
 
-  const previousTrack = () => {
+  const previousTrack = useCallback(() => {
     if (!selectedPlaylist) return;
     const prevIndex = currentTrackIndex === 0 ? selectedPlaylist.tracks.length - 1 : currentTrackIndex - 1;
     setCurrentTrackIndex(prevIndex);
     setCurrentTrack(selectedPlaylist.tracks[prevIndex]);
-  };
+  }, [selectedPlaylist, currentTrackIndex]);
 
   const selectTrack = (track: Track, index: number) => {
     setCurrentTrack(track);
@@ -113,9 +115,39 @@ const MusicPage: React.FC = () => {
     setIsPlaying(true);
   };
 
+  useEffect(() => {
+    if (audioRef.current && currentTrack) {
+        const audio = audioRef.current;
+        if (audio.src !== currentTrack.audioUrl) {
+            audio.src = currentTrack.audioUrl;
+            audio.load();
+        }
+        if (isPlaying) {
+            audio.play().catch(e => {
+                console.error("Error playing audio:", e)
+                setIsPlaying(false);
+            });
+        } else {
+            audio.pause();
+        }
+    }
+  }, [isPlaying, currentTrack]);
+
+  useEffect(() => {
+      const audio = audioRef.current;
+      if (audio) {
+          const handleEnded = () => nextTrack();
+          audio.addEventListener('ended', handleEnded);
+          return () => {
+              audio.removeEventListener('ended', handleEnded);
+          };
+      }
+  }, [nextTrack]);
+
   if (selectedPlaylist) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
+        <audio ref={audioRef} />
         {/* Header */}
         <div className={`bg-gradient-to-r ${selectedPlaylist.color} rounded-b-3xl mx-4 mb-6 shadow-xl`}>
           <div className="p-6 text-center text-white">
@@ -224,6 +256,7 @@ const MusicPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green">
+      <audio ref={audioRef} />
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-b-3xl mx-4 mb-6 shadow-xl">
         <div className="p-6 text-center text-white">
