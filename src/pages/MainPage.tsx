@@ -428,6 +428,11 @@ const MainPage: React.FC = () => {
     return timeCoins + activityCoins;
   };
 
+  const calculateCalories = () => {
+    const minutes = sessionTime / 60; // Convert seconds to minutes
+    return Math.floor(minutes * 3.5); // 3.5 calories per minute
+  };
+
   const handleStreakClick = () => {
     navigate('/profile');
   };
@@ -776,7 +781,7 @@ const MainPage: React.FC = () => {
             </div>
             <div className="bg-light-green rounded-xl p-3">
               <p className="font-black text-bright-green">🔥 Calories</p>
-              <p className="font-bold text-text-dark">{Math.floor(sessionTime / 2)} cal</p>
+              <p className="font-bold text-text-dark">{calculateCalories()} cal</p>
             </div>
           </div>
 
