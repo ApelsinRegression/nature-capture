@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Clock } from 'lucide-react';
 
@@ -320,7 +321,11 @@ const ArticlePage: React.FC = () => {
         </h2>
         <div className="space-y-4">
           {articles.filter(article => !article.featured).map(article => (
-            <div key={article.id} className="bg-white rounded-2xl p-4 shadow-lg border-3 border-light-green">
+            <div 
+              key={article.id} 
+              className="bg-white rounded-2xl p-4 shadow-lg border-3 border-light-green hover:shadow-xl transition-shadow cursor-pointer"
+              onClick={() => window.open(article.link, '_blank')}
+            >
               <div className="flex space-x-4">
                 <img 
                   src={article.image} 
