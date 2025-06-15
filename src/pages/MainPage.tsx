@@ -879,13 +879,6 @@ const MainPage: React.FC = () => {
         </div>
       )}
 
-      {/* Did You Know card */}
-      {!isSessionActive && (
-        <div className="px-4 mb-6">
-          <DidYouKnow />
-        </div>
-      )}
-
       {/* Main Start/Stop Button */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-forest-green relative overflow-hidden">
