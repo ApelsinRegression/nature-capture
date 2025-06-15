@@ -26,89 +26,60 @@ const MusicPage: React.FC = () => {
 
   const playlists: Playlist[] = [
     {
-      id: 'friendly',
-      name: 'Friendly',
-      emoji: '😊',
-      description: 'Upbeat tunes for walking with friends',
-      color: 'from-yellow-400 to-orange-500',
-      tracks: [
-        { id: '1', title: 'Walking on Sunshine', artist: 'Nature Sounds', duration: '3:24' },
-        { id: '2', title: 'Happy Trails', artist: 'Forest Vibes', duration: '2:58' },
-        { id: '3', title: 'Friend Like Me', artist: 'Outdoor Collective', duration: '4:12' },
-        { id: '4', title: 'Together We Walk', artist: 'Nature Harmony', duration: '3:45' },
-        { id: '5', title: 'Sunny Day Stroll', artist: 'Green Path', duration: '3:18' }
-      ]
-    },
-    {
-      id: 'calm',
-      name: 'Calm',
-      emoji: '🧘',
-      description: 'Peaceful sounds for meditation and relaxation',
+      id: 'calm-piano',
+      name: 'Calm Piano',
+      emoji: '🎼',
+      description: 'Gentle, reflective piano ideal for quiet walks.',
       color: 'from-blue-400 to-purple-500',
       tracks: [
-        { id: '6', title: 'Forest Whispers', artist: 'Zen Nature', duration: '5:30' },
-        { id: '7', title: 'Flowing River', artist: 'Peaceful Mind', duration: '4:45' },
-        { id: '8', title: 'Mountain Breeze', artist: 'Tranquil Sounds', duration: '6:12' },
-        { id: '9', title: 'Evening Meditation', artist: 'Calm Collective', duration: '8:00' },
-        { id: '10', title: 'Inner Peace', artist: 'Serenity Now', duration: '4:20' }
+        { id: 'cp1', title: 'Morning in the Forest', artist: 'Grand_Project', duration: '10:55' },
+        { id: 'cp2', title: 'Silent Evening (Calm Piano)', artist: 'Grand_Project', duration: '5:10' },
       ]
     },
     {
-      id: 'autumn',
-      name: 'Autumn',
-      emoji: '🍂',
-      description: 'Cozy vibes for crisp autumn walks',
-      color: 'from-orange-400 to-red-500',
-      tracks: [
-        { id: '11', title: 'Falling Leaves', artist: 'Seasonal Sounds', duration: '3:56' },
-        { id: '12', title: 'Autumn Breeze', artist: 'Golden Hour', duration: '4:23' },
-        { id: '13', title: 'Harvest Moon', artist: 'Fall Collective', duration: '5:10' },
-        { id: '14', title: 'Crunching Steps', artist: 'Nature Walk', duration: '3:34' },
-        { id: '15', title: 'Cozy Trail', artist: 'Autumn Vibes', duration: '4:18' }
-      ]
-    },
-    {
-      id: 'energetic',
-      name: 'Energetic',
-      emoji: '⚡',
-      description: 'High-energy beats for active adventures',
+      id: 'ambient-nature',
+      name: 'Ambient Nature',
+      emoji: '🌿',
+      description: 'Ethereal ambient textures with subtle forest tones.',
       color: 'from-green-400 to-blue-500',
       tracks: [
-        { id: '16', title: 'Power Walk', artist: 'Energy Boost', duration: '3:42' },
-        { id: '17', title: 'Trail Runner', artist: 'Active Life', duration: '4:05' },
-        { id: '18', title: 'Mountain Climber', artist: 'Peak Performance', duration: '3:28' },
-        { id: '19', title: 'Adventure Time', artist: 'Outdoor Energy', duration: '4:15' },
-        { id: '20', title: 'Nature Boost', artist: 'Dynamic Flow', duration: '3:52' }
+        { id: 'an1', title: 'Nature Dreamscape', artist: 'Universfield', duration: '3:00' },
+        { id: 'an2', title: 'Ambient Nature Landscape Music', artist: 'HitsLab', duration: '2:33' },
       ]
     },
     {
-      id: 'birds',
-      name: 'Bird Songs',
-      emoji: '🐦',
-      description: 'Natural bird sounds for peaceful walks',
-      color: 'from-emerald-400 to-teal-500',
+      id: 'meditation-spa',
+      name: 'Meditation / Spa',
+      emoji: '🧘',
+      description: 'Spacious, calming ambient atmospheres for relaxation.',
+      color: 'from-purple-400 to-pink-500',
       tracks: [
-        { id: '21', title: 'Morning Chorus', artist: 'Dawn Birds', duration: '6:30' },
-        { id: '22', title: 'Robin\'s Song', artist: 'Garden Birds', duration: '4:12' },
-        { id: '23', title: 'Forest Symphony', artist: 'Wild Birds', duration: '7:45' },
-        { id: '24', title: 'Sparrow Dance', artist: 'Chirping Collective', duration: '3:58' },
-        { id: '25', title: 'Owl\'s Lullaby', artist: 'Night Birds', duration: '5:22' }
+        { id: 'ms1', title: 'Inner Peace', artist: 'Grand_Project', duration: '10:28' },
+        { id: 'ms2', title: 'Beautiful Ambient Nature', artist: 'Michael-X_Studio', duration: '9:44' },
       ]
     },
     {
-      id: 'rain',
-      name: 'Rain Sounds',
-      emoji: '🌧️',
-      description: 'Gentle rain for cozy indoor vibes',
-      color: 'from-gray-400 to-blue-600',
+      id: 'water-air',
+      name: 'Water & Air Soundscapes',
+      emoji: '🌊',
+      description: 'Breezy, water-like textures and rich natural soundscapes.',
+      color: 'from-cyan-400 to-blue-600',
       tracks: [
-        { id: '26', title: 'Gentle Rain', artist: 'Weather Sounds', duration: '10:00' },
-        { id: '27', title: 'Thunderstorm', artist: 'Storm Collective', duration: '8:30' },
-        { id: '28', title: 'Raindrops on Leaves', artist: 'Nature Rain', duration: '12:15' },
-        { id: '29', title: 'Cozy Cabin Rain', artist: 'Indoor Comfort', duration: '15:00' },
-        { id: '30', title: 'Spring Shower', artist: 'Fresh Rain', duration: '6:45' }
+        { id: 'wa1', title: 'Calm And Beautiful Nature', artist: 'lvymusic', duration: '3:22' },
+        { id: 'wa2', title: 'Ambient nature soundscape', artist: 'Surprising_Media', duration: '9:49' },
       ]
-    }
+    },
+    {
+      id: 'acoustic-folk',
+      name: 'Relaxing Acoustic & Folk',
+      emoji: '🌟',
+      description: 'Gentle acoustic guitar with natural ambiance.',
+      color: 'from-yellow-400 to-orange-500',
+      tracks: [
+        { id: 'af1', title: 'Nature Calls', artist: 'folk_acoustic', duration: '3:00' },
+        { id: 'af2', title: 'The Beat of Nature', artist: 'folk_acoustic', duration: '2:53' },
+      ]
+    },
   ];
 
   const selectPlaylist = (playlist: Playlist) => {
@@ -279,7 +250,10 @@ const MusicPage: React.FC = () => {
                 <p className="text-gray-600 font-bold text-sm mb-2">{playlist.description}</p>
                 <div className="flex items-center space-x-4 text-xs text-gray-500 font-bold">
                   <span>🎵 {playlist.tracks.length} tracks</span>
-                  <span>⏱️ {Math.floor(playlist.tracks.length * 4.5)} min</span>
+                  <span>⏱️ {Math.floor(playlist.tracks.reduce((acc, track) => {
+                    const [min, sec] = track.duration.split(':');
+                    return acc + parseInt(min, 10) * 60 + parseInt(sec, 10);
+                  }, 0) / 60)} min</span>
                 </div>
               </div>
               <div className="text-bright-green">
