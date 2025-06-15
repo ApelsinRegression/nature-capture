@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { book } from 'lucide-react';
+import { Book } from 'lucide-react';
 import { FactsManager } from '../utils/factsManager';
 
 interface NatureFact {
@@ -29,7 +29,7 @@ const DidYouKnow: React.FC = () => {
     <div className="duolingo-card">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-nunito font-bold text-bright-green flex items-center">
-          <book className="w-6 h-6 mr-2" />
+          <Book className="w-6 h-6 mr-2" />
           🌿 Did You Know?
         </h3>
         <button
