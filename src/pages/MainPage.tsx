@@ -9,6 +9,7 @@ import ExtendedWeatherInfo from '../components/ExtendedWeatherInfo';
 import DateTimeDisplay from '../components/DateTimeDisplay';
 import { userManager } from '../utils/userManager';
 import { FactsManager } from '../utils/factsManager';
+import { BenefitsManager } from '../utils/benefitsManager';
 
 interface Position {
   lat: number;
@@ -76,6 +77,9 @@ const MainPage: React.FC = () => {
   const [sessionBenefits, setSessionBenefits] = useState<any[]>(() => {
     return JSON.parse(localStorage.getItem('sessionBenefits') || '[]');
   });
+  const [sessionFacts, setSessionFacts] = useState<any[]>(() => {
+    return JSON.parse(localStorage.getItem('sessionFacts') || '[]');
+  });
 
   // Generate random 5 activities for display
   const [randomActivities, setRandomActivities] = useState<typeof allActivities>([]);
@@ -89,7 +93,6 @@ const MainPage: React.FC = () => {
   const currentUser = userManager.getCurrentUser();
 
   const allActivities = [
-    // 5 Coins
     { name: 'Notice 5 things you can see, hear, and feel', coins: 5 },
     { name: 'Match your breath to your steps', coins: 5 },
     { name: 'Smell flowers, leaves, or tree bark', coins: 5 },
@@ -98,8 +101,6 @@ const MainPage: React.FC = () => {
     { name: 'Say hello to people or animals you pass', coins: 5 },
     { name: 'Think of one thing you\'re grateful for every 100 steps', coins: 5 },
     { name: 'Sit and take 10 slow, deep breaths before continuing', coins: 5 },
-    
-    // 10 Coins
     { name: 'Close your eyes and listen to sounds around you', coins: 10 },
     { name: 'Touch tree bark, stones, or leaves', coins: 10 },
     { name: 'Look for animal tracks', coins: 10 },
@@ -108,8 +109,6 @@ const MainPage: React.FC = () => {
     { name: 'Watch how the light filters through trees', coins: 10 },
     { name: 'Imagine what the area looked like 100 years ago', coins: 10 },
     { name: 'Walk in the rain and notice how everything smells', coins: 10 },
-    
-    // 15 Coins
     { name: 'Write a short poem or haiku', coins: 15 },
     { name: 'Keep a journal of your walks', coins: 15 },
     { name: 'Sketch something you see', coins: 15 },
@@ -118,8 +117,6 @@ const MainPage: React.FC = () => {
     { name: 'Create a scavenger hunt for yourself or others', coins: 15 },
     { name: 'Record nature sounds', coins: 15 },
     { name: 'Make a nature mandala with found items', coins: 15 },
-    
-    // 20 Coins
     { name: 'Follow a new path', coins: 20 },
     { name: 'Identify trees or plants', coins: 20 },
     { name: 'Try walking meditation', coins: 20 },
@@ -128,8 +125,6 @@ const MainPage: React.FC = () => {
     { name: 'Follow a trail and name it', coins: 20 },
     { name: 'Walk barefoot on grass or sand', coins: 20 },
     { name: 'Walk in silence and focus on sounds', coins: 20 },
-    
-    // 25 Coins
     { name: 'Take nature photos', coins: 25 },
     { name: 'Try geocaching', coins: 25 },
     { name: 'Collect fallen leaves or petals', coins: 25 },
@@ -197,6 +192,10 @@ const MainPage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('sessionBenefits', JSON.stringify(sessionBenefits));
   }, [sessionBenefits]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionFacts', JSON.stringify(sessionFacts));
+  }, [sessionFacts]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -343,9 +342,11 @@ const MainPage: React.FC = () => {
     if (isSessionActive) {
       setIsSessionActive(false);
       
-      // Generate a random fact when session ends
-      const randomBenefits = FactsManager.getRandomFacts(1);
+      // Generate 4 random benefits and 1 random fact when session ends
+      const randomBenefits = BenefitsManager.getRandomBenefits(4);
+      const randomFacts = FactsManager.getRandomFacts(1);
       setSessionBenefits(randomBenefits);
+      setSessionFacts(randomFacts);
       
       // Calculate coins: 1 coin per minute + activity bonuses
       const timeCoins = Math.floor(sessionTime / 60);
@@ -382,6 +383,7 @@ const MainPage: React.FC = () => {
         setSuggestedActivities([]);
         setAddedActivities([]);
         setSessionBenefits([]);
+        setSessionFacts([]);
         // Clear localStorage for session data
         localStorage.removeItem('sessionCompletedActivities');
         localStorage.removeItem('sessionPhotos');
@@ -390,6 +392,7 @@ const MainPage: React.FC = () => {
         localStorage.removeItem('suggestedActivities');
         localStorage.removeItem('addedActivities');
         localStorage.removeItem('sessionBenefits');
+        localStorage.removeItem('sessionFacts');
         localStorage.setItem('sessionTime', '0');
         localStorage.setItem('sessionActive', 'false');
       }, 180000); // 3 minutes
@@ -542,6 +545,7 @@ const MainPage: React.FC = () => {
     setSuggestedActivities([]);
     setAddedActivities([]);
     setSessionBenefits([]);
+    setSessionFacts([]);
     localStorage.removeItem('sessionCompletedActivities');
     localStorage.removeItem('sessionPhotos');
     localStorage.removeItem('sessionComments');
@@ -549,6 +553,7 @@ const MainPage: React.FC = () => {
     localStorage.removeItem('suggestedActivities');
     localStorage.removeItem('addedActivities');
     localStorage.removeItem('sessionBenefits');
+    localStorage.removeItem('sessionFacts');
     localStorage.setItem('sessionTime', '0');
     localStorage.setItem('sessionActive', 'false');
   };
@@ -723,42 +728,39 @@ const MainPage: React.FC = () => {
             </div>
           )}
 
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-bright-green mb-4">💡 Did You Know? 💡</h3>
+          {/* BENEFITS - More prominent display */}
+          <div className="mb-8">
+            <h3 className="text-2xl font-black text-bright-green mb-4">🌟 YOUR HEALTH BENEFITS 🌟</h3>
             <div className="space-y-3">
               {sessionBenefits.map((benefit) => (
-                <div key={benefit.id} className="bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-4 border-2 border-green-400 shadow-lg text-white flex items-center space-x-3 transform hover:scale-105 transition-transform duration-300">
-                  <Sparkles className="w-6 h-6 text-yellow-300 flex-shrink-0" />
-                  <p className="font-bold text-base font-poppins">
-                    {benefit.description}
-                  </p>
+                <div key={benefit.id} className="bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 rounded-3xl p-5 border-4 border-emerald-400 shadow-2xl text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                  <div className="absolute top-2 right-2 text-2xl opacity-30">✨</div>
+                  <div className="absolute bottom-2 left-2 text-xl opacity-30">💚</div>
+                  <div className="relative z-10 flex items-center space-x-4">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <span className="text-emerald-500 text-lg">🎯</span>
+                    </div>
+                    <p className="font-black text-lg leading-relaxed text-white">
+                      {benefit.description}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {suggestedActivities.length > 0 && (
+          {/* DID YOU KNOW - Smaller, less prominent */}
+          {sessionFacts.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-bright-green mb-3">🎯 Your Activities 🎯</h3>
+              <h3 className="text-lg font-bold text-bright-green mb-3">💡 Did You Know? 💡</h3>
               <div className="space-y-2">
-                {suggestedActivities.map((activityName, index) => {
-                  const activity = allActivities.find(a => a.name === activityName);
-                  if (!activity) return null;
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleActivityComplete(activity.name)}
-                      className={`w-full p-3 rounded-2xl border-2 transition-all hover:scale-105 ${
-                        completedActivities.includes(activity.name)
-                          ? 'bg-yellow-accent border-bright-green text-bright-green'
-                          : 'bg-white border-light-green text-text-dark hover:border-bright-green'
-                      }`}
-                    >
-                      <span className="font-bold">{activity.name}</span>
-                      <span className="ml-2 text-sm">🪙 +{activity.coins}</span>
-                    </button>
-                  );
-                })}
+                {sessionFacts.map((fact) => (
+                  <div key={fact.id} className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl p-3 border-2 border-blue-300 shadow-lg text-white">
+                    <p className="font-bold text-sm">
+                      {fact.description}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
