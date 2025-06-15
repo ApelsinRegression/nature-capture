@@ -7,7 +7,6 @@ import AirQualityMonitor from '../components/AirQualityMonitor';
 import WeatherMonitor from '../components/WeatherMonitor';
 import ExtendedWeatherInfo from '../components/ExtendedWeatherInfo';
 import DateTimeDisplay from '../components/DateTimeDisplay';
-import DidYouKnow from '../components/DidYouKnow';
 import { userManager } from '../utils/userManager';
 import { FactsManager } from '../utils/factsManager';
 
@@ -78,15 +77,67 @@ const MainPage: React.FC = () => {
     return JSON.parse(localStorage.getItem('sessionBenefits') || '[]');
   });
 
+  // Generate random 5 activities for display
+  const [randomActivities, setRandomActivities] = useState<typeof allActivities>([]);
+
+  useEffect(() => {
+    const shuffled = [...allActivities].sort(() => 0.5 - Math.random());
+    setRandomActivities(shuffled.slice(0, 5));
+  }, []);
+
   // Get current user data
   const currentUser = userManager.getCurrentUser();
 
   const allActivities = [
-    { name: 'Morning Walk', icon: '🚶', duration: '30 min', calories: '120 cal', difficulty: 'Easy', coins: 30 },
-    { name: 'Park Yoga', icon: '🧘', duration: '45 min', calories: '180 cal', difficulty: 'Medium', coins: 45 },
-    { name: 'Nature Photography', icon: '📸', duration: '60 min', calories: '90 cal', difficulty: 'Easy', coins: 35 },
-    { name: 'Tree Meditation', icon: '🌳', duration: '20 min', calories: '50 cal', difficulty: 'Easy', coins: 25 },
-    { name: 'Bird Watching', icon: '🦅', duration: '40 min', calories: '80 cal', difficulty: 'Easy', coins: 40 },
+    // 5 Coins
+    { name: 'Notice 5 things you can see, hear, and feel', coins: 5 },
+    { name: 'Match your breath to your steps', coins: 5 },
+    { name: 'Smell flowers, leaves, or tree bark', coins: 5 },
+    { name: 'Watch a bird and follow its movement', coins: 5 },
+    { name: 'Walk slow, then fast, then slow again', coins: 5 },
+    { name: 'Say hello to people or animals you pass', coins: 5 },
+    { name: 'Think of one thing you\'re grateful for every 100 steps', coins: 5 },
+    { name: 'Sit and take 10 slow, deep breaths before continuing', coins: 5 },
+    
+    // 10 Coins
+    { name: 'Close your eyes and listen to sounds around you', coins: 10 },
+    { name: 'Touch tree bark, stones, or leaves', coins: 10 },
+    { name: 'Look for animal tracks', coins: 10 },
+    { name: 'Find one item for each color of the rainbow', coins: 10 },
+    { name: 'Use your phone\'s compass', coins: 10 },
+    { name: 'Watch how the light filters through trees', coins: 10 },
+    { name: 'Imagine what the area looked like 100 years ago', coins: 10 },
+    { name: 'Walk in the rain and notice how everything smells', coins: 10 },
+    
+    // 15 Coins
+    { name: 'Write a short poem or haiku', coins: 15 },
+    { name: 'Keep a journal of your walks', coins: 15 },
+    { name: 'Sketch something you see', coins: 15 },
+    { name: 'Draw shapes in the dirt or sand', coins: 15 },
+    { name: 'Try to draw a map of your walk', coins: 15 },
+    { name: 'Create a scavenger hunt for yourself or others', coins: 15 },
+    { name: 'Record nature sounds', coins: 15 },
+    { name: 'Make a nature mandala with found items', coins: 15 },
+    
+    // 20 Coins
+    { name: 'Follow a new path', coins: 20 },
+    { name: 'Identify trees or plants', coins: 20 },
+    { name: 'Try walking meditation', coins: 20 },
+    { name: 'Count the types of birds or bugs you see', coins: 20 },
+    { name: 'Tell stories while walking with someone', coins: 20 },
+    { name: 'Follow a trail and name it', coins: 20 },
+    { name: 'Walk barefoot on grass or sand', coins: 20 },
+    { name: 'Walk in silence and focus on sounds', coins: 20 },
+    
+    // 25 Coins
+    { name: 'Take nature photos', coins: 25 },
+    { name: 'Try geocaching', coins: 25 },
+    { name: 'Collect fallen leaves or petals', coins: 25 },
+    { name: 'Pick up trash safely along the path', coins: 25 },
+    { name: 'Listen to calming music or a nature podcast', coins: 25 },
+    { name: 'Play "I spy" using nature items', coins: 25 },
+    { name: 'Go on a gratitude walk with a friend', coins: 25 },
+    { name: 'Plan a small outdoor social or picnic walk', coins: 25 },
   ];
 
   const friends = [
@@ -694,7 +745,6 @@ const MainPage: React.FC = () => {
                       : 'bg-white border-light-green text-text-dark hover:border-bright-green'
                   }`}
                 >
-                  <span className="mr-2">{activity.icon}</span>
                   <span className="font-bold">{activity.name}</span>
                   <span className="ml-2 text-sm">🪙 +{activity.coins}</span>
                 </button>
@@ -854,10 +904,9 @@ const MainPage: React.FC = () => {
                   <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border border-forest-green">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{activity.icon}</span>
                         <div>
                           <p className="font-black text-bright-green text-sm">{activity.name}</p>
-                          <p className="text-xs font-bold text-text-dark">{activity.duration} • {activity.calories}</p>
+                          <p className="text-xs font-bold text-text-dark">🪙 {activity.coins} coins</p>
                         </div>
                       </div>
                       <Button 
@@ -983,20 +1032,19 @@ const MainPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Suggested Activities - Updated with toggle functionality */}
+      {/* Suggested Activities - Updated with new activities */}
       {!isSessionActive && (
         <div className="px-4 mb-6">
           <div className="bg-white rounded-3xl p-4 shadow-xl border-2 border-yellow-accent">
             <h2 className="text-lg font-black text-bright-green mb-3">🎯 Suggested Activities</h2>
             <div className="space-y-2">
-              {allActivities.map((activity, index) => (
+              {randomActivities.map((activity, index) => (
                 <div key={index} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border border-forest-green">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{activity.icon}</span>
                       <div>
                         <p className="font-black text-bright-green text-sm">{activity.name}</p>
-                        <p className="text-xs font-bold text-text-dark">{activity.duration} • {activity.calories} • 🪙 {activity.coins}</p>
+                        <p className="text-xs font-bold text-text-dark">🪙 {activity.coins} coins</p>
                       </div>
                     </div>
                     <Button 
