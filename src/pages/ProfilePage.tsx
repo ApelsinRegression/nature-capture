@@ -268,6 +268,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
         userStats={userStats}
         isEditing={isEditing && !isPublicView}
         onEditClick={!isPublicView ? () => setIsEditing(!isEditing) : undefined}
+        viewingUserId={profileUser?.id}
       />
 
       {isEditing && !isPublicView && (

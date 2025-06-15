@@ -19,6 +19,7 @@ interface ProfileHeaderProps {
   };
   isEditing: boolean;
   onEditClick?: () => void;
+  viewingUserId?: string; // Add this to identify which user we're viewing
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -27,14 +28,23 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   selectedEmoji,
   userStats,
   isEditing,
-  onEditClick
+  onEditClick,
+  viewingUserId
 }) => {
   const currentUser = userManager.getCurrentUser();
   const allUsers = userManager.getAllUsers();
   
-  // Calculate real rank
-  const sortedUsers = allUsers.sort((a, b) => b.coins - a.coins);
-  const userRank = currentUser ? sortedUsers.findIndex(u => u.id === currentUser.id) + 1 : 1;
+  // Calculate real rank based on total walking distance (same as LeaderboardPage)
+  const usersWithDistance = allUsers.map(user => {
+    const totalDistance = user.walkingSessions.reduce((sum, session) => sum + session.distance, 0);
+    return { ...user, totalDistance };
+  });
+  
+  const sortedUsers = usersWithDistance.sort((a, b) => b.totalDistance - a.totalDistance);
+  
+  // Find the rank of the user we're viewing (either current user or the viewed user)
+  const targetUserId = viewingUserId || currentUser?.id;
+  const userRank = targetUserId ? sortedUsers.findIndex(u => u.id === targetUserId) + 1 : 1;
   
   const getCoinsToNextLevel = () => {
     switch (userStats.nextLevel) {
