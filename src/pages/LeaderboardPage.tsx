@@ -38,9 +38,9 @@ const LeaderboardPage: React.FC = () => {
       users = currentUserFriends;
     }
 
-    // Convert to leaderboard entries
-    const entries: LeaderboardEntry[] = users.map((user) => {
-      return {
+    // Convert to leaderboard entries and sort by coins (highest first)
+    const entries: LeaderboardEntry[] = users
+      .map((user) => ({
         id: user.id,
         name: user.name,
         avatar: user.avatar,
@@ -48,14 +48,12 @@ const LeaderboardPage: React.FC = () => {
         city: user.city,
         isFriend: friendIds.includes(user.id),
         rank: 0
-      };
-    });
-
-    // Sort by coins (highest first) and assign ranks
-    entries.sort((a, b) => b.coins - a.coins);
-    entries.forEach((entry, index) => {
-      entry.rank = index + 1;
-    });
+      }))
+      .sort((a, b) => b.coins - a.coins) // Sort by coins descending
+      .map((entry, index) => ({
+        ...entry,
+        rank: index + 1 // Assign rank based on sorted position
+      }));
 
     console.log('Users before sorting:', users.map(u => ({ name: u.name, coins: u.coins })));
     console.log('Final leaderboard data (sorted by coins):', entries.map(e => ({ name: e.name, coins: e.coins, rank: e.rank })));
@@ -195,6 +193,44 @@ const LeaderboardPage: React.FC = () => {
       </div>
     </div>
   );
+};
+
+const handleUserClick = (user: LeaderboardEntry) => {
+  const navigate = useNavigate();
+  const currentUser = userManager.getCurrentUser();
+  // Navigate to user profile
+  navigate('/profile', { 
+    state: { 
+      viewingUser: user,
+      isPublicView: user.id !== currentUser?.id 
+    } 
+  });
+};
+
+const getRankIcon = (rank: number) => {
+  switch (rank) {
+    case 1:
+      return <Crown className="w-6 h-6 text-yellow-500" />;
+    case 2:
+      return <Medal className="w-6 h-6 text-gray-400" />;
+    case 3:
+      return <Trophy className="w-6 h-6 text-orange-500" />;
+    default:
+      return <span className="text-lg font-black text-forest-green">#{rank}</span>;
+  }
+};
+
+const getTabIcon = (tab: string) => {
+  switch (tab) {
+    case 'local':
+      return <MapPin className="w-4 h-4" />;
+    case 'global':
+      return <Globe className="w-4 h-4" />;
+    case 'friends':
+      return <Users className="w-4 h-4" />;
+    default:
+      return null;
+  }
 };
 
 export default LeaderboardPage;
