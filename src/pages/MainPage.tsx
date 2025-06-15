@@ -327,7 +327,7 @@ const MainPage: React.FC = () => {
         localStorage.removeItem('addedActivities');
         localStorage.setItem('sessionTime', '0');
         localStorage.setItem('sessionActive', 'false');
-      }, 15000);
+      }, 180000); // Changed from 15000 to 180000 (3 minutes)
     } else {
       setIsSessionActive(true);
       if (currentPosition) {
