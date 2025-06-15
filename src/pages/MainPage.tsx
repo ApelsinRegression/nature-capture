@@ -7,6 +7,7 @@ import AirQualityMonitor from '../components/AirQualityMonitor';
 import WeatherMonitor from '../components/WeatherMonitor';
 import ExtendedWeatherInfo from '../components/ExtendedWeatherInfo';
 import DateTimeDisplay from '../components/DateTimeDisplay';
+import DidYouKnow from '../components/DidYouKnow';
 import { userManager } from '../utils/userManager';
 import { FactsManager } from '../utils/factsManager';
 
@@ -748,7 +749,7 @@ const MainPage: React.FC = () => {
               />
               <div>
                 <h1 className="text-2xl font-nunito font-black text-white mb-1">NatureCapture</h1>
-                <p className="text-light-green font-bold text-xs">Ready for your next adventure? 🌟</p>
+                <p className="text-light-green font-bold text-xs">Ready for your next adventure?</p>
               </div>
             </div>
             
@@ -875,6 +876,13 @@ const MainPage: React.FC = () => {
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Did You Know card */}
+      {!isSessionActive && (
+        <div className="px-4 mb-6">
+          <DidYouKnow />
         </div>
       )}
 
