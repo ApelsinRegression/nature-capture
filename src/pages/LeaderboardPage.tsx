@@ -57,7 +57,8 @@ const LeaderboardPage: React.FC = () => {
       entry.rank = index + 1;
     });
 
-    console.log('Final leaderboard data (sorted by coins):', entries);
+    console.log('Users before sorting:', users.map(u => ({ name: u.name, coins: u.coins })));
+    console.log('Final leaderboard data (sorted by coins):', entries.map(e => ({ name: e.name, coins: e.coins, rank: e.rank })));
     setLeaderboardData(entries);
   };
 
