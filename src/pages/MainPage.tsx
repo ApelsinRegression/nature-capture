@@ -405,8 +405,22 @@ const MainPage: React.FC = () => {
   };
 
   const handleActivityComplete = (activityName: string) => {
+    console.log('Completing activity:', activityName);
+    console.log('Current completed activities:', completedActivities);
+    
     if (!completedActivities.includes(activityName)) {
-      setCompletedActivities([...completedActivities, activityName]);
+      const newCompletedActivities = [...completedActivities, activityName];
+      setCompletedActivities(newCompletedActivities);
+      console.log('Updated completed activities:', newCompletedActivities);
+      
+      // Show success message
+      const activity = allActivities.find(a => a.name === activityName);
+      if (activity) {
+        alert(`✅ Activity completed! +${activity.coins} coins! 🪙`);
+      }
+    } else {
+      console.log('Activity already completed');
+      alert('✅ Activity already completed!');
     }
   };
 
