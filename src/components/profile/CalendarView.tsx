@@ -56,12 +56,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
-  // Get color based on coins earned with new categories
+  // Get color based on coins earned with brown-orange-yellow progression
   const getCoinColor = (coins: number) => {
     if (coins === 0) return 'bg-gray-200';
-    if (coins >= 1 && coins <= 50) return 'bg-yellow-200';
-    if (coins >= 51 && coins <= 150) return 'bg-yellow-500';
-    if (coins >= 151) return 'bg-yellow-700';
+    if (coins >= 1 && coins <= 50) return 'bg-amber-800'; // Brown
+    if (coins >= 51 && coins <= 150) return 'bg-orange-500'; // Orange
+    if (coins >= 151) return 'bg-yellow-400'; // Yellow
     return 'bg-gray-200';
   };
 
@@ -74,8 +74,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       
       return (
         <div className={`relative w-full h-full rounded-full flex flex-col items-center justify-center ${colorClass} min-h-[32px]`}>
-          <div className="text-xs font-bold text-gray-800">{date.getDate()}</div>
-          <div className="text-xs text-gray-800 font-bold">
+          <div className="text-xs font-bold text-white">{date.getDate()}</div>
+          <div className="text-xs text-white font-bold">
             {coins}🪙
           </div>
         </div>
@@ -133,15 +133,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             <span className="font-bold">No coins</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-yellow-200 rounded"></div>
+            <div className="w-3 h-3 bg-amber-800 rounded"></div>
             <span className="font-bold">1-50 coins</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+            <div className="w-3 h-3 bg-orange-500 rounded"></div>
             <span className="font-bold">51-150 coins</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-yellow-700 rounded"></div>
+            <div className="w-3 h-3 bg-yellow-400 rounded"></div>
             <span className="font-bold">151+ coins</span>
           </div>
         </div>
