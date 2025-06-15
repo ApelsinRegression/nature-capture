@@ -39,15 +39,15 @@ const LeaderboardPage: React.FC = () => {
       users = currentUserFriends;
     }
 
-    // Convert to leaderboard entries with total walking distance
+    // Convert to leaderboard entries with total walking time
     const entries: LeaderboardEntry[] = users.map((user) => {
-      const totalDistance = user.walkingSessions.reduce((sum, session) => sum + session.distance, 0);
+      const totalTime = user.walkingSessions.reduce((sum, session) => sum + session.time, 0);
       
       return {
         id: user.id,
         name: user.name,
         avatar: user.avatar,
-        distance: totalDistance,
+        distance: totalTime, // Using distance field to store time for display
         city: user.city,
         isFriend: friendIds.includes(user.id),
         rank: 0,
@@ -55,7 +55,7 @@ const LeaderboardPage: React.FC = () => {
       };
     });
 
-    // Sort by distance and assign ranks
+    // Sort by time and assign ranks
     entries.sort((a, b) => b.distance - a.distance);
     entries.forEach((entry, index) => {
       entry.rank = index + 1;
@@ -114,7 +114,7 @@ const LeaderboardPage: React.FC = () => {
             </Button>
             <div>
               <h1 className="text-3xl font-nunito font-black text-white">🏆 Leaderboard 🏆</h1>
-              <p className="text-light-green font-bold text-sm">See who's leading the nature adventure!</p>
+              <p className="text-light-green font-bold text-sm">See who's spending the most time in nature!</p>
             </div>
           </div>
 
@@ -171,8 +171,8 @@ const LeaderboardPage: React.FC = () => {
                 </div>
                 
                 <div className="text-right">
-                  <p className="font-black text-lg">{user.distance.toFixed(1)}</p>
-                  <p className="text-xs font-bold opacity-80">km walked</p>
+                  <p className="font-black text-lg">{Math.floor(user.distance / 60)}h {user.distance % 60}m</p>
+                  <p className="text-xs font-bold opacity-80">time spent</p>
                 </div>
               </div>
             ))}

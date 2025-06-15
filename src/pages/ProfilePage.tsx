@@ -143,21 +143,67 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     }
   }, [isPublicView, currentUser]);
 
-  const calendarData = Array.from({ length: 30 }, (_, i) => {
-    const session = walkingSessions.find(s => {
-      const sessionDate = new Date(s.date);
-      const calendarDate = new Date();
-      calendarDate.setDate(calendarDate.getDate() - (29 - i));
-      return sessionDate.toDateString() === calendarDate.toDateString();
-    });
+  const generateCalendarData = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
     
-    return {
-      day: i + 1,
-      distance: session?.distance || 0,
-      hasActivity: !!session,
-      session: session || null
-    };
-  });
+    // Get first day of month and calculate starting day of week
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
+    
+    // Get previous month's last few days
+    const prevMonth = new Date(year, month, 0);
+    const prevMonthDays = prevMonth.getDate();
+    
+    const calendarDays: any[] = [];
+    
+    // Add previous month's trailing days
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const day = prevMonthDays - i;
+      calendarDays.push({
+        day,
+        distance: 0,
+        hasActivity: false,
+        session: null,
+        isCurrentMonth: false
+      });
+    }
+    
+    // Add current month's days
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      const currentDate = new Date(year, month, day);
+      const session = walkingSessions.find(s => {
+        const sessionDate = new Date(s.date);
+        return sessionDate.toDateString() === currentDate.toDateString();
+      });
+      
+      calendarDays.push({
+        day,
+        distance: session?.distance || 0,
+        hasActivity: !!session,
+        session: session || null,
+        isCurrentMonth: true
+      });
+    }
+    
+    // Add next month's leading days to fill the grid (42 days total = 6 weeks)
+    const remainingDays = 42 - calendarDays.length;
+    for (let day = 1; day <= remainingDays; day++) {
+      calendarDays.push({
+        day,
+        distance: 0,
+        hasActivity: false,
+        session: null,
+        isCurrentMonth: false
+      });
+    }
+    
+    return calendarDays;
+  };
+
+  const calendarData = generateCalendarData();
 
   const badges = [
     { name: 'First Steps', emoji: '👣', unlocked: userStats.totalSessions > 0 },

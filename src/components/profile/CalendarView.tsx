@@ -18,6 +18,7 @@ interface CalendarDay {
   distance: number;
   hasActivity: boolean;
   session: WalkingSession | null;
+  isCurrentMonth: boolean;
 }
 
 interface CalendarViewProps {
@@ -31,7 +32,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   onBackClick, 
   onSessionClick 
 }) => {
-  const getDistanceColor = (distance: number) => {
+  const getDistanceColor = (distance: number, isCurrentMonth: boolean) => {
+    if (!isCurrentMonth) return 'bg-gray-50 text-gray-300';
     if (distance === 0) return 'bg-gray-100';
     if (distance < 1) return 'bg-green-200';
     if (distance < 3) return 'bg-green-400';
@@ -39,11 +41,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     return 'bg-green-800';
   };
 
+  const currentDate = new Date();
+  const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-off-white to-light-green p-6">
       <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-yellow-accent">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-black text-bright-green">📅 Walking Calendar 📅</h2>
+          <h2 className="text-lg font-black text-bright-green">📅 {monthName} Walking Calendar 📅</h2>
           <Button 
             onClick={onBackClick}
             className="bg-forest-green text-white rounded-full px-4 py-2"
@@ -57,7 +62,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
 
         <div className="grid grid-cols-7 gap-2 mb-4">
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
             <div key={index} className="text-center font-bold text-bright-green p-2 text-sm">
               {day}
             </div>
@@ -69,10 +74,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             <div
               key={index}
               onClick={() => day.session && onSessionClick(day.session)}
-              className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-sm font-bold cursor-pointer ${getDistanceColor(day.distance)}`}
+              className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-sm font-bold cursor-pointer transition-all hover:scale-105 ${getDistanceColor(day.distance, day.isCurrentMonth)}`}
             >
-              <span className="text-white text-xs">{day.day}</span>
-              {day.distance > 0 && (
+              <span className={`text-xs ${day.isCurrentMonth ? 'text-white' : 'text-gray-400'}`}>{day.day}</span>
+              {day.distance > 0 && day.isCurrentMonth && (
                 <span className="text-xs text-white">{day.distance.toFixed(1)}km</span>
               )}
             </div>
