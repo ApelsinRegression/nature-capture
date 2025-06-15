@@ -36,6 +36,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     return Math.floor(distance * 10);
   };
 
+  // Find session for selected date and calculate coins earned that day
+  const getCoinsForDate = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const session = calendarData.find(day => {
+      if (!day.session) return false;
+      const sessionDate = new Date(day.session.date).toISOString().split('T')[0];
+      return sessionDate === dateStr;
+    })?.session;
+    
+    if (session && session.distance > 0) {
+      return calculateCoinsFromDistance(session.distance);
+    }
+    return 0;
+  };
+
   // Find session for selected date
   const findSessionForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
@@ -67,11 +82,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   // Custom day content to show coins earned
   const customDayContent = (date: Date) => {
-    const session = findSessionForDate(date);
-    if (session && session.distance > 0) {
-      const coins = calculateCoinsFromDistance(session.distance);
-      const colorClass = getCoinColor(coins);
-      
+    const coins = getCoinsForDate(date);
+    const colorClass = getCoinColor(coins);
+    
+    if (coins > 0) {
       return (
         <div className={`relative w-full h-full rounded-full flex flex-col items-center justify-center ${colorClass} min-h-[32px]`}>
           <div className="text-xs font-bold text-white">{date.getDate()}</div>
@@ -82,7 +96,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       );
     }
     return (
-      <div className="relative w-full h-full rounded-full flex items-center justify-center bg-gray-100 min-h-[32px]">
+      <div className="relative w-full h-full rounded-full flex items-center justify-center bg-gray-200 min-h-[32px]">
         <div className="text-sm text-gray-600">{date.getDate()}</div>
       </div>
     );
@@ -119,10 +133,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               )
             }}
             modifiers={{
-              hasSession: (date) => !!findSessionForDate(date)
+              hasCoins: (date) => getCoinsForDate(date) > 0
             }}
             modifiersStyles={{
-              hasSession: { backgroundColor: 'transparent' }
+              hasCoins: { backgroundColor: 'transparent' }
             }}
           />
         </div>
