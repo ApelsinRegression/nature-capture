@@ -56,13 +56,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
-  // Get color based on coins earned
+  // Get color based on coins earned with new categories
   const getCoinColor = (coins: number) => {
-    if (coins === 0) return 'bg-gray-100';
-    if (coins < 10) return 'bg-yellow-200';
-    if (coins < 30) return 'bg-yellow-400';
-    if (coins < 50) return 'bg-yellow-600';
-    return 'bg-yellow-800';
+    if (coins === 0) return 'bg-gray-200';
+    if (coins >= 1 && coins <= 50) return 'bg-yellow-200';
+    if (coins >= 51 && coins <= 150) return 'bg-yellow-500';
+    if (coins >= 151) return 'bg-yellow-700';
+    return 'bg-gray-200';
   };
 
   // Custom day content to show coins earned
@@ -73,15 +73,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       const colorClass = getCoinColor(coins);
       
       return (
-        <div className={`relative w-full h-full rounded-full flex flex-col items-center justify-center ${colorClass}`}>
-          <div className="text-xs font-bold text-white">{date.getDate()}</div>
-          <div className="text-xs text-white font-bold">
-            🪙{coins}
+        <div className={`relative w-full h-full rounded-full flex flex-col items-center justify-center ${colorClass} min-h-[32px]`}>
+          <div className="text-xs font-bold text-gray-800">{date.getDate()}</div>
+          <div className="text-xs text-gray-800 font-bold">
+            {coins}🪙
           </div>
         </div>
       );
     }
-    return <div className="text-sm">{date.getDate()}</div>;
+    return (
+      <div className="relative w-full h-full rounded-full flex items-center justify-center bg-gray-100 min-h-[32px]">
+        <div className="text-sm text-gray-600">{date.getDate()}</div>
+      </div>
+    );
   };
 
   return (
@@ -123,26 +127,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           />
         </div>
 
-        <div className="mt-6 flex justify-center space-x-2 text-xs">
+        <div className="mt-6 flex justify-center flex-wrap gap-2 text-xs">
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-gray-100 rounded"></div>
+            <div className="w-3 h-3 bg-gray-200 rounded"></div>
             <span className="font-bold">No coins</span>
           </div>
           <div className="flex items-center space-x-1">
             <div className="w-3 h-3 bg-yellow-200 rounded"></div>
-            <span className="font-bold">1-9 coins</span>
+            <span className="font-bold">1-50 coins</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-yellow-400 rounded"></div>
-            <span className="font-bold">10-29 coins</span>
+            <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+            <span className="font-bold">51-150 coins</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-yellow-600 rounded"></div>
-            <span className="font-bold">30-49 coins</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <div className="w-3 h-3 bg-yellow-800 rounded"></div>
-            <span className="font-bold">50+ coins</span>
+            <div className="w-3 h-3 bg-yellow-700 rounded"></div>
+            <span className="font-bold">151+ coins</span>
           </div>
         </div>
       </div>
