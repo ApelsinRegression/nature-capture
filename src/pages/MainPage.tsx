@@ -73,6 +73,9 @@ const MainPage: React.FC = () => {
   const [addedActivities, setAddedActivities] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('addedActivities') || '[]');
   });
+  const [sessionBenefits, setSessionBenefits] = useState<any[]>(() => {
+    return JSON.parse(localStorage.getItem('sessionBenefits') || '[]');
+  });
 
   // Get current user data
   const currentUser = userManager.getCurrentUser();
@@ -138,6 +141,10 @@ const MainPage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('addedActivities', JSON.stringify(addedActivities));
   }, [addedActivities]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionBenefits', JSON.stringify(sessionBenefits));
+  }, [sessionBenefits]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -284,6 +291,10 @@ const MainPage: React.FC = () => {
     if (isSessionActive) {
       setIsSessionActive(false);
       
+      // Generate random benefits when session ends
+      const randomBenefits = FactsManager.getRandomFacts(4);
+      setSessionBenefits(randomBenefits);
+      
       // Calculate coins: 1 coin per minute + activity bonuses
       const timeCoins = Math.floor(sessionTime / 60);
       const activityCoins = completedActivities.reduce((total, activityName) => {
@@ -318,6 +329,7 @@ const MainPage: React.FC = () => {
         setFeelingRating(0);
         setSuggestedActivities([]);
         setAddedActivities([]);
+        setSessionBenefits([]);
         // Clear localStorage for session data
         localStorage.removeItem('sessionCompletedActivities');
         localStorage.removeItem('sessionPhotos');
@@ -325,9 +337,10 @@ const MainPage: React.FC = () => {
         localStorage.removeItem('sessionFeeling');
         localStorage.removeItem('suggestedActivities');
         localStorage.removeItem('addedActivities');
+        localStorage.removeItem('sessionBenefits');
         localStorage.setItem('sessionTime', '0');
         localStorage.setItem('sessionActive', 'false');
-      }, 180000); // Changed from 15000 to 180000 (3 minutes)
+      }, 180000); // 3 minutes
     } else {
       setIsSessionActive(true);
       if (currentPosition) {
@@ -478,12 +491,14 @@ const MainPage: React.FC = () => {
     setFeelingRating(0);
     setSuggestedActivities([]);
     setAddedActivities([]);
+    setSessionBenefits([]);
     localStorage.removeItem('sessionCompletedActivities');
     localStorage.removeItem('sessionPhotos');
     localStorage.removeItem('sessionComments');
     localStorage.removeItem('sessionFeeling');
     localStorage.removeItem('suggestedActivities');
     localStorage.removeItem('addedActivities');
+    localStorage.removeItem('sessionBenefits');
     localStorage.setItem('sessionTime', '0');
     localStorage.setItem('sessionActive', 'false');
   };
@@ -639,8 +654,6 @@ const MainPage: React.FC = () => {
   }
 
   if (showSessionComplete) {
-    const randomBenefits = FactsManager.getRandomFacts(4);
-    
     return (
       <div className="min-h-screen bg-gradient-to-br from-forest-green to-bright-green flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl p-8 shadow-2xl border-4 border-yellow-accent text-center max-w-md w-full">
@@ -663,11 +676,8 @@ const MainPage: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-xl font-bold text-bright-green mb-4">🌟 Benefits You Just Gained 🌟</h3>
             <div className="space-y-3">
-              {randomBenefits.map((benefit, index) => (
+              {sessionBenefits.map((benefit, index) => (
                 <div key={benefit.id} className="bg-gradient-to-r from-light-green to-white rounded-2xl p-3 border-2 border-forest-green text-left">
-                  <h4 className="font-bold text-bright-green text-sm mb-1">
-                    {benefit.title}
-                  </h4>
                   <p className="text-xs text-text-dark leading-relaxed">
                     {benefit.description}
                   </p>
