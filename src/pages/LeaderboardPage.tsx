@@ -9,7 +9,7 @@ interface LeaderboardEntry {
   id: string;
   name: string;
   avatar: string;
-  totalMinutes: number;
+  avgMinutesPerDay: number;
   city: string;
   isFriend: boolean;
   rank: number;
@@ -39,7 +39,7 @@ const LeaderboardPage: React.FC = () => {
       users = currentUserFriends;
     }
 
-    // Convert to leaderboard entries with total walking time in minutes
+    // Convert to leaderboard entries with average minutes per day
     const entries: LeaderboardEntry[] = users.map((user) => {
       // Sum all walking session times (each session.time is in minutes)
       const totalMinutes = user.walkingSessions.reduce((sum, session) => {
@@ -47,13 +47,20 @@ const LeaderboardPage: React.FC = () => {
         return sum + session.time;
       }, 0);
       
-      console.log(`User ${user.name} total walking time: ${totalMinutes} minutes`);
+      // Get unique days with walking sessions
+      const uniqueDays = new Set(user.walkingSessions.map(session => session.date));
+      const daysWithActivity = uniqueDays.size;
+      
+      // Calculate average minutes per day (avoid division by zero)
+      const avgMinutesPerDay = daysWithActivity > 0 ? totalMinutes / daysWithActivity : 0;
+      
+      console.log(`User ${user.name}: ${totalMinutes} total minutes across ${daysWithActivity} days = ${avgMinutesPerDay.toFixed(1)} avg min/day`);
       
       return {
         id: user.id,
         name: user.name,
         avatar: user.avatar,
-        totalMinutes: totalMinutes,
+        avgMinutesPerDay: avgMinutesPerDay,
         city: user.city,
         isFriend: friendIds.includes(user.id),
         rank: 0,
@@ -61,8 +68,8 @@ const LeaderboardPage: React.FC = () => {
       };
     });
 
-    // Sort by total walking time (highest first) and assign ranks
-    entries.sort((a, b) => b.totalMinutes - a.totalMinutes);
+    // Sort by average minutes per day (highest first) and assign ranks
+    entries.sort((a, b) => b.avgMinutesPerDay - a.avgMinutesPerDay);
     entries.forEach((entry, index) => {
       entry.rank = index + 1;
     });
@@ -121,7 +128,7 @@ const LeaderboardPage: React.FC = () => {
             </Button>
             <div>
               <h1 className="text-3xl font-nunito font-black text-white">🏆 Leaderboard 🏆</h1>
-              <p className="text-light-green font-bold text-sm">See who's spending the most time in nature!</p>
+              <p className="text-light-green font-bold text-sm">See who's most active per day in nature!</p>
             </div>
           </div>
 
@@ -179,9 +186,9 @@ const LeaderboardPage: React.FC = () => {
                 
                 <div className="text-right">
                   <p className="font-black text-lg">
-                    {Math.floor(user.totalMinutes / 60)}h {user.totalMinutes % 60}m
+                    {user.avgMinutesPerDay.toFixed(0)} min
                   </p>
-                  <p className="text-xs font-bold opacity-80">time spent</p>
+                  <p className="text-xs font-bold opacity-80">avg per day</p>
                 </div>
               </div>
             ))}
