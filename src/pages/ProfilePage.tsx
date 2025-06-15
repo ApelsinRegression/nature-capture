@@ -69,11 +69,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [tempUserCity, setTempUserCity] = useState(userCity);
   const [messages, setMessages] = useState<Message[]>([]);
   
+  // Calculate badges properly based on coins
+  const calculateBadges = (coins: number) => {
+    let badgeCount = 0;
+    if (coins > 0) badgeCount++; // First Steps
+    if (coins > 50) badgeCount++; // Early Bird
+    if (coins > 100) badgeCount++; // Tree Hugger
+    if (coins > 200) badgeCount++; // Rain Walker
+    if (coins > 500) badgeCount++; // Sunset Chaser
+    if (coins > 1000) badgeCount++; // Mountain Climber
+    if (coins > 1500) badgeCount++; // Ocean Explorer
+    if (coins > 2000) badgeCount++; // Star Gazer
+    return badgeCount;
+  };
+
   const userStats = {
     totalSessions: profileUser?.totalSessions || 0,
     totalHours: profileUser?.totalHours || 0,
     currentStreak: profileUser?.currentStreak || 0,
-    badges: profileUser?.badges || 0,
+    badges: calculateBadges(profileUser?.coins || 0), // Use calculated badges
     level: profileUser?.level || 'Beginner',
     nextLevel: profileUser?.nextLevel || 'Nature Seeker',
     coins: profileUser?.coins || 0,
@@ -206,7 +220,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const calendarData = generateCalendarData();
 
   const badges = [
-    { name: 'First Steps', emoji: '👣', unlocked: userStats.totalSessions > 0 },
+    { name: 'First Steps', emoji: '👣', unlocked: userStats.coins > 0 },
     { name: 'Early Bird', emoji: '🌅', unlocked: userStats.coins > 50 },
     { name: 'Tree Hugger', emoji: '🌳', unlocked: userStats.coins > 100 },
     { name: 'Rain Walker', emoji: '🌧️', unlocked: userStats.coins > 200 },

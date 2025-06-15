@@ -115,7 +115,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           )}
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Only 3 items now (removed hours) */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-white/20 rounded-2xl p-4 text-center">
             <div className="text-2xl font-black text-white mb-1">🪙 {userStats.coins}</div>

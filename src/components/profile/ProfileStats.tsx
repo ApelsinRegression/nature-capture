@@ -20,21 +20,13 @@ const ProfileStats: React.FC<ProfileStatsProps> = ({ userStats }) => {
         <h2 className="text-xl font-nunito font-bold text-bright-green mb-4 text-center">
           📊 Your Journey Stats 📊
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="w-16 h-16 bg-forest-green rounded-full mx-auto mb-2 flex items-center justify-center">
               <Calendar className="w-8 h-8 text-white" />
             </div>
             <div className="text-2xl font-bold text-bright-green">{userStats.totalSessions}</div>
             <div className="text-sm font-bold text-text-dark">Sessions 📈</div>
-          </div>
-
-          <div className="text-center">
-            <div className="w-16 h-16 bg-bright-green rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">{userStats.totalHours}</span>
-            </div>
-            <div className="text-2xl font-bold text-bright-green">{userStats.totalHours}h</div>
-            <div className="text-sm font-bold text-text-dark">Hours ⏰</div>
           </div>
 
           <div className="text-center">
